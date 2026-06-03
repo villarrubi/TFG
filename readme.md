@@ -13,11 +13,13 @@ Desarrollar un prototipo que detecte ataques de phishing en correos electrónico
 - Análisis de texto completo del correo pegado manualmente.
 - Detección de `Reply-To` diferente a `From`.
 - Detección de nombres de remitente engañosos.
-- Identificación de dominios y URLs sospechosas.
+- Detección de inconsistencias de cabeceras (`Return-Path`, `From`).
+- Identificación de dominios y URLs sospechosas, incluyendo listas negras locales.
 - Detección de lenguaje urgente y asuntos típicos de phishing.
 - Detección de enlaces acortados conocidos.
 - Detección de discrepancias entre el texto visible y la URL real en enlaces HTML.
-- Muestra de puntuación de riesgo y explicación de señales detectadas.
+- Detección de formularios HTML potencialmente sospechosos en el correo.- Detección de fallos de autenticación SPF/DKIM/DMARC y anomalías en las cabeceras Received.
+- Identificación de mensajes firmados o cifrados (S/MIME, PGP) como indicador adicional de autenticidad.- Interfaz mejorada con medidor de riesgo y panel de detalles por regla.
 
 ## Uso
 1. Crear un entorno virtual Python.
