@@ -66,22 +66,24 @@ PYTHONPATH=src python -m unittest discover -s tests -p "test_*.py"
 ```
 
 ## Estructura del repositorio
+```
 src/
 ├── app.py                  # Punto de entrada general
 ├── detect_app.py           # Interfaz de detección
 ├── train_app.py            # Interfaz de entrenamiento
 └── sistema_phishing/
-├── analizador_email.py # Parser de archivos .eml
-├── analyzer.py         # Orquestador del análisis heurístico
-├── correo.py           # Modelo de datos del correo analizado
-├── heuristicas.py      # Fachada pública del análisis heurístico
-├── neural.py           # Clasificador neuronal y gestión del modelo
-├── scorer.py           # Cálculo de puntuación de riesgo ponderada
-└── signals.py          # Funciones de detección de señales individuales
+    ├── analizador_email.py # Parser de archivos .eml
+    ├── analyzer.py         # Orquestador del análisis heurístico
+    ├── correo.py           # Modelo de datos del correo analizado
+    ├── heuristicas.py      # Fachada pública del análisis heurístico
+    ├── neural.py           # Clasificador neuronal y gestión del modelo
+    ├── scorer.py           # Cálculo de puntuación de riesgo ponderada
+    └── signals.py          # Funciones de detección de señales individuales
 tests/                      # Pruebas unitarias
 datos_entrenamiento/        # Datasets CSV para entrenar el modelo neuronal
 modelo_neural_entrenado.joblib  # Modelo neuronal persistido
 requirements.txt            # Dependencias
+```
 
 ## Mejoras futuras
 - Integración con listas negras y servicios de reputación online (VirusTotal, SURBL).
