@@ -90,6 +90,8 @@ def _extraer_campos(msg) -> Dict[str, object]:
     attachments = []
 
     if msg.is_multipart():
+        # Los mensajes reales suelen ser multipart: texto, HTML y adjuntos
+        # viajan como partes separadas dentro del mismo .eml.
         for part in msg.walk():
             tipo = part.get_content_type()
             disposicion = part.get_content_disposition()
@@ -105,6 +107,7 @@ def _extraer_campos(msg) -> Dict[str, object]:
             elif tipo == "text/html" and not cuerpo_html:
                 cuerpo_html = str(contenido).strip()
     else:
+        # Los correos no multipart solo tienen una representación principal.
         tipo = msg.get_content_type()
         contenido = msg.get_content()
         if tipo == "text/plain":
@@ -113,12 +116,18 @@ def _extraer_campos(msg) -> Dict[str, object]:
             cuerpo_html = str(contenido).strip()
 
     if cuerpo_html and not cuerpo_texto:
+        # Si solo existe versión HTML, se genera texto visible para que el
+        # clasificador y las reglas de lenguaje puedan analizarlo.
         cuerpo_texto = _limpiar_html(cuerpo_html)
     if cuerpo_html:
         anclas = _extraer_anclas(cuerpo_html)
 
     headers = {k: v for k, v in msg.items()}
+    # full_text conserva cabeceras relevantes junto al cuerpo para que las
+    # heurísticas puedan trabajar con una representación plana del correo.
     full_text = _construir_texto_para_analisis(headers, cuerpo_texto)
+    # Se extraen URLs del texto plano final; las URLs de anclas HTML se añaden
+    # después al normalizar el correo en CorreoAnalizado.
     urls = re.findall(r"https?://[\w\-\.\:\/\?\#\&\=\%\+\;]+", full_text, flags=re.IGNORECASE)
 
     return {
