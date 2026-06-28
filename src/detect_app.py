@@ -28,18 +28,23 @@ MODEL_PATH_EN = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "m
 
 def _color_riesgo(score: float) -> str:
     """Convierte una puntuación 0-100 en un color verde-amarillo-rojo."""
+    # Se limita la entrada para que un valor accidentalmente fuera de rango no
+    # genere colores inválidos ni barras con porcentajes incoherentes.
     score = max(0.0, min(100.0, score))
     if score <= 30:
+        # Tramo bajo: transición de verde a amarillo.
         ratio = score / 30.0
         r = int(76 + (255 - 76) * ratio)
         g = int(175 + (235 - 175) * ratio)
         b = int(80 - (80 * ratio))
     elif score <= 70:
+        # Tramo medio: transición de amarillo a naranja.
         ratio = (score - 30.0) / 40.0
         r = int(255)
         g = int(235 - (128 * ratio))
         b = int(0 + (0 * ratio))
     else:
+        # Tramo alto: transición de naranja a rojo intenso.
         ratio = (score - 70.0) / 30.0
         r = int(255)
         g = int(107 - (40 * ratio))
@@ -55,6 +60,8 @@ def mostrar_resultado_basico(resultado, titulo: str = "Resultado del análisis")
     risk_score = int(round(resultado["risk_score"]))
     color = _color_riesgo(risk_score)
 
+    # La métrica resume el resultado y la barra ofrece una lectura visual rápida
+    # para comparar análisis heurístico, neuronal y combinado.
     col1, col2 = st.columns([1, 3])
     col1.metric("Puntuación de riesgo", f"{risk_score}%")
     col2.markdown(
@@ -83,6 +90,8 @@ def mostrar_resultado_heuristico(resultado):
     """Muestra la puntuación heurística y el detalle de reglas activadas."""
     mostrar_resultado_basico(resultado, "Análisis heurístico")
     st.markdown("### Señales detectadas")
+    # Se transforma el diccionario de señales en una tabla de lectura sencilla
+    # sin perder el nombre técnico de cada regla.
     detalle_senales = [
         {"Regla": nombre.replace("_", " ").capitalize(), "Activo": "Sí" if valor else "No"}
         for nombre, valor in resultado["signals"].items()
@@ -144,6 +153,8 @@ def _detectar_idioma_texto(texto: str) -> str:
     if not LANGDETECT_DISPONIBLE or not texto.strip():
         return "es"
     try:
+        # La app solo mantiene modelos separados para español e inglés; otros
+        # idiomas se agrupan con español como opción por defecto.
         lang = detectar_idioma(texto)
         return "en" if lang == "en" else "es"
     except Exception:
@@ -169,6 +180,7 @@ def cargar_detector(idioma: str) -> NeuralPhishingDetector:
 
 
 def main():
+    """Construye la pantalla de detección y ejecuta el análisis seleccionado."""
     st.title("Detección - Sistema de phishing")
     st.markdown(
         "Esta pantalla está dedicada exclusivamente a analizar correos. "
@@ -192,6 +204,8 @@ def main():
     datos_email = None
 
     if modo == "Pegar texto del correo":
+        # En modo texto se trabaja con una representación plana: cabeceras y
+        # cuerpo pegados por el usuario en el mismo campo.
         texto_para_analisis = st.text_area("Pega aquí el contenido del correo (cabeceras + cuerpo):")
     else:
         archivo = st.file_uploader("Sube un archivo .eml", type=["eml"])
@@ -211,6 +225,8 @@ def main():
     heur_weight = 60
     neural_weight = 40
     if tipo_analisis == "Combinado":
+        # El peso neuronal se calcula como complemento para evitar que la suma
+        # de ponderaciones pueda superar o quedarse por debajo del 100%.
         heur_weight = st.slider("Peso heurístico (%)", 0, 100, 60)
         neural_weight = 100 - heur_weight
 

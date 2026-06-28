@@ -11,6 +11,8 @@ El sistema integra dos modos de detección complementarios:
 
 Ambos modos están disponibles desde interfaces Streamlit independientes.
 
+La implementación se ha refactorizado siguiendo una separación de responsabilidades: las fachadas públicas (`heuristicas.py`, `signals.py` y `neural.py`) mantienen una API sencilla, mientras que la lógica interna se reparte en módulos especializados para parsing, reglas de cabecera, análisis HTML, URLs, datasets, modelo neuronal y explicación de resultados.
+
 ## Funcionalidades implementadas
 
 ### Análisis heurístico (28 señales)
@@ -39,8 +41,16 @@ Ambos modos están disponibles desde interfaces Streamlit independientes.
 - Pipeline TF-IDF + MLP (scikit-learn) con bigramas y hasta 3000 características.
 - Entrenamiento desde uno o varios archivos CSV con detección automática de columnas.
 - Soporte para datasets en inglés y español (stopwords propias).
-- Modelo persistente en disco mediante `joblib` (`modelo_neural_entrenado.joblib`).
+- Modelos persistentes en disco mediante `joblib` (`modelo_neural_es.joblib` y `modelo_neural_en.joblib`).
 - Interfaz de entrenamiento protegida opcionalmente por contraseña (`TRAINING_PASSWORD`).
+
+### Refactorización y diseño
+- `PhishingAnalyzer` actúa como coordinador del análisis, sin contener directamente todas las reglas.
+- `SignalBuilder` construye el diccionario de señales heurísticas.
+- `ExplanationBuilder` genera explicaciones legibles para la interfaz.
+- Las reglas se dividen por tipo de responsabilidad: cabeceras, contenido, HTML y URLs.
+- La parte neuronal separa carga de datasets, definición del modelo, persistencia y detección.
+- Las fachadas conservan compatibilidad con imports anteriores, facilitando cambios internos sin afectar a la interfaz.
 
 ## Uso
 1. Crear un entorno virtual Python.
@@ -74,14 +84,24 @@ src/
 └── sistema_phishing/
     ├── analizador_email.py # Parser de archivos .eml
     ├── analyzer.py         # Orquestador del análisis heurístico
+    ├── configuracion.py    # Constantes, listas de términos y stopwords
+    ├── content_signals.py  # Señales basadas en texto y adjuntos
     ├── correo.py           # Modelo de datos del correo analizado
+    ├── dataset.py          # Carga y normalización de CSV de entrenamiento
+    ├── explanations.py     # Generación de explicaciones para la UI
+    ├── header_signals.py   # Señales de cabeceras y autenticación
     ├── heuristicas.py      # Fachada pública del análisis heurístico
-    ├── neural.py           # Clasificador neuronal y gestión del modelo
+    ├── html_signals.py     # Señales específicas de HTML y anclas
+    ├── modelo_neural.py    # Clasificador neuronal, almacenamiento y servicios
+    ├── neural.py           # Fachada pública del subsistema neuronal
     ├── scorer.py           # Cálculo de puntuación de riesgo ponderada
-    └── signals.py          # Funciones de detección de señales individuales
+    ├── signal_builder.py   # Construcción del conjunto de señales
+    ├── signals.py          # Fachada de compatibilidad para reglas
+    └── url_utils.py        # Utilidades y reglas de URLs/dominios
 tests/                      # Pruebas unitarias
 datos_entrenamiento/        # Datasets CSV para entrenar el modelo neuronal
-modelo_neural_entrenado.joblib  # Modelo neuronal persistido
+modelo_neural_es.joblib     # Modelo neuronal persistido en español
+modelo_neural_en.joblib     # Modelo neuronal persistido en inglés
 requirements.txt            # Dependencias
 ```
 
@@ -89,4 +109,5 @@ requirements.txt            # Dependencias
 - Integración con listas negras y servicios de reputación online (VirusTotal, SURBL).
 - Conexión IMAP/POP3 para analizar correos directamente desde una cuenta.
 - Validación de certificados y comprobación de reputación de dominios en tiempo real.
-- Combinación de la puntuación heurística y la probabilidad neuronal en un score único.
+- Añadir métricas de evaluación más completas para el modelo neuronal (precision, recall y F1).
+- Incorporar configuración externa para pesos heurísticos y listas de dominios.

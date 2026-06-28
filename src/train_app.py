@@ -23,6 +23,7 @@ def cargar_modelo_existente(path: str) -> None:
 
 
 def main():
+    """Construye la pantalla de entrenamiento y evaluación de modelos."""
     st.title("Entrenamiento - Sistema de detección de phishing")
     st.markdown(
         "Esta pantalla está dedicada exclusivamente al entrenamiento del modelo neuronal. "
@@ -44,10 +45,13 @@ def main():
     lenguaje = st.selectbox("Lenguaje del modelo", ["Español", "Inglés"], index=0)
 
     if text_format == "Texto completo":
+        # Formato habitual en datasets ya preprocesados: una sola columna con
+        # asunto, cabeceras y cuerpo unidos.
         text_column = st.text_input("Columna de texto completo", value="text")
         subject_column = ""
         body_column = ""
     else:
+        # Formato más estructurado: se combinan asunto y cuerpo antes de entrenar.
         text_column = ""
         subject_column = st.text_input("Columna de asunto", value="subject")
         body_column = st.text_input("Columna de cuerpo", value="body")
@@ -113,6 +117,8 @@ def main():
     test_label_column = st.text_input("Columna de etiqueta (prueba)", value="label", key="test_label")
 
     if test_text_format == "Texto completo":
+        # Los campos de prueba pueden llamarse distinto a los de entrenamiento,
+        # por eso se piden de nuevo en esta sección.
         test_text_column = st.text_input("Columna de texto completo (prueba)", value="text", key="test_text")
         test_subject_column = ""
         test_body_column = ""
@@ -185,6 +191,8 @@ def main():
         storage = ModelStorage(path)
         with st.expander(f"Modelo en {nombre_idioma} — {'✅ Entrenado' if storage.exists() else '❌ No entrenado'}"):
             if storage.exists():
+                # La carga permite mostrar metadatos guardados junto al modelo,
+                # pero si el fichero está corrupto no se bloquea la interfaz.
                 st.write(f"Ruta: `{path}`")
                 classifier = storage.load()
                 if classifier is not None:

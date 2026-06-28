@@ -71,6 +71,8 @@ def _extraer_anclas(html: str) -> List[Dict[str, str]]:
 
 def parsear_eml_bytes(data: bytes) -> Dict[str, object]:
     """Parsea un mensaje EML pasado como bytes y devuelve los campos extraídos."""
+    # `policy.default` decodifica cabeceras y cuerpos de forma más cómoda que la
+    # política legacy, especialmente con asuntos o remitentes internacionalizados.
     msg = BytesParser(policy=policy.default).parsebytes(data)
     return _extraer_campos(msg)
 
@@ -84,6 +86,8 @@ def parsear_eml_archivo(ruta: str) -> Dict[str, object]:
 
 def _extraer_campos(msg) -> Dict[str, object]:
     """Extrae datos relevantes del objeto de correo parseado."""
+    # Se separan cuerpo de texto, HTML, anclas y adjuntos porque cada familia de
+    # reglas necesita mirar una representación distinta del mismo correo.
     cuerpo_texto = ""
     cuerpo_html = ""
     anclas = []

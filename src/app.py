@@ -3,7 +3,8 @@
 import streamlit as st
 
 # Punto de entrada mínimo: mantiene separadas las dos herramientas reales
-# para evitar mezclar en una misma pantalla entrenamiento y detección.
+# para evitar mezclar en una misma pantalla entrenamiento y detección. Esta
+# página funciona como índice cuando se ejecuta `streamlit run src/app.py`.
 st.title("TFG - Sistema de detección de phishing")
 st.markdown(
     "Esta aplicación ya no incluye entrenamiento y detección juntos. "

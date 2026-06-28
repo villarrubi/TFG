@@ -1,5 +1,8 @@
 """Módulo del sistema de detección de phishing para correos electrónicos."""
 
+# Este archivo define la superficie pública del paquete. Los módulos internos
+# pueden cambiar por refactorizaciones, pero estos imports se mantienen estables
+# para las aplicaciones Streamlit y para posibles usos externos.
 __all__ = [
     "analizar_correo",
     "extraer_urls",
@@ -9,10 +12,13 @@ __all__ = [
     "NeuralModelTrainer",
     "NeuralPhishingDetector",
     "ModelStorage",
+    "SignalBuilder",
+    "ExplanationBuilder",
     "generar_dataset_sintetico",
 ]
 
 from .analizador_email import parsear_eml_archivo, parsear_eml_bytes
+from .explanations import ExplanationBuilder
 from .heuristicas import analizar_correo, extraer_urls
 from .neural import (
     ModelStorage,
@@ -21,3 +27,4 @@ from .neural import (
     NeuralPhishingDetector,
     generar_dataset_sintetico,
 )
+from .signal_builder import SignalBuilder

@@ -4,6 +4,8 @@ from typing import Dict
 
 
 class RiskScorer:
+    """Convierte señales booleanas en una puntuación numérica de riesgo."""
+
     # Cada señal aporta una fracción del riesgo total. Los pesos negativos
     # representan indicadores que reducen ligeramente la sospecha.
     weights = {
@@ -40,5 +42,7 @@ class RiskScorer:
     @classmethod
     def score(cls, signals: Dict[str, bool]) -> float:
         """Suma los pesos activos y limita el resultado al rango 0-100."""
+        # Las señales desconocidas pesan 0 para poder añadir reglas nuevas sin
+        # romper llamadas antiguas que todavía no tengan peso asignado.
         total = sum(cls.weights.get(name, 0.0) * (1.0 if value else 0.0) for name, value in signals.items())
         return min(max(total * 100, 0), 100)

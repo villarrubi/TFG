@@ -11,7 +11,10 @@ from .signals import extraer_urls
 class CorreoAnalizado:
     """Representación interna común para texto pegado y archivos .eml."""
 
+    # `full_text` conserva la representación plana que consumen muchas reglas
+    # basadas en cabeceras y expresiones regulares.
     full_text: str
+    # Las URLs incluyen enlaces encontrados en texto y, si procede, hrefs HTML.
     urls: List[str] = field(default_factory=list)
     anchors: List[Dict[str, str]] = field(default_factory=list)
     html_body: str = ""
