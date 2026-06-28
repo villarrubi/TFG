@@ -11,6 +11,7 @@ venv/
 # Editor
 .vscode/
 .idea/
+~$*.docx
 
 # OS
 .DS_Store
