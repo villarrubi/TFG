@@ -49,6 +49,14 @@ La implementación se ha refactorizado siguiendo una separación de responsabili
 - Opción centralizada para conectar o cambiar de cuenta desde la vista **Configuración**.
 - Almacenamiento local del token OAuth en `token.json`.
 
+### Extensión para Gmail Web
+- Extensión Manifest V3 cargable en Chrome o Edge desde la carpeta `extension_gmail/`.
+- Inserción automática de un panel de riesgo dentro de un correo abierto en `mail.google.com`.
+- Extracción local del asunto, remitente, cuerpo visible, enlaces y anclas HTML del mensaje abierto.
+- Comunicación con un servidor local Python (`src/gmail_extension_server.py`) para reutilizar el detector del TFG sin mover el modelo al navegador.
+- Soporte para análisis `heuristico`, `neural` o `combinado`, con el mismo umbral configurable que el monitor.
+- Panel desplegable con explicaciones y señales activas cuando el análisis aporta detalles.
+
 ### Monitorización automática
 - Parámetros gestionables desde la vista **Configuración**: intervalo, query de Gmail, límite de correos, umbral, modo de análisis y pesos.
 - Vista **Monitor** dentro de la aplicación principal para comprobar la configuración.
@@ -154,6 +162,47 @@ python src/monitor_gmail.py --once
 
 En Windows puede ejecutarse como tarea programada o servicio. En Linux/VPS puede ejecutarse con `systemd` o dentro de un contenedor con reinicio automático.
 
+### Uso de la extensión en Gmail Web
+La extensión funciona como puente entre Gmail Web y el detector Python local. No necesita permisos de Gmail API porque analiza el correo que ya está abierto en la página.
+
+1. Arrancar el servidor local desde la raíz del proyecto:
+```bash
+python src/gmail_extension_server.py
+```
+2. Para una prueba rápida se puede usar solo el modo heurístico:
+```bash
+python src/gmail_extension_server.py --mode heuristico
+```
+3. Opcionalmente elegir modo y umbral:
+```bash
+python src/gmail_extension_server.py --mode combinado --threshold 45
+```
+4. Abrir Chrome o Edge y entrar en `chrome://extensions` o `edge://extensions`.
+5. Activar el **modo desarrollador**.
+6. Pulsar **Cargar descomprimida** y seleccionar la carpeta `extension_gmail/`.
+7. Comprobar que el interruptor de la extensión está activado.
+8. Abrir `https://mail.google.com`, entrar en un correo y esperar el panel de la extensión.
+
+Si se modifica cualquier archivo de `extension_gmail/`, hay que volver a `chrome://extensions` y pulsar el botón de recarga de la extensión. Después se recarga Gmail con `F5`.
+
+El panel aparece arriba a la derecha y puede mostrar varios estados:
+
+- `Detector cargado`: Chrome ha inyectado correctamente la extensión en Gmail.
+- `Analizando phishing...`: la extensión ha encontrado un correo abierto y está consultando al servidor local.
+- `Seguro: X%`: el correo analizado queda por debajo del umbral configurado.
+- `Phishing: X%`: el correo supera el umbral de riesgo.
+- `Detector local apagado`: la extensión está cargada, pero el servidor `python src/gmail_extension_server.py` no está en ejecución o no responde en `127.0.0.1:8765`.
+
+Si no aparece ningún panel dentro de Gmail:
+
+1. Revisar que la extensión está activada en `chrome://extensions`.
+2. Pulsar el botón de recarga de la extensión.
+3. Recargar Gmail con `F5`.
+4. Entrar en **Detalles** de la extensión y comprobar que tiene permiso para ejecutarse en `https://mail.google.com/*`.
+5. Abrir un correo concreto, no solo la bandeja de entrada.
+
+Limitación importante: desde Gmail Web solo se pueden leer los datos visibles en la página. Para señales completas de autenticación y cabeceras (`SPF`, `DKIM`, `DMARC`, `Received`, etc.) sigue siendo más completo el flujo con Gmail API o archivos `.eml`.
+
 ## Pruebas unitarias
 Para ejecutar las pruebas con `unittest`:
 ```bash
@@ -169,6 +218,7 @@ src/
 ├── monitor_app.py          # Interfaz de configuración del monitor
 ├── monitor_gmail.py        # Proceso 24/7 de monitorización
 ├── train_app.py            # Interfaz de entrenamiento
+├── gmail_extension_server.py # Servidor local para la extensión de Gmail Web
 └── sistema_phishing/
     ├── analizador_email.py # Parser de archivos .eml
     ├── analyzer.py         # Orquestador del análisis heurístico
@@ -191,6 +241,7 @@ src/
     ├── telegram_notifier.py # Envío de alertas por Telegram
     └── url_utils.py        # Utilidades y reglas de URLs/dominios
 tests/                      # Pruebas unitarias
+extension_gmail/            # Extensión Manifest V3 para Gmail Web
 datos_entrenamiento/        # Datasets CSV para entrenar el modelo neuronal
 .env.example                # Plantilla de variables del monitor/Telegram
 credentials.example.json    # Plantilla de credenciales OAuth para Gmail
