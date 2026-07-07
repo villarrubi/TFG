@@ -57,6 +57,7 @@ La implementación se ha refactorizado siguiendo una separación de responsabili
 - Detección de correos nuevos mediante un estado local en `estado_monitor.json`.
 - Primera ejecución protegida para marcar correos existentes como vistos y evitar alertas masivas.
 - Notificaciones por Telegram cuando un correo supera el umbral configurado.
+- Las alertas de Telegram muestran solo señales sospechosas activadas, no comprobaciones correctas del correo.
 - Configuración del bot y chat destino desde la vista **Configuración**.
 - Soporte para análisis `heuristico`, `neural` o `combinado`.
 - Botón de prueba para verificar el envío de Telegram desde la interfaz.
@@ -143,6 +144,8 @@ Ejecución continua:
 ```bash
 python src/monitor_gmail.py
 ```
+
+La vista **Monitor** no mantiene un bucle 24/7 dentro de Streamlit. La interfaz sirve para configurar y probar; el proceso continuo se arranca con el comando anterior y debe permanecer en ejecución.
 
 Ejecución puntual:
 ```bash

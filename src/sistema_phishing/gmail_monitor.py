@@ -74,6 +74,7 @@ def construir_resultado_combinado(resultado_heur: dict, resultado_neural: dict, 
         "anchors": resultado_heur.get("anchors", []),
         "headers": resultado_heur.get("headers", {}),
         "explanation": resultado_heur.get("explanation", []),
+        "signals": resultado_heur.get("signals", {}),
     }
 
 
