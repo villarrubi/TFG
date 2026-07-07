@@ -7,6 +7,10 @@ venv/
 .env.*
 .venv/
 .pytest_cache/
+credentials.json
+token.json
+config/credentials.json
+config/token.json
 
 # Editor
 .vscode/
