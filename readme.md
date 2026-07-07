@@ -9,7 +9,7 @@ El sistema integra dos modos de detección complementarios:
 - **Análisis heurístico**: evalúa el correo mediante un conjunto de señales basadas en patrones conocidos de phishing (cabeceras, URLs, HTML, lenguaje, autenticación). Cada señal tiene un peso ponderado y se calcula una puntuación de riesgo de 0 a 100. El umbral de clasificación como phishing es ≥ 45 puntos.
 - **Clasificador neuronal**: red neuronal MLP entrenada con datasets reales (Enron, CEAS, Nazario, entre otros), que utiliza TF-IDF sobre el texto del correo para predecir la probabilidad de phishing.
 
-La aplicación principal está desarrollada en Streamlit y funciona como punto de entrada único. Desde la pantalla inicial se puede navegar a detección o entrenamiento sin ejecutar aplicaciones separadas.
+La aplicación principal está desarrollada en Streamlit y funciona como punto de entrada único. Desde la pantalla inicial se puede navegar a configuración, detección, monitorización o entrenamiento sin ejecutar aplicaciones separadas.
 
 La implementación se ha refactorizado siguiendo una separación de responsabilidades: las fachadas públicas (`heuristicas.py`, `signals.py` y `neural.py`) mantienen una API sencilla, mientras que la lógica interna se reparte en módulos especializados para parsing, reglas de cabecera, análisis HTML, URLs, datasets, modelo neuronal y explicación de resultados.
 
@@ -46,8 +46,21 @@ La implementación se ha refactorizado siguiendo una separación de responsabili
 - Resumen vertical por correo, sin tabla horizontal, con puntuación de riesgo y clasificación.
 - Vista de detalle individual para revisar un correo concreto. En modo heurístico se muestran señales, enlaces y cabeceras; en modo neuronal solo se muestra el resultado del modelo; en modo combinado se muestra la puntuación mixta.
 - Visualización de la cuenta de Gmail conectada.
-- Opción para cambiar de cuenta eliminando el token OAuth local y repitiendo el inicio de sesión.
+- Opción centralizada para conectar o cambiar de cuenta desde la vista **Configuración**.
 - Almacenamiento local del token OAuth en `token.json`.
+
+### Monitorización automática
+- Parámetros gestionables desde la vista **Configuración**: intervalo, query de Gmail, límite de correos, umbral, modo de análisis y pesos.
+- Vista **Monitor** dentro de la aplicación principal para comprobar la configuración.
+- Script independiente `src/monitor_gmail.py` pensado para ejecutarse como proceso 24/7.
+- Revisión periódica de Gmail mediante polling configurable.
+- Detección de correos nuevos mediante un estado local en `estado_monitor.json`.
+- Primera ejecución protegida para marcar correos existentes como vistos y evitar alertas masivas.
+- Notificaciones por Telegram cuando un correo supera el umbral configurado.
+- Configuración del bot y chat destino desde la vista **Configuración**.
+- Soporte para análisis `heuristico`, `neural` o `combinado`.
+- Botón de prueba para verificar el envío de Telegram desde la interfaz.
+- Botón de comprobación puntual para revisar Gmail sin arrancar el bucle continuo.
 
 ### Clasificador neuronal
 - Pipeline TF-IDF + MLP (scikit-learn) con bigramas y hasta 3000 características.
@@ -63,6 +76,9 @@ La implementación se ha refactorizado siguiendo una separación de responsabili
 - Las reglas se dividen por tipo de responsabilidad: cabeceras, contenido, HTML y URLs.
 - La parte neuronal separa carga de datasets, definición del modelo, persistencia y detección.
 - `gmail_client.py` encapsula la autenticación y lectura de correos desde Gmail.
+- `gmail_monitor.py` contiene la lógica de monitorización y control de estado.
+- `telegram_notifier.py` encapsula el envío de alertas mediante Telegram Bot API.
+- `env_loader.py` permite cargar y actualizar configuración local desde `.env.local`.
 - La navegación se centraliza en `app.py` mediante parámetros de URL de Streamlit.
 - Se ocultan los enlaces automáticos de los títulos para mantener una interfaz más limpia en la demo.
 - Las fachadas conservan compatibilidad con imports anteriores, facilitando cambios internos sin afectar a la interfaz.
@@ -79,7 +95,9 @@ La implementación se ha refactorizado siguiendo una separación de responsabili
 ```
 4. Navegar desde la pantalla inicial:
 - **Inicio**: pantalla de presentación y acceso a las herramientas.
+- **Configuración**: cuenta Gmail, Telegram y parámetros del monitor.
 - **Detección**: análisis de correos pegados, `.eml` o Gmail.
+- **Monitor**: configuración y pruebas del monitor automático con Telegram.
 - **Entrenamiento**: entrenamiento y evaluación de modelos neuronales.
 
 También se conservan los puntos de entrada específicos:
@@ -100,7 +118,38 @@ Para usar el modo **Analizar correos de Gmail**:
 7. Guardarlo en la raíz del proyecto como `credentials.json`.
 8. Ejecutar la app y pulsar **Conectar Gmail y analizar**.
 
-El repositorio incluye `credentials.example.json` como plantilla. Los archivos reales `credentials.json` y `token.json` están excluidos en `.gitignore` porque contienen credenciales y tokens locales. Para cambiar de cuenta desde la aplicación, se elimina `token.json` y se inicia de nuevo el flujo OAuth.
+El repositorio incluye `credentials.example.json` como plantilla. Los archivos reales `credentials.json` y `token.json` están excluidos en `.gitignore` porque contienen credenciales y tokens locales. Para cambiar de cuenta desde la vista **Configuración**, se elimina `token.json` y se inicia de nuevo el flujo OAuth.
+
+### Configuración del monitor y Telegram
+El monitor usa las mismas credenciales de Gmail que la interfaz. Para Telegram:
+
+1. Crear un bot con `@BotFather`.
+2. Guardar el token en `TELEGRAM_BOT_TOKEN`.
+3. Obtener el identificador del chat y guardarlo en `TELEGRAM_CHAT_ID`.
+4. Usar `.env.example` como referencia de configuración.
+
+Las variables pueden editarse desde la vista **Configuración** o manualmente en `.env.local`. Variables principales:
+```bash
+TELEGRAM_BOT_TOKEN=123456:ABCDEF_TOKEN_DEL_BOT
+TELEGRAM_CHAT_ID=123456789
+MONITOR_INTERVAL_SECONDS=120
+PHISHING_THRESHOLD=45
+MONITOR_ANALYSIS_MODE=combinado
+GMAIL_MONITOR_QUERY=in:inbox newer_than:1d
+GMAIL_MONITOR_LIMIT=20
+```
+
+Ejecución continua:
+```bash
+python src/monitor_gmail.py
+```
+
+Ejecución puntual:
+```bash
+python src/monitor_gmail.py --once
+```
+
+En Windows puede ejecutarse como tarea programada o servicio. En Linux/VPS puede ejecutarse con `systemd` o dentro de un contenedor con reinicio automático.
 
 ## Pruebas unitarias
 Para ejecutar las pruebas con `unittest`:
@@ -112,7 +161,10 @@ PYTHONPATH=src python -m unittest discover -s tests -p "test_*.py"
 ```
 src/
 ├── app.py                  # Punto de entrada principal con navegación
+├── config_app.py           # Configuración central de Gmail, Telegram y monitor
 ├── detect_app.py           # Interfaz de detección
+├── monitor_app.py          # Interfaz de configuración del monitor
+├── monitor_gmail.py        # Proceso 24/7 de monitorización
 ├── train_app.py            # Interfaz de entrenamiento
 └── sistema_phishing/
     ├── analizador_email.py # Parser de archivos .eml
@@ -121,8 +173,10 @@ src/
     ├── content_signals.py  # Señales basadas en texto y adjuntos
     ├── correo.py           # Modelo de datos del correo analizado
     ├── dataset.py          # Carga y normalización de CSV de entrenamiento
+    ├── env_loader.py       # Carga y escritura de configuración local
     ├── explanations.py     # Generación de explicaciones para la UI
     ├── gmail_client.py     # Cliente OAuth/Gmail API para leer correos
+    ├── gmail_monitor.py    # Monitor de correos nuevos y gestión de estado
     ├── header_signals.py   # Señales de cabeceras y autenticación
     ├── heuristicas.py      # Fachada pública del análisis heurístico
     ├── html_signals.py     # Señales específicas de HTML y anclas
@@ -131,9 +185,11 @@ src/
     ├── scorer.py           # Cálculo de puntuación de riesgo ponderada
     ├── signal_builder.py   # Construcción del conjunto de señales
     ├── signals.py          # Fachada de compatibilidad para reglas
+    ├── telegram_notifier.py # Envío de alertas por Telegram
     └── url_utils.py        # Utilidades y reglas de URLs/dominios
 tests/                      # Pruebas unitarias
 datos_entrenamiento/        # Datasets CSV para entrenar el modelo neuronal
+.env.example                # Plantilla de variables del monitor/Telegram
 credentials.example.json    # Plantilla de credenciales OAuth para Gmail
 modelo_neural_es.joblib     # Modelo neuronal persistido en español
 modelo_neural_en.joblib     # Modelo neuronal persistido en inglés
@@ -142,7 +198,7 @@ requirements.txt            # Dependencias
 
 ## Mejoras futuras
 - Integración con listas negras y servicios de reputación online (VirusTotal, SURBL).
-- Automatización de nuevos correos mediante Gmail Push Notifications y Google Pub/Sub.
+- Sustituir el polling del monitor por Gmail Push Notifications y Google Pub/Sub.
 - Etiquetado opcional de correos sospechosos en Gmail usando permisos adicionales.
 - Validación de certificados y comprobación de reputación de dominios en tiempo real.
 - Añadir métricas de evaluación más completas para el modelo neuronal (precision, recall y F1).

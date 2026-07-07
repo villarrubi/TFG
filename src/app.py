@@ -2,19 +2,23 @@
 
 import streamlit as st
 
+import config_app
 import detect_app
+import monitor_app
 import train_app
 
 
 VISTA_INICIO = "inicio"
+VISTA_CONFIGURACION = "configuracion"
 VISTA_DETECCION = "deteccion"
+VISTA_MONITOR = "monitor"
 VISTA_ENTRENAMIENTO = "entrenamiento"
 
 
 def _vista_actual() -> str:
     """Lee la vista seleccionada desde la URL."""
     vista = st.query_params.get("vista", VISTA_INICIO)
-    if vista not in {VISTA_INICIO, VISTA_DETECCION, VISTA_ENTRENAMIENTO}:
+    if vista not in {VISTA_INICIO, VISTA_CONFIGURACION, VISTA_DETECCION, VISTA_MONITOR, VISTA_ENTRENAMIENTO}:
         return VISTA_INICIO
     return vista
 
@@ -27,11 +31,15 @@ def _cambiar_vista(vista: str) -> None:
 
 def mostrar_navegacion(vista: str) -> None:
     """Muestra la navegación común entre inicio, detección y entrenamiento."""
-    col_inicio, col_deteccion, col_entrenamiento = st.columns(3)
+    col_inicio, col_config, col_deteccion, col_monitor, col_entrenamiento = st.columns(5)
     if col_inicio.button("Inicio", use_container_width=True, disabled=vista == VISTA_INICIO):
         _cambiar_vista(VISTA_INICIO)
+    if col_config.button("Configuración", use_container_width=True, disabled=vista == VISTA_CONFIGURACION):
+        _cambiar_vista(VISTA_CONFIGURACION)
     if col_deteccion.button("Detección", use_container_width=True, disabled=vista == VISTA_DETECCION):
         _cambiar_vista(VISTA_DETECCION)
+    if col_monitor.button("Monitor", use_container_width=True, disabled=vista == VISTA_MONITOR):
+        _cambiar_vista(VISTA_MONITOR)
     if col_entrenamiento.button(
         "Entrenamiento",
         use_container_width=True,
@@ -63,21 +71,30 @@ def mostrar_inicio() -> None:
         "modelo neuronal y conexión opcional con Gmail."
     )
 
-    col_deteccion, col_entrenamiento = st.columns(2)
+    col_config, col_deteccion, col_monitor, col_entrenamiento = st.columns(4)
+    with col_config:
+        st.subheader("Configuración")
+        st.write("Gestiona Gmail, Telegram y los parámetros del monitor.")
+        if st.button("Ir a configuración", use_container_width=True):
+            _cambiar_vista(VISTA_CONFIGURACION)
+
     with col_deteccion:
         st.subheader("Detección")
         st.write("Analiza correos pegados, archivos `.eml` o mensajes importados desde Gmail.")
         if st.button("Ir a detección", use_container_width=True):
             _cambiar_vista(VISTA_DETECCION)
 
+    with col_monitor:
+        st.subheader("Monitor")
+        st.write("Comprueba Gmail periódicamente y envía alertas por Telegram.")
+        if st.button("Ir a monitor", use_container_width=True):
+            _cambiar_vista(VISTA_MONITOR)
+
     with col_entrenamiento:
         st.subheader("Entrenamiento")
         st.write("Entrena y evalúa los modelos neuronales en español e inglés.")
         if st.button("Ir a entrenamiento", use_container_width=True):
             _cambiar_vista(VISTA_ENTRENAMIENTO)
-
-    st.markdown("---")
-    st.info("Ejecuta esta pantalla con `streamlit run src/app.py` para usar la navegación completa.")
 
 
 def main() -> None:
@@ -86,8 +103,12 @@ def main() -> None:
     vista = _vista_actual()
     mostrar_navegacion(vista)
 
-    if vista == VISTA_DETECCION:
+    if vista == VISTA_CONFIGURACION:
+        config_app.main()
+    elif vista == VISTA_DETECCION:
         detect_app.main()
+    elif vista == VISTA_MONITOR:
+        monitor_app.main()
     elif vista == VISTA_ENTRENAMIENTO:
         train_app.main()
     else:

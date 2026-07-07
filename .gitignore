@@ -5,10 +5,12 @@ __pycache__/
 venv/
 .env
 .env.*
+!.env.example
 .venv/
 .pytest_cache/
 credentials.json
 token.json
+estado_monitor.json
 config/credentials.json
 config/token.json
 

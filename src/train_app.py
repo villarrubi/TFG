@@ -13,13 +13,45 @@ MODEL_PATH_EN = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "m
 MODEL_PATHS = {"Español": MODEL_PATH_ES, "Inglés": MODEL_PATH_EN}
 # La contraseña puede venir del entorno; el valor por defecto facilita las
 # pruebas locales, pero en despliegue conviene definir TRAINING_PASSWORD.
-TRAINING_PASSWORD = os.getenv("TRAINING_PASSWORD", "123456")
+TRAINING_PASSWORD = os.getenv("TRAINING_PASSWORD", "")
 
 
 def cargar_modelo_existente(path: str) -> None:
     """Carga un modelo si existe; se usa para consultar modelos guardados."""
     storage = ModelStorage(path)
     return storage.load()
+
+
+def resumir_dataset_subido(archivo, label_column: str, text_column: str, subject_column: str, body_column: str) -> dict:
+    """Calcula métricas rápidas de un CSV subido antes de entrenar."""
+    texto_csv = archivo.getvalue().decode("utf-8", errors="replace")
+    sio = StringIO(texto_csv)
+    sio.name = archivo.name
+    try:
+        _, etiquetas = cargar_dataset_csv(
+            sio,
+            label_column=label_column,
+            text_column=text_column,
+            subject_column=subject_column,
+            body_column=body_column,
+        )
+        phishing = sum(etiquetas)
+        legitimos = len(etiquetas) - phishing
+        return {
+            "Archivo": archivo.name,
+            "Filas válidas": len(etiquetas),
+            "Phishing": phishing,
+            "Legítimos": legitimos,
+            "Estado": "OK",
+        }
+    except Exception as exc:
+        return {
+            "Archivo": archivo.name,
+            "Filas válidas": 0,
+            "Phishing": 0,
+            "Legítimos": 0,
+            "Estado": str(exc),
+        }
 
 
 def main():
@@ -60,6 +92,25 @@ def main():
         st.markdown("**Archivos cargados:**")
         for archivo in uploaded_files:
             st.write(f"- {archivo.name}")
+        resumenes = [
+            resumir_dataset_subido(
+                archivo,
+                label_column=label_column,
+                text_column=text_column,
+                subject_column=subject_column,
+                body_column=body_column,
+            )
+            for archivo in uploaded_files
+        ]
+        total_validas = sum(item["Filas válidas"] for item in resumenes)
+        total_phishing = sum(item["Phishing"] for item in resumenes)
+        total_legitimos = sum(item["Legítimos"] for item in resumenes)
+        st.markdown("**Resumen previo de datos:**")
+        col_total, col_phishing, col_legitimos = st.columns(3)
+        col_total.metric("Filas válidas", total_validas)
+        col_phishing.metric("Phishing", total_phishing)
+        col_legitimos.metric("Legítimos", total_legitimos)
+        st.dataframe(resumenes, use_container_width=True)
 
     if st.button("Entrenar modelo desde CSV"):
         if not uploaded_files:

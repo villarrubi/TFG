@@ -1,0 +1,107 @@
+"""Proceso 24/7 para monitorizar Gmail y alertar por Telegram."""
+
+import argparse
+import os
+import time
+
+from sistema_phishing.gmail_client import construir_servicio_gmail, obtener_ultimos_correos
+from sistema_phishing.env_loader import cargar_env_local
+from sistema_phishing.gmail_monitor import MonitorConfig, analizar_correos_nuevos
+from sistema_phishing.telegram_notifier import TelegramNotifier
+
+
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+cargar_env_local(ROOT_DIR)
+DEFAULT_CREDENTIALS_PATH = os.path.join(ROOT_DIR, "credentials.json")
+DEFAULT_TOKEN_PATH = os.path.join(ROOT_DIR, "token.json")
+DEFAULT_STATE_PATH = os.path.join(ROOT_DIR, "estado_monitor.json")
+DEFAULT_MODEL_PATH_ES = os.path.join(ROOT_DIR, "modelo_neural_es.joblib")
+DEFAULT_MODEL_PATH_EN = os.path.join(ROOT_DIR, "modelo_neural_en.joblib")
+
+
+def _env_int(name: str, default: int) -> int:
+    """Lee un entero desde variables de entorno."""
+    try:
+        return int(os.getenv(name, default))
+    except ValueError:
+        return default
+
+
+def _env_float(name: str, default: float) -> float:
+    """Lee un decimal desde variables de entorno."""
+    try:
+        return float(os.getenv(name, default))
+    except ValueError:
+        return default
+
+
+def construir_config() -> MonitorConfig:
+    """Construye la configuración del monitor desde variables de entorno."""
+    return MonitorConfig(
+        state_path=os.getenv("MONITOR_STATE_PATH", DEFAULT_STATE_PATH),
+        threshold=_env_float("PHISHING_THRESHOLD", 45.0),
+        mode=os.getenv("MONITOR_ANALYSIS_MODE", "combinado").lower(),
+        heur_weight=_env_int("MONITOR_HEUR_WEIGHT", 60),
+        neural_weight=_env_int("MONITOR_NEURAL_WEIGHT", 40),
+        model_path_es=DEFAULT_MODEL_PATH_ES,
+        model_path_en=DEFAULT_MODEL_PATH_EN,
+        mark_existing_as_seen=os.getenv("MONITOR_MARK_EXISTING_AS_SEEN", "1") != "0",
+    )
+
+
+def construir_notifier() -> TelegramNotifier | None:
+    """Crea el notificador si Telegram está configurado."""
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
+    if not bot_token or not chat_id:
+        return None
+    return TelegramNotifier(bot_token=bot_token, chat_id=chat_id)
+
+
+def ejecutar_ciclo() -> None:
+    """Ejecuta una comprobación completa de Gmail."""
+    credentials_path = os.getenv("GMAIL_CREDENTIALS_PATH", DEFAULT_CREDENTIALS_PATH)
+    token_path = os.getenv("GMAIL_TOKEN_PATH", DEFAULT_TOKEN_PATH)
+    query = os.getenv("GMAIL_MONITOR_QUERY", "in:inbox newer_than:1d")
+    limit = _env_int("GMAIL_MONITOR_LIMIT", 20)
+
+    servicio = construir_servicio_gmail(credentials_path, token_path)
+    correos = obtener_ultimos_correos(servicio, limite=limit, query=query)
+    resultados = analizar_correos_nuevos(correos, construir_config(), construir_notifier())
+
+    if not resultados:
+        print("Sin correos nuevos para analizar.")
+        return
+
+    for resultado in resultados:
+        estado = "PHISHING" if resultado.is_phishing else "OK"
+        aviso = "notificado" if resultado.notified else "sin notificar"
+        print(f"[{estado}] {resultado.risk_score:.1f}% - {resultado.subject} ({aviso})")
+
+
+def main() -> None:
+    """Ejecuta el monitor en bucle o una sola vez."""
+    parser = argparse.ArgumentParser(description="Monitor de Gmail para detección automática de phishing.")
+    parser.add_argument("--once", action="store_true", help="Ejecuta una sola comprobación y termina.")
+    args = parser.parse_args()
+
+    interval = _env_int("MONITOR_INTERVAL_SECONDS", 120)
+    print("Monitor de Gmail iniciado.")
+    print(f"Intervalo: {interval} segundos.")
+
+    while True:
+        try:
+            ejecutar_ciclo()
+        except KeyboardInterrupt:
+            print("Monitor detenido por el usuario.")
+            break
+        except Exception as exc:
+            print(f"Error en el ciclo de monitorización: {exc}")
+
+        if args.once:
+            break
+        time.sleep(interval)
+
+
+if __name__ == "__main__":
+    main()
