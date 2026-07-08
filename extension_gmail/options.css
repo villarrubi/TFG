@@ -1,0 +1,166 @@
+body {
+  margin: 0;
+  background: #f1f5f9;
+  color: #172033;
+  font-family: Arial, sans-serif;
+}
+
+.options-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 28px;
+  box-sizing: border-box;
+}
+
+.options-card {
+  width: min(520px, 100%);
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16);
+  box-sizing: border-box;
+}
+
+.card-bar {
+  height: 8px;
+  background: #2563eb;
+}
+
+.card-content {
+  padding: 28px;
+}
+
+.kicker {
+  margin: 0 0 6px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0 0 24px;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.status-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 14px;
+  margin-bottom: 22px;
+}
+
+.label {
+  margin-bottom: 6px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.status-pill.online {
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.status-pill.offline {
+  border: 1px solid #fed7aa;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+input {
+  width: 120px;
+  min-height: 40px;
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
+  padding: 0 10px;
+  color: #0f172a;
+  font-size: 16px;
+}
+
+.hint {
+  margin: 14px 0 22px;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.command-box {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 14px;
+  margin: 0 0 22px;
+}
+
+code {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0 18px;
+}
+
+.secondary {
+  border: 1px solid #94a3b8;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+.secondary:hover {
+  background: #eef2f7;
+}
+
+.save-status {
+  min-height: 20px;
+  margin: 14px 0 0;
+  color: #067647;
+  font-size: 14px;
+  font-weight: 700;
+}

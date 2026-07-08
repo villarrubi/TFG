@@ -5,15 +5,16 @@ import os
 from dataclasses import dataclass
 from typing import Iterable, List, Set
 
-from .analizador_email import construir_texto_para_analisis, parsear_eml_bytes
-from .heuristicas import analizar_correo
-from .modelo_neural import ModelStorage, NeuralPhishingClassifier, NeuralPhishingDetector
+from .analysis_service import (
+    MODO_COMBINADO,
+    MODO_HEURISTICO,
+    MODO_NEURAL,
+    EmailAnalysisService,
+    cargar_detector_neural as _cargar_detector_neural,
+    construir_resultado_combinado as _construir_resultado_combinado,
+)
+from .analizador_email import parsear_eml_bytes
 from .telegram_notifier import TelegramNotifier, construir_mensaje_alerta
-
-
-MODO_HEURISTICO = "heuristico"
-MODO_NEURAL = "neural"
-MODO_COMBINADO = "combinado"
 
 
 @dataclass
@@ -62,50 +63,17 @@ def guardar_estado(path: str, seen_ids: Iterable[str]) -> None:
 
 def construir_resultado_combinado(resultado_heur: dict, resultado_neural: dict, config: MonitorConfig) -> dict:
     """Combina heurística y red neuronal usando la misma lógica que la UI."""
-    combined_score = (
-        resultado_heur["risk_score"] * config.heur_weight
-        + resultado_neural["risk_score"] * config.neural_weight
-    ) / (config.heur_weight + config.neural_weight)
-    return {
-        "is_phishing": combined_score >= config.threshold,
-        "risk_score": round(combined_score, 1),
-        "description": "Resultado mixto ponderado entre heurística y red neuronal.",
-        "urls": resultado_heur.get("urls", []),
-        "anchors": resultado_heur.get("anchors", []),
-        "headers": resultado_heur.get("headers", {}),
-        "explanation": resultado_heur.get("explanation", []),
-        "signals": resultado_heur.get("signals", {}),
-    }
+    return _construir_resultado_combinado(resultado_heur, resultado_neural, config)
 
 
-def cargar_detector_neural(config: MonitorConfig) -> NeuralPhishingDetector:
+def cargar_detector_neural(config: MonitorConfig):
     """Carga un detector neuronal desde disco o usa el modelo sintético."""
-    classifier = ModelStorage(config.model_path_es).load()
-    if classifier is None:
-        classifier = ModelStorage(config.model_path_en).load()
-    if classifier is None:
-        classifier = NeuralPhishingClassifier()
-        classifier.fit_default()
-    return NeuralPhishingDetector(classifier)
+    return _cargar_detector_neural(config)
 
 
 def analizar_email_monitor(datos_email: dict, config: MonitorConfig) -> dict:
     """Analiza un correo con el modo seleccionado para el monitor."""
-    texto_modelo = construir_texto_para_analisis(datos_email)
-    resultado_heur = analizar_correo(datos_email)
-
-    if config.mode == MODO_HEURISTICO:
-        return resultado_heur
-
-    detector = cargar_detector_neural(config)
-    resultado_neural = detector.analyze(
-        texto_modelo,
-        datos_email.get("from", ""),
-        datos_email.get("subject", ""),
-    )
-    if config.mode == MODO_NEURAL:
-        return resultado_neural
-    return construir_resultado_combinado(resultado_heur, resultado_neural, config)
+    return EmailAnalysisService(config).analyze(datos_email)
 
 
 def analizar_correos_nuevos(correos_gmail, config: MonitorConfig, notifier: TelegramNotifier | None = None) -> List[MonitorResult]:

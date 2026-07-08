@@ -84,13 +84,18 @@ def parsear_eml_archivo(ruta: str) -> Dict[str, object]:
     return _extraer_campos(msg)
 
 
-def _extraer_campos(msg) -> Dict[str, object]:
-    """Extrae datos relevantes del objeto de correo parseado."""
-    # Se separan cuerpo de texto, HTML, anclas y adjuntos porque cada familia de
-    # reglas necesita mirar una representación distinta del mismo correo.
+def _contenido_seguro(part) -> str:
+    """Obtiene el contenido de una parte MIME tolerando partes no decodificables."""
+    try:
+        return str(part.get_content())
+    except Exception:
+        return ""
+
+
+def _extraer_partes_mime(msg) -> Dict[str, object]:
+    """Separa texto, HTML y adjuntos de un mensaje MIME."""
     cuerpo_texto = ""
     cuerpo_html = ""
-    anclas = []
     attachments = []
 
     if msg.is_multipart():
@@ -102,22 +107,41 @@ def _extraer_campos(msg) -> Dict[str, object]:
             if disposicion == "attachment":
                 attachments.append(part.get_filename())
                 continue
-            try:
-                contenido = part.get_content()
-            except Exception:
-                contenido = ""
+            contenido = _contenido_seguro(part)
             if tipo == "text/plain" and not cuerpo_texto:
-                cuerpo_texto = str(contenido).strip()
+                cuerpo_texto = contenido.strip()
             elif tipo == "text/html" and not cuerpo_html:
-                cuerpo_html = str(contenido).strip()
+                cuerpo_html = contenido.strip()
     else:
         # Los correos no multipart solo tienen una representación principal.
         tipo = msg.get_content_type()
-        contenido = msg.get_content()
+        contenido = _contenido_seguro(msg)
         if tipo == "text/plain":
-            cuerpo_texto = str(contenido).strip()
+            cuerpo_texto = contenido.strip()
         elif tipo == "text/html":
-            cuerpo_html = str(contenido).strip()
+            cuerpo_html = contenido.strip()
+
+    return {
+        "body": cuerpo_texto,
+        "html_body": cuerpo_html,
+        "attachments": attachments,
+    }
+
+
+def _extraer_urls_texto(texto: str) -> List[str]:
+    """Extrae URLs HTTP/HTTPS desde texto plano."""
+    return re.findall(r"https?://[\w\-\.\:\/\?\#\&\=\%\+\;]+", texto, flags=re.IGNORECASE)
+
+
+def _extraer_campos(msg) -> Dict[str, object]:
+    """Extrae datos relevantes del objeto de correo parseado."""
+    # Se separan cuerpo de texto, HTML, anclas y adjuntos porque cada familia de
+    # reglas necesita mirar una representación distinta del mismo correo.
+    partes_mime = _extraer_partes_mime(msg)
+    cuerpo_texto = partes_mime["body"]
+    cuerpo_html = partes_mime["html_body"]
+    attachments = partes_mime["attachments"]
+    anclas = []
 
     if cuerpo_html and not cuerpo_texto:
         # Si solo existe versión HTML, se genera texto visible para que el
@@ -132,7 +156,7 @@ def _extraer_campos(msg) -> Dict[str, object]:
     full_text = _construir_texto_para_analisis(headers, cuerpo_texto)
     # Se extraen URLs del texto plano final; las URLs de anclas HTML se añaden
     # después al normalizar el correo en CorreoAnalizado.
-    urls = re.findall(r"https?://[\w\-\.\:\/\?\#\&\=\%\+\;]+", full_text, flags=re.IGNORECASE)
+    urls = _extraer_urls_texto(full_text)
 
     return {
         "subject": msg.get("subject", ""),

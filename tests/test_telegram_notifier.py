@@ -34,9 +34,10 @@ class TestTelegramNotifier(unittest.TestCase):
             "heuristico",
         )
 
-        self.assertIn("Posible phishing detectado", mensaje)
+        self.assertIn("ALERTA DE PHISHING", mensaje)
         self.assertIn("80.0%", mensaje)
         self.assertIn("a@example.com", mensaje)
+        self.assertIn("Primeros enlaces", mensaje)
 
     def test_construir_mensaje_alerta_escapa_remitente_html(self):
         mensaje = construir_mensaje_alerta(

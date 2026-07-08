@@ -1,259 +1,336 @@
 # TFG - Detección de Phishing en Correos Electrónicos
 
-## Objetivo
-Desarrollar un prototipo que detecte ataques de phishing en correos electrónicos mediante el análisis de cabeceras, contenido y enlaces, combinando reglas heurísticas con un clasificador de aprendizaje automático.
+Prototipo para detectar phishing en correos electrónicos mediante reglas heurísticas, análisis de contenido, revisión de enlaces, integración con Gmail y un clasificador neuronal TF-IDF + MLP.
 
-## Descripción del sistema
-El sistema integra dos modos de detección complementarios:
+El proyecto ofrece tres formas principales de uso:
 
-- **Análisis heurístico**: evalúa el correo mediante un conjunto de señales basadas en patrones conocidos de phishing (cabeceras, URLs, HTML, lenguaje, autenticación). Cada señal tiene un peso ponderado y se calcula una puntuación de riesgo de 0 a 100. El umbral de clasificación como phishing es ≥ 45 puntos.
-- **Clasificador neuronal**: red neuronal MLP entrenada con datasets reales (Enron, CEAS, Nazario, entre otros), que utiliza TF-IDF sobre el texto del correo para predecir la probabilidad de phishing.
+- **Aplicación Streamlit**: interfaz central para configuración, detección, monitorización y entrenamiento.
+- **Extensión para Gmail Web**: panel visual dentro de `mail.google.com` que consulta un servidor local Python.
+- **Monitor 24/7**: proceso de consola que revisa Gmail periódicamente y envía alertas por Telegram.
 
-La aplicación principal está desarrollada en Streamlit y funciona como punto de entrada único. Desde la pantalla inicial se puede navegar a configuración, detección, monitorización o entrenamiento sin ejecutar aplicaciones separadas.
+## Inicio Rápido
 
-La implementación se ha refactorizado siguiendo una separación de responsabilidades: las fachadas públicas (`heuristicas.py`, `signals.py` y `neural.py`) mantienen una API sencilla, mientras que la lógica interna se reparte en módulos especializados para parsing, reglas de cabecera, análisis HTML, URLs, datasets, modelo neuronal y explicación de resultados.
-
-## Funcionalidades implementadas
-
-### Análisis heurístico (28 señales)
-- Análisis de correos cargados desde un archivo `.eml`, texto pegado manualmente o mensajes importados desde Gmail.
-- Detección de `Reply-To` diferente a `From`.
-- Detección de nombres de remitente engañosos y uso fraudulento de marcas conocidas.
-- Detección de inconsistencias en cabeceras (`Return-Path`, `From`, `Received-SPF`).
-- Identificación de dominios y URLs sospechosas, incluyendo lista negra local.
-- Detección de dominios en punycode/Unicode.
-- Detección de enlaces acortados conocidos.
-- Detección de discrepancias entre el texto visible y la URL real en enlaces HTML.
-- Detección de formularios HTML con acciones vacías, relativas o sospechosas.
-- Detección de fallos de autenticación SPF/DKIM/DMARC y anomalías en cabeceras `Received`.
-- Detección de DMARC fallido y firmas DKIM mal formadas.
-- Detección de incoherencias entre `From`, `Return-Path` y `Received-SPF`.
-- Detección de redirecciones ocultas en HTML (meta refresh, JavaScript).
-- Detección de elementos HTML sospechosos (iframe, base href, enlaces javascript/data).
-- Detección de adjuntos con extensiones peligrosas.
-- Detección de lenguaje urgente y asuntos típicos de phishing.
-- Detección de saludos genéricos y solicitudes de credenciales.
-- Detección de `Message-ID` con dominio inconsistente con el remitente.
-- Identificación de mensajes firmados o cifrados (S/MIME, PGP) como indicador de autenticidad.
-- Interfaz con medidor de riesgo visual y panel de detalles por señal.
-- La interfaz muestra únicamente el análisis elegido: heurístico, neuronal o combinado.
-
-### Integración con Gmail
-- Conexión mediante OAuth 2.0 y la Gmail API oficial.
-- Uso del permiso de solo lectura `https://www.googleapis.com/auth/gmail.readonly`.
-- Descarga de mensajes en formato `raw` y reutilización del parser `.eml` existente.
-- Análisis de los últimos correos que coincidan con una consulta de Gmail, por defecto `in:inbox`.
-- Resumen vertical por correo, sin tabla horizontal, con puntuación de riesgo y clasificación.
-- Vista de detalle individual para revisar un correo concreto. En modo heurístico se muestran señales, enlaces y cabeceras; en modo neuronal solo se muestra el resultado del modelo; en modo combinado se muestra la puntuación mixta.
-- Visualización de la cuenta de Gmail conectada.
-- Opción centralizada para conectar o cambiar de cuenta desde la vista **Configuración**.
-- Almacenamiento local del token OAuth en `token.json`.
-
-### Extensión para Gmail Web
-- Extensión Manifest V3 cargable en Chrome o Edge desde la carpeta `extension_gmail/`.
-- Inserción automática de un panel de riesgo dentro de un correo abierto en `mail.google.com`.
-- Extracción local del asunto, remitente, cuerpo visible, enlaces y anclas HTML del mensaje abierto.
-- Comunicación con un servidor local Python (`src/gmail_extension_server.py`) para reutilizar el detector del TFG sin mover el modelo al navegador.
-- Soporte para análisis `heuristico`, `neural` o `combinado`, con el mismo umbral configurable que el monitor.
-- Panel desplegable con explicaciones y señales activas cuando el análisis aporta detalles.
-
-### Monitorización automática
-- Parámetros gestionables desde la vista **Configuración**: intervalo, query de Gmail, límite de correos, umbral, modo de análisis y pesos.
-- Vista **Monitor** dentro de la aplicación principal para comprobar la configuración.
-- Script independiente `src/monitor_gmail.py` pensado para ejecutarse como proceso 24/7.
-- Revisión periódica de Gmail mediante polling configurable.
-- Detección de correos nuevos mediante un estado local en `estado_monitor.json`.
-- Primera ejecución protegida para marcar correos existentes como vistos y evitar alertas masivas.
-- Notificaciones por Telegram cuando un correo supera el umbral configurado.
-- Las alertas de Telegram muestran solo señales sospechosas activadas, no comprobaciones correctas del correo.
-- Configuración del bot y chat destino desde la vista **Configuración**.
-- Soporte para análisis `heuristico`, `neural` o `combinado`.
-- Botón de prueba para verificar el envío de Telegram desde la interfaz.
-- Botón de comprobación puntual para revisar Gmail sin arrancar el bucle continuo.
-
-### Clasificador neuronal
-- Pipeline TF-IDF + MLP (scikit-learn) con bigramas y hasta 3000 características.
-- Entrenamiento desde uno o varios archivos CSV con detección automática de columnas.
-- Soporte para datasets en inglés y español (stopwords propias).
-- Modelos persistentes en disco mediante `joblib` (`modelo_neural_es.joblib` y `modelo_neural_en.joblib`).
-- Interfaz de entrenamiento protegida opcionalmente por contraseña (`TRAINING_PASSWORD`).
-
-### Refactorización y diseño
-- `PhishingAnalyzer` actúa como coordinador del análisis, sin contener directamente todas las reglas.
-- `SignalBuilder` construye el diccionario de señales heurísticas.
-- `ExplanationBuilder` genera explicaciones legibles para la interfaz.
-- Las reglas se dividen por tipo de responsabilidad: cabeceras, contenido, HTML y URLs.
-- La parte neuronal separa carga de datasets, definición del modelo, persistencia y detección.
-- `gmail_client.py` encapsula la autenticación y lectura de correos desde Gmail.
-- `gmail_monitor.py` contiene la lógica de monitorización y control de estado.
-- `telegram_notifier.py` encapsula el envío de alertas mediante Telegram Bot API.
-- `env_loader.py` permite cargar y actualizar configuración local desde `.env.local`.
-- La navegación se centraliza en `app.py` mediante parámetros de URL de Streamlit.
-- Se ocultan los enlaces automáticos de los títulos para mantener una interfaz más limpia en la demo.
-- Las fachadas conservan compatibilidad con imports anteriores, facilitando cambios internos sin afectar a la interfaz.
-
-## Uso
-1. Crear un entorno virtual Python.
+1. Crear y activar un entorno virtual.
 2. Instalar dependencias:
+
 ```bash
-   pip install -r requirements.txt
+pip install -r requirements.txt
 ```
+
 3. Ejecutar la aplicación principal:
-```bash
-   streamlit run src/app.py
-```
-4. Navegar desde la pantalla inicial:
-- **Inicio**: pantalla de presentación y acceso a las herramientas.
-- **Configuración**: cuenta Gmail, Telegram y parámetros del monitor.
-- **Detección**: análisis de correos pegados, `.eml` o Gmail.
-- **Monitor**: configuración y pruebas del monitor automático con Telegram.
-- **Entrenamiento**: entrenamiento y evaluación de modelos neuronales.
 
-También se conservan los puntos de entrada específicos:
 ```bash
-   streamlit run src/detect_app.py
-   streamlit run src/train_app.py
+streamlit run src/app.py
 ```
 
-### Configuración de Gmail
-Para usar el modo **Analizar correos de Gmail**:
+4. Ejecutar tests:
 
-1. Crear un proyecto en Google Cloud Console.
-2. Activar la **Gmail API**.
-3. Configurar la pantalla de consentimiento OAuth en modo externo/de pruebas.
-4. Añadir la cuenta de Gmail como usuario de prueba.
-5. Crear un cliente OAuth de tipo **Aplicación de escritorio**.
-6. Descargar el JSON de credenciales.
-7. Guardarlo en la raíz del proyecto como `credentials.json`.
-8. Ejecutar la app y pulsar **Conectar Gmail y analizar**.
-
-El repositorio incluye `credentials.example.json` como plantilla. Los archivos reales `credentials.json` y `token.json` están excluidos en `.gitignore` porque contienen credenciales y tokens locales. Para cambiar de cuenta desde la vista **Configuración**, se elimina `token.json` y se inicia de nuevo el flujo OAuth.
-
-### Configuración del monitor y Telegram
-El monitor usa las mismas credenciales de Gmail que la interfaz. Para Telegram:
-
-1. Crear un bot con `@BotFather`.
-2. Guardar el token en `TELEGRAM_BOT_TOKEN`.
-3. Obtener el identificador del chat y guardarlo en `TELEGRAM_CHAT_ID`.
-4. Usar `.env.example` como referencia de configuración.
-
-Las variables pueden editarse desde la vista **Configuración** o manualmente en `.env.local`. Variables principales:
-```bash
-TELEGRAM_BOT_TOKEN=123456:ABCDEF_TOKEN_DEL_BOT
-TELEGRAM_CHAT_ID=123456789
-MONITOR_INTERVAL_SECONDS=120
-PHISHING_THRESHOLD=45
-MONITOR_ANALYSIS_MODE=combinado
-GMAIL_MONITOR_QUERY=in:inbox newer_than:1d
-GMAIL_MONITOR_LIMIT=20
-```
-
-Ejecución continua:
-```bash
-python src/monitor_gmail.py
-```
-
-La vista **Monitor** no mantiene un bucle 24/7 dentro de Streamlit. La interfaz sirve para configurar y probar; el proceso continuo se arranca con el comando anterior y debe permanecer en ejecución.
-
-Ejecución puntual:
-```bash
-python src/monitor_gmail.py --once
-```
-
-En Windows puede ejecutarse como tarea programada o servicio. En Linux/VPS puede ejecutarse con `systemd` o dentro de un contenedor con reinicio automático.
-
-### Uso de la extensión en Gmail Web
-La extensión funciona como puente entre Gmail Web y el detector Python local. No necesita permisos de Gmail API porque analiza el correo que ya está abierto en la página.
-
-1. Arrancar el servidor local desde la raíz del proyecto:
-```bash
-python src/gmail_extension_server.py
-```
-2. Para una prueba rápida se puede usar solo el modo heurístico:
-```bash
-python src/gmail_extension_server.py --mode heuristico
-```
-3. Opcionalmente elegir modo y umbral:
-```bash
-python src/gmail_extension_server.py --mode combinado --threshold 45
-```
-4. Abrir Chrome o Edge y entrar en `chrome://extensions` o `edge://extensions`.
-5. Activar el **modo desarrollador**.
-6. Pulsar **Cargar descomprimida** y seleccionar la carpeta `extension_gmail/`.
-7. Comprobar que el interruptor de la extensión está activado.
-8. Abrir `https://mail.google.com`, entrar en un correo y esperar el panel de la extensión.
-
-Si se modifica cualquier archivo de `extension_gmail/`, hay que volver a `chrome://extensions` y pulsar el botón de recarga de la extensión. Después se recarga Gmail con `F5`.
-
-El panel aparece arriba a la derecha y puede mostrar varios estados:
-
-- `Detector cargado`: Chrome ha inyectado correctamente la extensión en Gmail.
-- `Analizando phishing...`: la extensión ha encontrado un correo abierto y está consultando al servidor local.
-- `Seguro: X%`: el correo analizado queda por debajo del umbral configurado.
-- `Phishing: X%`: el correo supera el umbral de riesgo.
-- `Detector local apagado`: la extensión está cargada, pero el servidor `python src/gmail_extension_server.py` no está en ejecución o no responde en `127.0.0.1:8765`.
-
-Si no aparece ningún panel dentro de Gmail:
-
-1. Revisar que la extensión está activada en `chrome://extensions`.
-2. Pulsar el botón de recarga de la extensión.
-3. Recargar Gmail con `F5`.
-4. Entrar en **Detalles** de la extensión y comprobar que tiene permiso para ejecutarse en `https://mail.google.com/*`.
-5. Abrir un correo concreto, no solo la bandeja de entrada.
-
-Limitación importante: desde Gmail Web solo se pueden leer los datos visibles en la página. Para señales completas de autenticación y cabeceras (`SPF`, `DKIM`, `DMARC`, `Received`, etc.) sigue siendo más completo el flujo con Gmail API o archivos `.eml`.
-
-## Pruebas unitarias
-Para ejecutar las pruebas con `unittest`:
 ```bash
 PYTHONPATH=src python -m unittest discover -s tests -p "test_*.py"
 ```
 
-## Estructura del repositorio
-```
-src/
-├── app.py                  # Punto de entrada principal con navegación
-├── config_app.py           # Configuración central de Gmail, Telegram y monitor
-├── detect_app.py           # Interfaz de detección
-├── monitor_app.py          # Interfaz de configuración del monitor
-├── monitor_gmail.py        # Proceso 24/7 de monitorización
-├── train_app.py            # Interfaz de entrenamiento
-├── gmail_extension_server.py # Servidor local para la extensión de Gmail Web
-└── sistema_phishing/
-    ├── analizador_email.py # Parser de archivos .eml
-    ├── analyzer.py         # Orquestador del análisis heurístico
-    ├── configuracion.py    # Constantes, listas de términos y stopwords
-    ├── content_signals.py  # Señales basadas en texto y adjuntos
-    ├── correo.py           # Modelo de datos del correo analizado
-    ├── dataset.py          # Carga y normalización de CSV de entrenamiento
-    ├── env_loader.py       # Carga y escritura de configuración local
-    ├── explanations.py     # Generación de explicaciones para la UI
-    ├── gmail_client.py     # Cliente OAuth/Gmail API para leer correos
-    ├── gmail_monitor.py    # Monitor de correos nuevos y gestión de estado
-    ├── header_signals.py   # Señales de cabeceras y autenticación
-    ├── heuristicas.py      # Fachada pública del análisis heurístico
-    ├── html_signals.py     # Señales específicas de HTML y anclas
-    ├── modelo_neural.py    # Clasificador neuronal, almacenamiento y servicios
-    ├── neural.py           # Fachada pública del subsistema neuronal
-    ├── scorer.py           # Cálculo de puntuación de riesgo ponderada
-    ├── signal_builder.py   # Construcción del conjunto de señales
-    ├── signals.py          # Fachada de compatibilidad para reglas
-    ├── telegram_notifier.py # Envío de alertas por Telegram
-    └── url_utils.py        # Utilidades y reglas de URLs/dominios
-tests/                      # Pruebas unitarias
-extension_gmail/            # Extensión Manifest V3 para Gmail Web
-datos_entrenamiento/        # Datasets CSV para entrenar el modelo neuronal
-.env.example                # Plantilla de variables del monitor/Telegram
-credentials.example.json    # Plantilla de credenciales OAuth para Gmail
-modelo_neural_es.joblib     # Modelo neuronal persistido en español
-modelo_neural_en.joblib     # Modelo neuronal persistido en inglés
-requirements.txt            # Dependencias
+En PowerShell:
+
+```powershell
+$env:PYTHONPATH='src'; python -m unittest discover -s tests -p "test_*.py"
 ```
 
-## Mejoras futuras
-- Integración con listas negras y servicios de reputación online (VirusTotal, SURBL).
-- Sustituir el polling del monitor por Gmail Push Notifications y Google Pub/Sub.
-- Etiquetado opcional de correos sospechosos en Gmail usando permisos adicionales.
-- Validación de certificados y comprobación de reputación de dominios en tiempo real.
-- Añadir métricas de evaluación más completas para el modelo neuronal (precision, recall y F1).
-- Incorporar configuración externa para pesos heurísticos y listas de dominios.
+## Arquitectura
+
+```text
+Gmail API / EML / texto pegado / Gmail Web
+        |
+        v
+Parser y normalización de correo
+        |
+        v
+Análisis heurístico + modelo neuronal
+        |
+        v
+Streamlit / extensión Gmail / monitor / Telegram
+```
+
+Módulos principales:
+
+- `src/app.py`: entrada principal con navegación.
+- `src/detect_app.py`: pantalla de análisis manual, EML y Gmail.
+- `src/config_app.py`: configuración de Gmail, Telegram, monitor y parámetros avanzados de la red neuronal.
+- `src/monitor_app.py`: panel de control del monitor en Streamlit.
+- `src/train_app.py`: entrenamiento, evaluación y gestión de modelos neuronales.
+- `src/monitor_gmail.py`: proceso de monitorización continua de Gmail.
+- `src/gmail_extension_server.py`: servidor local usado por la extensión de Gmail.
+- `src/sistema_phishing/analysis_service.py`: servicio común que unifica heurística, neuronal y análisis combinado.
+- `src/sistema_phishing/gmail_client.py`: integración OAuth con Gmail API.
+- `src/sistema_phishing/gmail_monitor.py`: lógica del monitor y gestión de estado.
+- `src/sistema_phishing/telegram_notifier.py`: envío de alertas por Telegram.
+
+## Novedades recientes
+
+- Comparación de hasta 3 redes neuronales en memoria usando múltiples CSV de entrenamiento.
+- La vista de entrenamiento agrupa datos de múltiples archivos sin persistir modelos temporales antiguos.
+- En modo combinado, el monitor y la extensión Gmail Web usan un único control de peso heurístico; el peso neuronal se calcula automáticamente como `100 - heur_weight`.
+- La extensión Gmail Web y el monitor emplean variables de entorno `.env.local` para host, puerto y rutas de modelo.
+
+## Modos de Análisis
+
+### Heurístico
+
+Evalúa señales de phishing como:
+
+- incoherencias de remitente y cabeceras
+- fallos SPF/DKIM/DMARC
+- URLs sospechosas, dominios en blacklist, punycode y acortadores
+- redirecciones HTML y meta refresh
+- lenguaje urgente y saludos genéricos
+- solicitudes de credenciales
+- adjuntos peligrosos
+
+### Neuronal
+
+Modelo `TF-IDF + MLPClassifier` entrenable desde CSV. El proyecto soporta modelos separados para español e inglés:
+
+- `modelo_neural_es.joblib`
+- `modelo_neural_en.joblib`
+
+El código ahora centraliza los hiperparámetros de la red neuronal en una clase `HiperparametrosModelo` y permite leerlos desde variables de entorno (`.env.local`). Esto se usa tanto al entrenar como para mostrar qué configuración se aplicará.
+
+### Combinado
+
+Mezcla heurística y red neuronal con pesos configurables desde la configuración del monitor.
+
+## Aplicación Streamlit
+
+Ejecutar:
+
+```bash
+streamlit run src/app.py
+```
+
+Vistas disponibles:
+
+- **Inicio**: dashboard con estado de Gmail, Telegram, modelos y extensión.
+- **Configuración**: conexión Gmail, Telegram, monitor y parámetros avanzados para la red neuronal.
+- **Detección**: análisis de texto pegado, `.eml` o correos importados desde Gmail.
+- **Monitor**: comprobación manual y resumen de configuración del monitor.
+- **Entrenamiento**: carga de CSV, entrenamiento, comparación y evaluación de modelos en memoria.
+
+También se pueden lanzar pantallas concretas:
+
+```bash
+streamlit run src/detect_app.py
+streamlit run src/train_app.py
+```
+
+## Entrenamiento de Modelos
+
+La vista **Entrenamiento** ahora ofrece:
+
+- subida de uno o varios CSV de entrenamiento para poder comparar datasets
+- selección de formato `Texto completo` o `Asunto + cuerpo`
+- configuración de columnas de texto y etiqueta
+- selección de idioma del modelo (español / inglés)
+- resumen previo de los datos cargados y combinados en memoria
+- entrenamiento de hasta 3 redes neuronales con distintos hiperparámetros en memoria
+- visualización de los hiperparámetros que se usarán en el entrenamiento
+- pestañas separadas de `Entrenar`, `Evaluar`, `Comparar` y `Modelos guardados`
+- evaluación con CSV de prueba que no se usa para el entrenamiento
+- métricas de predicción y matriz de confusión
+- comparación en memoria sin guardar modelos de prueba antiguos
+- información de modelos guardados y su estado
+
+## Configuración de Gmail
+
+Para usar Gmail desde la aplicación o el monitor:
+
+1. Crear un proyecto en Google Cloud Console.
+2. Activar la **Gmail API**.
+3. Configurar la pantalla de consentimiento OAuth.
+4. Añadir la cuenta Gmail como usuario de prueba si aplica.
+5. Crear un cliente OAuth de tipo **Aplicación de escritorio**.
+6. Descargar el JSON de credenciales.
+7. Guardarlo en la raíz del proyecto como `credentials.json`.
+8. Conectar desde la vista **Configuración** o desde la vista **Detección**.
+
+La configuración del monitor y de la extensión Gmail Web ahora permite ajustar un único peso heurístico en modo combinado; el peso neuronal se deriva automáticamente como `100 - heur_weight` para evitar desajustes.
+
+Archivos sensibles excluidos por `.gitignore`:
+
+- `credentials.json`
+- `token.json`
+- `.env.local`
+- `estado_monitor.json`
+
+## Configuración de Telegram
+
+Variables principales:
+
+```bash
+TELEGRAM_BOT_TOKEN=123456:ABCDEF_TOKEN_DEL_BOT
+TELEGRAM_CHAT_ID=123456789
+```
+
+Se pueden editar desde la vista **Configuración** o manualmente en `.env.local`.
+
+Las alertas de Telegram incluyen:
+
+- nivel de riesgo
+- puntuación
+- modo de análisis
+- remitente y asunto
+- número de URLs detectadas
+- señales activas principales
+- primeros enlaces detectados, recortados
+
+## Monitor 24/7
+
+Ejecutar en bucle:
+
+```bash
+python src/monitor_gmail.py
+```
+
+Ejecutar una sola comprobación:
+
+```bash
+python src/monitor_gmail.py --once
+```
+
+Ayuda:
+
+```bash
+python src/monitor_gmail.py --help
+```
+
+El monitor imprime el estado activo, los parámetros de configuración y notifica por Telegram cuando detecta phishing según el umbral configurado.
+
+## Extensión para Gmail Web
+
+La extensión vive en:
+
+```text
+extension_gmail/
+```
+
+Permite mostrar un panel de riesgo dentro de Gmail Web. No utiliza permisos de Gmail API porque lee el correo abierto en la página y envía los datos al servidor local Python.
+
+### Arrancar servidor local
+
+```bash
+python src/gmail_extension_server.py
+```
+
+Ayuda:
+
+```bash
+python src/gmail_extension_server.py --help
+```
+
+### Cargar extensión
+
+1. Abrir `chrome://extensions` o `edge://extensions`.
+2. Activar **Modo desarrollador**.
+3. Pulsar **Cargar descomprimida**.
+4. Seleccionar `extension_gmail/`.
+5. Abrir `https://mail.google.com`.
+6. Abrir un correo.
+
+Si se modifica la extensión, recargarla desde `chrome://extensions` y luego recargar Gmail.
+
+### Estados del panel
+
+- `Detector cargado`: la extensión se ha inyectado.
+- `Analizando`: el servidor local está procesando el correo.
+- `Riesgo bajo`: no supera el umbral.
+- `Riesgo alto`: supera el umbral.
+- `Sin conexión`: el servidor local no responde.
+
+## Estructura del Repositorio
+
+```text
+src/
+├── app.py
+├── config_app.py
+├── detect_app.py
+├── gmail_extension_server.py
+├── monitor_app.py
+├── monitor_gmail.py
+├── train_app.py
+└── sistema_phishing/
+    ├── analizador_email.py
+    ├── analysis_service.py
+    ├── analyzer.py
+    ├── configuracion.py
+    ├── content_signals.py
+    ├── correo.py
+    ├── dataset.py
+    ├── env_loader.py
+    ├── explanations.py
+    ├── gmail_client.py
+    ├── gmail_monitor.py
+    ├── header_signals.py
+    ├── heuristicas.py
+    ├── html_signals.py
+    ├── modelo_neural.py
+    ├── neural.py
+    ├── scorer.py
+    ├── signal_builder.py
+    ├── signals.py
+    ├── telegram_notifier.py
+    └── url_utils.py
+extension_gmail/
+├── manifest.json
+├── content.js
+├── styles.css
+├── options.html
+├── options.css
+└── options.js
+tests/
+```
+
+## Troubleshooting
+
+### La extensión no aparece en Gmail
+
+1. Revisar que está activada en `chrome://extensions`.
+2. Recargar la extensión.
+3. Recargar Gmail con `F5`.
+4. Abrir un correo concreto.
+5. Comprobar que tiene permiso para ejecutarse en `https://mail.google.com/*`.
+
+### La extensión dice que el detector está apagado
+
+Arrancar:
+
+```bash
+python src/gmail_extension_server.py
+```
+
+### El modelo aparece como no encontrado
+
+Comprobar que el `.joblib` está en la raíz del proyecto. El servidor de extensión y el monitor buscan los modelos desde la raíz, no desde el directorio actual del terminal.
+
+### Gmail no conecta
+
+Comprobar:
+
+- `credentials.json` existe en la raíz.
+- Gmail API está activada.
+- La cuenta está autorizada en la pantalla OAuth.
+- `token.json` no está caducado o corrupto.
+
+### Telegram no envía
+
+Comprobar:
+
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHAT_ID`
+- que el bot pueda escribir en el chat destino
+
+## Mejoras Futuras
+
+- Sustituir polling por Gmail Push Notifications y Google Pub/Sub.
+- Etiquetar correos sospechosos en Gmail con permisos adicionales.
+- Añadir reputación online de dominios o URLs.
+- Añadir métricas avanzadas de evaluación: precision, recall y F1.
+- Externalizar pesos heurísticos y listas de dominios.
+- Empaquetar la extensión para distribución fuera de modo desarrollador.

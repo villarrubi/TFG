@@ -9,23 +9,109 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Dict, Tuple
 
-from sistema_phishing.analizador_email import construir_texto_para_analisis
-from sistema_phishing.gmail_monitor import (
+from sistema_phishing.analysis_service import (
     MODO_COMBINADO,
     MODO_HEURISTICO,
     MODO_NEURAL,
-    MonitorConfig,
-    construir_resultado_combinado,
-    cargar_detector_neural,
+    VALID_MODES,
+    EmailAnalysisService,
 )
-from sistema_phishing.heuristicas import analizar_correo
+from sistema_phishing.env_loader import cargar_env_local
+from sistema_phishing.gmail_monitor import MonitorConfig
 
 
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+DEFAULT_MODEL_PATH_ES = os.path.join(ROOT_DIR, "modelo_neural_es.joblib")
+DEFAULT_MODEL_PATH_EN = os.path.join(ROOT_DIR, "modelo_neural_en.joblib")
 ALLOWED_ORIGINS = {"https://mail.google.com"}
-VALID_MODES = {MODO_HEURISTICO, MODO_NEURAL, MODO_COMBINADO}
+APP_NAME = "TFG Phishing Guard - Gmail Web"
+ASCII_TITLE = r"""
+ ____  _   _ ___ ____  _   _ ___ _   _  ____    ____ _   _    _    ____  ____
+|  _ \| | | |_ _/ ___|| | | |_ _| \ | |/ ___|  / ___| | | |  / \  |  _ \|  _ \
+| |_) | |_| || |\___ \| |_| || ||  \| | |  _  | |  _| | | | / _ \ | |_) | | | |
+|  __/|  _  || | ___) |  _  || || |\  | |_| | | |_| | |_| |/ ___ \|  _ <| |_| |
+|_|   |_| |_|___|____/|_| |_|___|_| \_|\____|  \____|\___//_/   \_\_| \_\____/
+"""
+
+
+def _hora_actual() -> str:
+    return datetime.now().strftime("%H:%M:%S")
+
+
+def _recortar(texto: str, limite: int = 72) -> str:
+    texto = " ".join(str(texto).split())
+    return texto if len(texto) <= limite else f"{texto[: limite - 3]}..."
+
+
+def _estado_archivo(path: str) -> str:
+    return "encontrado" if os.path.exists(path) else "no encontrado"
+
+
+def _ruta_legible(path: str) -> str:
+    try:
+        return os.path.relpath(path, ROOT_DIR)
+    except ValueError:
+        return path
+
+
+def _linea_clave_valor(clave: str, valor: object) -> str:
+    return f"  {clave:<22} {valor}"
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, default))
+    except ValueError:
+        return default
+
+
+def _env_float(name: str, default: float) -> float:
+    try:
+        return float(os.getenv(name, default))
+    except ValueError:
+        return default
+
+
+def mostrar_banner(args: argparse.Namespace) -> None:
+    """Muestra una pantalla inicial legible para arrancar el servidor."""
+    endpoint = f"http://{args.host}:{args.port}"
+    print("")
+    print("=" * 72)
+    print(ASCII_TITLE.strip("\n"))
+    print(APP_NAME)
+    print("=" * 72)
+    print("Servidor local activo para la extension de Gmail.")
+    print("")
+    print("Conexion")
+    print(_linea_clave_valor("URL local:", endpoint))
+    print(_linea_clave_valor("Health check:", f"{endpoint}/health"))
+    print(_linea_clave_valor("Endpoint analisis:", f"{endpoint}/analyze"))
+    print("")
+    print("Analisis")
+    print(_linea_clave_valor("Modo:", args.mode))
+    print(_linea_clave_valor("Umbral phishing:", f"{args.threshold:.1f}%"))
+    print(_linea_clave_valor("Peso heuristico:", f"{args.heur_weight}%"))
+    print(_linea_clave_valor("Peso neuronal:", f"{args.neural_weight}%"))
+    print("")
+    print("Modelos")
+    print(_linea_clave_valor("Modelo ES:", f"{_ruta_legible(args.model_es)} ({_estado_archivo(args.model_es)})"))
+    print(_linea_clave_valor("Modelo EN:", f"{_ruta_legible(args.model_en)} ({_estado_archivo(args.model_en)})"))
+    print("")
+    print("Uso rapido")
+    print("  1. Recarga la extension en chrome://extensions.")
+    print("  2. Abre Gmail y entra en un correo.")
+    print("  3. Deja esta ventana abierta mientras uses la extension.")
+    print("")
+    print("Actividad")
+    print("  Esperando solicitudes desde Gmail...")
+    print("  Pulsa Ctrl+C para detener el servidor.")
+    print("=" * 72)
+    print("")
 
 
 def construir_datos_email(payload: Dict[str, object]) -> Dict[str, object]:
@@ -64,26 +150,14 @@ class GmailWebAnalyzer:
 
     def __init__(self, config: MonitorConfig):
         self.config = config
-        self._detector = None
+        self.service = EmailAnalysisService(config)
+        self.request_count = 0
 
     def analyze(self, payload: Dict[str, object]) -> Dict[str, object]:
         datos_email = construir_datos_email(payload)
-        resultado_heur = analizar_correo(datos_email)
-
-        if self.config.mode == MODO_HEURISTICO:
-            return resultado_heur
-
-        if self._detector is None:
-            self._detector = cargar_detector_neural(self.config)
-
-        resultado_neural = self._detector.analyze(
-            construir_texto_para_analisis(datos_email),
-            datos_email.get("from", ""),
-            datos_email.get("subject", ""),
-        )
-        if self.config.mode == MODO_NEURAL:
-            return resultado_neural
-        return construir_resultado_combinado(resultado_heur, resultado_neural, self.config)
+        resultado = self.service.analyze(datos_email)
+        self.request_count += 1
+        return resultado
 
 
 def limpiar_resultado(resultado: Dict[str, object], threshold: float) -> Dict[str, object]:
@@ -141,26 +215,78 @@ def crear_handler(analyzer: GmailWebAnalyzer):
                 if not isinstance(payload, dict):
                     raise ValueError("El cuerpo debe ser un objeto JSON")
                 resultado = analyzer.analyze(payload)
+                self._log_analisis(payload, resultado)
                 self._send_json(200, limpiar_resultado(resultado, analyzer.config.threshold))
             except Exception as exc:
+                print(f"[{_hora_actual()}] ERROR analisis: {exc}")
                 self._send_json(400, {"error": str(exc)})
 
         def log_message(self, format: str, *args) -> None:
             return
 
+        def _log_analisis(self, payload: Dict[str, object], resultado: Dict[str, object]) -> None:
+            subject = _recortar(str(payload.get("subject", "(sin asunto)")))
+            score = float(resultado.get("risk_score", 0))
+            label = "PHISHING" if score >= analyzer.config.threshold else "OK"
+            print(
+                f"[{_hora_actual()}] #{analyzer.request_count:03d} "
+                f"{label:<8} {score:5.1f}% | {subject}"
+            )
+
     return GmailExtensionHandler
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Servidor local para la extension de Gmail Web.")
-    parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8765)
-    parser.add_argument("--threshold", type=float, default=45.0)
-    parser.add_argument("--mode", choices=sorted(VALID_MODES), default=MODO_COMBINADO)
-    parser.add_argument("--heur-weight", type=int, default=60)
-    parser.add_argument("--neural-weight", type=int, default=40)
-    parser.add_argument("--model-es", default="modelo_neural_es.joblib")
-    parser.add_argument("--model-en", default="modelo_neural_en.joblib")
+    cargar_env_local(ROOT_DIR)
+    parser = argparse.ArgumentParser(
+        description="Servidor local que conecta la extension de Gmail Web con el detector Python.",
+        epilog="Ejemplo: python src/gmail_extension_server.py --mode heuristico",
+    )
+    parser.add_argument(
+        "--host",
+        default=os.getenv("GMAIL_EXTENSION_HOST", "127.0.0.1"),
+        help="Host local donde escuchar peticiones.",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=_env_int("GMAIL_EXTENSION_PORT", 8765),
+        help="Puerto local usado por la extension.",
+    )
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=_env_float("GMAIL_EXTENSION_THRESHOLD", 45.0),
+        help="Umbral de riesgo para marcar phishing.",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=sorted(VALID_MODES),
+        default=os.getenv("GMAIL_EXTENSION_MODE", MODO_COMBINADO),
+        help="Modo de analisis.",
+    )
+    parser.add_argument(
+        "--heur-weight",
+        type=int,
+        default=_env_int("GMAIL_EXTENSION_HEUR_WEIGHT", 60),
+        help="Peso heuristico en modo combinado.",
+    )
+    parser.add_argument(
+        "--neural-weight",
+        type=int,
+        default=_env_int("GMAIL_EXTENSION_NEURAL_WEIGHT", 40),
+        help="Peso neuronal en modo combinado.",
+    )
+    parser.add_argument(
+        "--model-es",
+        default=os.getenv("GMAIL_EXTENSION_MODEL_ES", DEFAULT_MODEL_PATH_ES),
+        help="Ruta del modelo neuronal en espanol.",
+    )
+    parser.add_argument(
+        "--model-en",
+        default=os.getenv("GMAIL_EXTENSION_MODEL_EN", DEFAULT_MODEL_PATH_EN),
+        help="Ruta del modelo neuronal en ingles.",
+    )
     return parser.parse_args()
 
 
@@ -182,12 +308,11 @@ def crear_servidor(args: argparse.Namespace) -> Tuple[ThreadingHTTPServer, Gmail
 def main() -> None:
     args = parse_args()
     server, _ = crear_servidor(args)
-    print(f"Servidor de extension Gmail activo en http://{args.host}:{args.port}")
-    print("Pulsa Ctrl+C para detenerlo.")
+    mostrar_banner(args)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nServidor detenido.")
+        print(f"\n[{_hora_actual()}] Servidor detenido por el usuario.")
     finally:
         server.server_close()
 

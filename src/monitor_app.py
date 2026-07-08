@@ -1,5 +1,6 @@
 """Pantalla Streamlit para configurar y probar el monitor de Gmail."""
 
+import html
 import os
 
 import streamlit as st
@@ -14,6 +15,7 @@ from sistema_phishing.gmail_client import (
 from sistema_phishing.env_loader import cargar_env_local, leer_env_file
 from sistema_phishing.gmail_monitor import MonitorConfig, analizar_correos_nuevos
 from sistema_phishing.telegram_notifier import TelegramNotifier, TelegramNotificationError
+from ui_components import aplicar_estilos_base, estado_badge, render_html
 
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -24,6 +26,45 @@ MONITOR_STATE_PATH = os.path.join(ROOT_DIR, "estado_monitor.json")
 MODEL_PATH_ES = os.path.join(ROOT_DIR, "modelo_neural_es.joblib")
 MODEL_PATH_EN = os.path.join(ROOT_DIR, "modelo_neural_en.joblib")
 ENV_LOCAL_PATH = os.path.join(ROOT_DIR, ".env.local")
+
+
+def aplicar_estilos_monitor() -> None:
+    """Aplica estilos locales para la pantalla de monitorización."""
+    aplicar_estilos_base(
+        """
+        .result-card {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+        .result-title {
+            color: #0f172a;
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .result-meta {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+        """
+    )
+
+
+def _valor_entero(valores: dict, key: str, default: int) -> int:
+    try:
+        return int(valores.get(key, str(default)))
+    except ValueError:
+        return default
+
+
+def _valor_float(valores: dict, key: str, default: float) -> float:
+    try:
+        return float(valores.get(key, str(default)))
+    except ValueError:
+        return default
 
 
 def _telegram_configurado() -> bool:
@@ -55,18 +96,90 @@ def _config_desde_ui(modo: str, threshold: float, heur_weight: int) -> MonitorCo
     )
 
 
+def _mostrar_estado_general(valores: dict) -> None:
+    """Pinta una fila de estado con Gmail, Telegram y proceso 24/7."""
+    gmail_ok = os.path.exists(GMAIL_TOKEN_PATH)
+    telegram_ok = _telegram_configurado()
+    interval = _valor_entero(valores, "MONITOR_INTERVAL_SECONDS", 120)
+
+    render_html(
+        f"""
+        <div class="ui-grid ui-grid-3">
+            <div class="ui-card">
+                <div class="ui-label">Gmail</div>
+                <div class="ui-value">{estado_badge(gmail_ok, "Conectado", "Sin token")}</div>
+                <div class="ui-note">Cuenta usada por el monitor automático.</div>
+            </div>
+            <div class="ui-card">
+                <div class="ui-label">Telegram</div>
+                <div class="ui-value">{estado_badge(telegram_ok, "Configurado", "Pendiente")}</div>
+                <div class="ui-note">Destino de alertas cuando hay phishing.</div>
+            </div>
+            <div class="ui-card">
+                <div class="ui-label">Proceso 24/7</div>
+                <div class="ui-value">Cada {interval}s</div>
+                <div class="ui-note">Se ejecuta aparte con <code>python src/monitor_gmail.py</code>.</div>
+            </div>
+        </div>
+        """
+    )
+
+
+def _mostrar_configuracion_activa(valores: dict) -> None:
+    """Muestra los parámetros que gobernarán la comprobación."""
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Umbral", f"{_valor_float(valores, 'PHISHING_THRESHOLD', 45):.0f}%")
+    col2.metric("Modo", valores.get("MONITOR_ANALYSIS_MODE", "combinado"))
+    col3.metric("Query", valores.get("GMAIL_MONITOR_QUERY", "in:inbox newer_than:1d"))
+    col4.metric("Límite", _valor_entero(valores, "GMAIL_MONITOR_LIMIT", 20))
+
+
+def _color_resultado(score: float, is_phishing: bool) -> str:
+    if is_phishing:
+        return "#dc2626"
+    if score >= 45:
+        return "#d97706"
+    return "#11845b"
+
+
+def _mostrar_resultado_monitor(resultado) -> None:
+    """Pinta una tarjeta de resultado de monitorización."""
+    color = _color_resultado(resultado.risk_score, resultado.is_phishing)
+    clasificacion = "Phishing probable" if resultado.is_phishing else "No parece phishing"
+    aviso = "Alerta enviada por Telegram" if resultado.notified else "Sin notificación"
+    subject = html.escape(resultado.subject or "(sin asunto)")
+    sender = html.escape(resultado.sender or "(sin remitente)")
+    render_html(
+        f"""
+        <div class="result-card">
+            <div class="result-title">{subject}</div>
+            <div class="result-meta">Remitente: {sender}</div>
+            <div style="margin-top:10px; display:flex; align-items:center; gap:12px;">
+                <div style="font-size:1.8rem; font-weight:800; color:{color};">{resultado.risk_score:.1f}%</div>
+                <div>
+                    <div style="font-weight:800; color:#0f172a;">{clasificacion}</div>
+                    <div class="result-meta">{aviso}</div>
+                </div>
+            </div>
+        </div>
+        """
+    )
+
+
 def main():
     """Renderiza la pantalla de monitorización."""
+    aplicar_estilos_monitor()
     cargar_env_local(ROOT_DIR)
     valores = leer_env_file(ENV_LOCAL_PATH)
-    st.title("Monitor - Alertas automáticas")
-    st.markdown(
-        "Esta pantalla permite comprobar la configuración del monitor. "
-        "El proceso 24/7 se ejecuta aparte para no bloquear la interfaz."
-    )
+    st.title("Monitor de Gmail")
+    st.caption("Comprueba correos nuevos, calcula riesgo y envía alertas por Telegram.")
+    _mostrar_estado_general(valores)
 
     if not dependencias_disponibles():
         st.warning("Faltan dependencias de Google. Ejecuta `pip install -r requirements.txt`.")
+
+    st.markdown("### Configuración activa")
+    _mostrar_configuracion_activa(valores)
 
     col_gmail, col_telegram = st.columns(2)
     with col_gmail:
@@ -94,8 +207,7 @@ def main():
             except TelegramNotificationError as exc:
                 st.error(str(exc))
 
-    st.markdown("---")
-    st.subheader("Comprobación manual")
+    st.markdown("### Comprobación manual")
     query = st.text_input("Consulta de Gmail", value=valores.get("GMAIL_MONITOR_QUERY", "in:inbox newer_than:1d"))
     limit = st.number_input(
         "Máximo de correos a revisar",
@@ -130,20 +242,13 @@ def main():
             if not resultados:
                 st.info("No hay correos nuevos para analizar con el estado actual del monitor.")
             for resultado in resultados:
-                with st.container(border=True):
-                    st.write(f"**{resultado.subject or '(sin asunto)'}**")
-                    st.write(f"Remitente: {resultado.sender or '(sin remitente)'}")
-                    st.write(f"Riesgo: {resultado.risk_score:.1f}%")
-                    st.write("Clasificación: Phishing probable" if resultado.is_phishing else "Clasificación: No parece phishing")
-                    if resultado.notified:
-                        st.success("Alerta enviada por Telegram.")
+                _mostrar_resultado_monitor(resultado)
         except GmailIntegrationError as exc:
             st.error(str(exc))
         except Exception as exc:
             st.error(f"No se pudo ejecutar la comprobación: {exc}")
 
-    st.markdown("---")
-    st.subheader("Ejecución 24/7")
+    st.markdown("### Ejecución 24/7")
     st.code("python src/monitor_gmail.py", language="powershell")
     st.write("Para una prueba puntual sin bucle continuo:")
     st.code("python src/monitor_gmail.py --once", language="powershell")

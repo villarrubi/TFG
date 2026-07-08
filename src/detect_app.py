@@ -1,6 +1,7 @@
 """Interfaz Streamlit para analizar correos con heurísticas y modelo neuronal."""
 
 import os
+from types import SimpleNamespace
 
 import streamlit as st
 
@@ -9,6 +10,7 @@ from sistema_phishing import (
     NeuralPhishingClassifier,
     NeuralPhishingDetector,
 )
+from sistema_phishing.analysis_service import construir_resultado_combinado as combinar_resultados
 from sistema_phishing.analizador_email import construir_texto_para_analisis, parsear_eml_bytes
 from sistema_phishing.gmail_client import (
     GmailIntegrationError,
@@ -18,14 +20,8 @@ from sistema_phishing.gmail_client import (
     obtener_ultimos_correos,
 )
 from sistema_phishing.heuristicas import analizar_correo
-
-try:
-    from langdetect import detect as detectar_idioma
-    LANGDETECT_DISPONIBLE = True
-except ImportError:
-    # La detección de idioma mejora la selección de modelo, pero la app puede
-    # funcionar sin esta dependencia usando español como idioma por defecto.
-    LANGDETECT_DISPONIBLE = False
+from sistema_phishing.idioma import detectar_idioma_correo
+from ui_components import aplicar_estilos_base, render_html
 
 # Los modelos se guardan junto al repositorio para que Streamlit pueda
 # encontrarlos aunque la app se ejecute desde otro directorio.
@@ -34,6 +30,143 @@ MODEL_PATH_ES = os.path.join(ROOT_DIR, "modelo_neural_es.joblib")
 MODEL_PATH_EN = os.path.join(ROOT_DIR, "modelo_neural_en.joblib")
 GMAIL_CREDENTIALS_PATH = os.path.join(ROOT_DIR, "credentials.json")
 GMAIL_TOKEN_PATH = os.path.join(ROOT_DIR, "token.json")
+
+# Chuleta de operadores de búsqueda de Gmail para el botón de ayuda (❓) junto
+# al campo de consulta. Se mantiene como constante para no ensuciar main().
+GMAIL_QUERY_HELP_MD = """
+**Parámetros comunes de búsqueda en Gmail**
+
+| Operador | Qué hace |
+|---|---|
+| `in:inbox` | Solo bandeja de entrada |
+| `in:spam` | Solo correos marcados como spam |
+| `in:trash` | Solo correos en la papelera |
+| `is:unread` | Correos no leídos |
+| `is:starred` | Correos destacados |
+| `from:persona@dominio.com` | De un remitente concreto |
+| `to:persona@dominio.com` | Dirigidos a una dirección concreta |
+| `subject:factura` | El asunto contiene esa palabra |
+| `has:attachment` | Con archivos adjuntos |
+| `filename:pdf` | Adjunto con esa extensión |
+| `after:2024/01/01` | Recibidos después de esa fecha |
+| `before:2024/12/31` | Recibidos antes de esa fecha |
+| `newer_than:7d` | Última semana (`d`=días, `m`=meses, `y`=años) |
+| `older_than:1m` | Más antiguos de 1 mes |
+| `label:importante` | Con una etiqueta concreta |
+
+Puedes combinar varios operadores en la misma consulta, por ejemplo:
+
+`in:inbox is:unread newer_than:7d has:attachment`
+"""
+
+
+def aplicar_estilos_deteccion() -> None:
+    """Aplica estilos locales para que la pantalla de detección sea más legible."""
+    aplicar_estilos_base(
+        """
+        .risk-card {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 18px 20px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            margin: 12px 0 18px;
+        }
+        .risk-card h3 {
+            margin: 0 0 4px;
+            font-size: 1.15rem;
+        }
+        .risk-kicker {
+            color: #64748b;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .risk-score {
+            font-size: 2.6rem;
+            font-weight: 800;
+            line-height: 1;
+            margin: 8px 0;
+        }
+        .risk-summary {
+            color: #475569;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            margin: 0;
+        }
+        .risk-bar-track {
+            height: 14px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e2e8f0;
+            margin-top: 14px;
+        }
+        .risk-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+        }
+        .status-pill {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+        .status-low {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        .status-medium {
+            background: #fefce8;
+            color: #854d0e;
+            border: 1px solid #fde68a;
+        }
+        .status-high {
+            background: #fff7ed;
+            color: #9a3412;
+            border: 1px solid #fed7aa;
+        }
+        .status-critical {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        .metric-strip {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin: 10px 0 18px;
+        }
+        .metric-tile {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+            padding: 12px;
+        }
+        .metric-label {
+            color: #64748b;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .metric-value {
+            color: #0f172a;
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+        @media (max-width: 720px) {
+            .metric-strip {
+                grid-template-columns: 1fr;
+            }
+            .risk-score {
+                font-size: 2.1rem;
+            }
+        }
+        """
+    )
 
 
 def _color_riesgo(score: float) -> str:
@@ -62,51 +195,143 @@ def _color_riesgo(score: float) -> str:
     return f"#{r:02x}{g:02x}{b:02x}"
 
 
-def mostrar_resultado_basico(resultado, titulo: str = "Resultado del análisis"):
-    """Pinta los datos comunes a cualquier tipo de análisis."""
-    st.subheader(titulo)
-    nivel = "No parece phishing" if not resultado["is_phishing"] else "Phishing probable"
-    st.write("**Evaluación global:**", nivel)
-    risk_score = int(round(resultado["risk_score"]))
-    color = _color_riesgo(risk_score)
-
-    # La métrica resume el resultado y la barra ofrece una lectura visual rápida
-    # para comparar análisis heurístico, neuronal y combinado.
-    col1, col2 = st.columns([1, 3])
-    col1.metric("Puntuación de riesgo", f"{risk_score}%")
-    col2.markdown(
-        f"""
-        <div style='width: 100%; background: #e0e0e0; border-radius: 16px; padding: 6px;'>
-            <div style='width: {risk_score}%; min-width: 4px; height: 34px; border-radius: 12px; background: {color}; box-shadow: inset 0 0 8px rgba(0,0,0,0.12); transition: width 0.5s ease;'></div>
-        </div>
-        <div style='display:flex; justify-content: space-between; font-size: 0.85rem; color: #333; margin-top: 6px;'>
-            <span>0</span>
-            <span>50</span>
-            <span>100</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
+def _nivel_riesgo(score: float, is_phishing: bool) -> tuple[str, str, str]:
+    """Devuelve etiqueta, clase CSS y resumen para una puntuación."""
+    if is_phishing or score >= 70:
+        return (
+            "Riesgo alto",
+            "status-critical",
+            "El correo supera el umbral de seguridad. Conviene tratarlo como sospechoso.",
+        )
+    if score >= 45:
+        return (
+            "Riesgo medio",
+            "status-high",
+            "Hay señales relevantes. Revisa remitente, enlaces y contenido antes de actuar.",
+        )
+    if score >= 25:
+        return (
+            "Riesgo bajo",
+            "status-medium",
+            "Se han encontrado algunas señales leves, pero no superan el umbral.",
+        )
+    return (
+        "Riesgo muy bajo",
+        "status-low",
+        "No se han detectado señales fuertes de phishing en los datos analizados.",
     )
 
-    st.markdown("---")
-    st.write(f"**URLs detectadas:** {len(resultado.get('urls', []))}")
-    st.write(f"**Enlaces HTML analizados:** {len(resultado.get('anchors', []))}")
-    st.write(f"**Cabeceras incluidas:** {len(resultado.get('headers', {}))}")
+
+def _render_metric_strip(resultado) -> None:
+    """Muestra contadores comunes del análisis."""
+    render_html(
+        f"""
+        <div class="metric-strip">
+            <div class="metric-tile">
+                <div class="metric-label">URLs</div>
+                <div class="metric-value">{len(resultado.get('urls', []))}</div>
+            </div>
+            <div class="metric-tile">
+                <div class="metric-label">Anclas HTML</div>
+                <div class="metric-value">{len(resultado.get('anchors', []))}</div>
+            </div>
+            <div class="metric-tile">
+                <div class="metric-label">Cabeceras</div>
+                <div class="metric-value">{len(resultado.get('headers', {}))}</div>
+            </div>
+        </div>
+        """
+    )
+
+
+def mostrar_resultado_basico(resultado, titulo: str = "Resultado del análisis"):
+    """Pinta los datos comunes a cualquier tipo de análisis."""
+    risk_score = max(0, min(100, int(round(resultado["risk_score"]))))
+    color = _color_riesgo(risk_score)
+    nivel, clase, resumen = _nivel_riesgo(risk_score, resultado["is_phishing"])
+    veredicto = "Phishing probable" if resultado["is_phishing"] else "No parece phishing"
+
+    render_html(
+        f"""
+        <div class="risk-card">
+            <div class="risk-kicker">{titulo}</div>
+            <span class="status-pill {clase}">{nivel}</span>
+            <div class="risk-score" style="color:{color};">{risk_score}%</div>
+            <h3>{veredicto}</h3>
+            <p class="risk-summary">{resumen}</p>
+            <div class="risk-bar-track">
+                <div class="risk-bar-fill" style="width:{risk_score}%; background:{color};"></div>
+            </div>
+        </div>
+        """
+    )
+    _render_metric_strip(resultado)
     if resultado.get("description"):
-        st.write(f"**Descripción:** {resultado['description']}")
+        st.info(resultado["description"])
+
+
+SIGNAL_GROUPS = {
+    "Identidad y cabeceras": [
+        "reply_to_diferente",
+        "nombre_display_engano",
+        "remitente_marca_engano",
+        "cabecera_spoofing",
+        "incoherencia_remitente",
+        "autenticacion_fallida",
+        "recibidos_sospechosos",
+        "dmarc_fallido",
+        "dkim_mal_formado",
+        "mensaje_id_sospechoso",
+        "mensaje_firmado_cifrado",
+    ],
+    "Enlaces y dominios": [
+        "enlaces_sospechosos",
+        "dominio_blacklist",
+        "url_parametros_sospechosos",
+        "dominio_punycode_unicode",
+        "enlace_shortener",
+        "anchor_distinto",
+    ],
+    "Contenido y adjuntos": [
+        "saludo_generico",
+        "solicitud_credenciales",
+        "lenguaje_urgente",
+        "asunto_sospechoso",
+        "adjunto_sospechoso",
+        "referencia_archivo",
+    ],
+    "HTML": [
+        "meta_refresh_html",
+        "javascript_redireccion",
+        "html_sospechoso",
+        "formulario_html",
+        "formulario_action_sospechoso",
+    ],
+}
+
+
+def _nombre_senal(nombre: str) -> str:
+    return nombre.replace("_", " ").capitalize()
+
+
+def _mostrar_senales_agrupadas(signals: dict) -> None:
+    """Muestra las señales por familia para facilitar la revisión."""
+    for grupo, nombres in SIGNAL_GROUPS.items():
+        filas = [
+            {"Señal": _nombre_senal(nombre), "Estado": "Activa" if signals.get(nombre) else "Correcta"}
+            for nombre in nombres
+            if nombre in signals
+        ]
+        activas = sum(1 for fila in filas if fila["Estado"] == "Activa")
+        with st.expander(f"{grupo} ({activas}/{len(filas)} activas)", expanded=activas > 0):
+            st.table(filas)
 
 
 def mostrar_resultado_heuristico(resultado):
     """Muestra la puntuación heurística y el detalle de reglas activadas."""
     mostrar_resultado_basico(resultado, "Análisis heurístico")
-    st.markdown("### Señales detectadas")
-    # Se transforma el diccionario de señales en una tabla de lectura sencilla
-    # sin perder el nombre técnico de cada regla.
-    detalle_senales = [
-        {"Regla": nombre.replace("_", " ").capitalize(), "Activo": "Sí" if valor else "No"}
-        for nombre, valor in resultado["signals"].items()
-    ]
-    st.table(detalle_senales)
+    st.markdown("### Señales por categoría")
+    _mostrar_senales_agrupadas(resultado["signals"])
 
     with st.expander("Explicación detallada de las señales"):
         for item in resultado["explanation"]:
@@ -152,31 +377,16 @@ def construir_resultado_combinado(resultado_heur, resultado_neural, heur_weight,
     """Devuelve el resultado mixto sin pintarlo en pantalla."""
     # Se mantiene el mismo umbral que la heurística para que la interpretación
     # del porcentaje sea homogénea en los tres modos de análisis.
-    combined_score = (
-        resultado_heur["risk_score"] * heur_weight
-        + resultado_neural["risk_score"] * neural_weight
-    ) / (heur_weight + neural_weight)
+    config = SimpleNamespace(threshold=45, heur_weight=heur_weight, neural_weight=neural_weight)
+    resultado = combinar_resultados(resultado_heur, resultado_neural, config)
     return {
-        "is_phishing": combined_score >= 45,
-        "risk_score": round(combined_score, 1),
-        "description": "Resultado mixto ponderado entre heurística y red neuronal.",
-        "urls": resultado_heur.get("urls", []),
-        "anchors": resultado_heur.get("anchors", []),
-        "headers": resultado_heur.get("headers", {}),
+        "is_phishing": resultado["is_phishing"],
+        "risk_score": resultado["risk_score"],
+        "description": resultado["description"],
+        "urls": resultado["urls"],
+        "anchors": resultado["anchors"],
+        "headers": resultado["headers"],
     }
-
-
-def _detectar_idioma_texto(texto: str) -> str:
-    """Devuelve 'es' o 'en' según el idioma detectado. Por defecto 'es'."""
-    if not LANGDETECT_DISPONIBLE or not texto.strip():
-        return "es"
-    try:
-        # La app solo mantiene modelos separados para español e inglés; otros
-        # idiomas se agrupan con español como opción por defecto.
-        lang = detectar_idioma(texto)
-        return "en" if lang == "en" else "es"
-    except Exception:
-        return "es"
 
 
 def cargar_detector(idioma: str) -> NeuralPhishingDetector:
@@ -199,7 +409,7 @@ def cargar_detector(idioma: str) -> NeuralPhishingDetector:
 
 def analizar_entrada(entrada, texto_modelo: str, remitente: str, subject: str, heur_weight: int, neural_weight: int):
     """Ejecuta análisis heurístico, neuronal y combinado sobre una entrada."""
-    idioma = _detectar_idioma_texto(texto_modelo)
+    idioma = detectar_idioma_correo(texto_modelo)
     detector = cargar_detector(idioma)
     resultado_heuristico = analizar_correo(entrada)
     resultado_neural = detector.analyze(texto_modelo, remitente, subject)
@@ -293,13 +503,12 @@ def mostrar_resultados_gmail(registros, tipo_analisis: str):
             col_texto.caption(_texto_corto(datos_email.get("from", "(sin remitente)"), 120))
             col_estado.markdown(f"**{clasificacion}**")
             col_estado.caption(f"Modo: {tipo_analisis}")
-            st.markdown(
+            render_html(
                 f"""
                 <div style='width: 100%; background: #e6e6e6; border-radius: 8px; height: 10px;'>
                     <div style='width: {resultado["risk_score"]}%; height: 10px; border-radius: 8px; background: {color};'></div>
                 </div>
-                """,
-                unsafe_allow_html=True,
+                """
             )
 
     registros_ok = [registro for registro in registros if registro["ok"]]
@@ -383,11 +592,9 @@ def cargar_email_gmail_desde_token() -> None:
 
 def main():
     """Construye la pantalla de detección y ejecuta el análisis seleccionado."""
-    st.title("Detección - Sistema de phishing")
-    st.markdown(
-        "Esta pantalla está dedicada exclusivamente a analizar correos. "
-        "No hay ninguna funcionalidad de entrenamiento en esta interfaz."
-    )
+    aplicar_estilos_deteccion()
+    st.title("Detección de phishing")
+    st.caption("Analiza correos pegados, archivos .eml o mensajes importados desde Gmail.")
 
     es_disponible = ModelStorage(MODEL_PATH_ES).exists()
     en_disponible = ModelStorage(MODEL_PATH_EN).exists()
@@ -446,7 +653,19 @@ def main():
         else:
             st.info("No hay ninguna cuenta de Gmail conectada todavía.")
         limite_gmail = st.number_input("Número de correos a analizar", min_value=1, max_value=50, value=10)
-        query_gmail = st.text_input("Consulta de Gmail", value="in:inbox")
+
+        # Campo de consulta + botón de ayuda (❓) con los operadores de
+        # búsqueda de Gmail más habituales. Se usan columnas para que el
+        # popover quede alineado a la derecha del campo de texto, y un
+        # pequeño espaciador para bajarlo a la altura del input (el popover
+        # se posiciona donde está el botón, no donde está la etiqueta).
+        col_query, col_ayuda = st.columns([6, 1])
+        with col_query:
+            query_gmail = st.text_input("Consulta de Gmail", value="in:inbox")
+        with col_ayuda:
+            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+            with st.popover("❓", use_container_width=True):
+                st.markdown(GMAIL_QUERY_HELP_MD)
 
     tipo_analisis = st.radio("Tipo de análisis", ["Heurístico", "Red neuronal", "Combinado"], index=2)
     heur_weight = 60

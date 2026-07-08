@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <title>Opciones - Detector de Phishing para Gmail</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main class="options-shell">
+      <section class="options-card">
+        <div class="card-bar"></div>
+        <div class="card-content">
+          <p class="kicker">TFG Phishing Guard</p>
+          <h1>Opciones de la extensión</h1>
+
+          <div class="status-panel">
+            <div>
+              <div class="label">Servidor local</div>
+              <div id="server-status" class="status-pill offline">Sin comprobar</div>
+            </div>
+            <button id="check-button" type="button" class="secondary">Comprobar conexión</button>
+          </div>
+
+          <label for="retry-seconds">Reintentar conexión cada</label>
+          <div class="input-row">
+            <input id="retry-seconds" type="number" min="5" step="5">
+            <span>segundos</span>
+          </div>
+          <p class="hint">Si el servidor local está apagado, Gmail volverá a comprobarlo automáticamente con este intervalo.</p>
+
+          <div class="command-box">
+            <div class="label">Comando recomendado</div>
+            <code>python src/gmail_extension_server.py</code>
+          </div>
+
+          <button id="save-button" type="button">Guardar opciones</button>
+          <p id="save-status" class="save-status" aria-live="polite"></p>
+        </div>
+      </section>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

@@ -1,6 +1,11 @@
+import io
 import unittest
 
-from sistema_phishing.neural import NeuralPhishingClassifier, generar_dataset_sintetico
+from sistema_phishing.neural import (
+    HiperparametrosModelo,
+    NeuralPhishingClassifier,
+    generar_dataset_sintetico,
+)
 
 
 class TestNeuralPhishingClassifier(unittest.TestCase):
@@ -35,3 +40,21 @@ class TestNeuralPhishingClassifier(unittest.TestCase):
         ])
         self.assertEqual(len(probas), 2)
         self.assertTrue(all(0.0 <= p <= 1.0 for p in probas))
+
+    def test_fit_from_csvs_acumula_datos_de_entrenamientos_previos(self):
+        clasificador = NeuralPhishingClassifier(
+            hiperparametros=HiperparametrosModelo(
+                tfidf_max_features=50,
+                mlp_max_iter=20,
+                mlp_hidden_layer_sizes=(8,),
+            )
+        )
+        primer_csv = io.StringIO("label,text\n1,phishing one\n0,legit one\n")
+        segundo_csv = io.StringIO("label,text\n1,phishing two\n0,legit two\n")
+
+        clasificador.fit_from_csvs([primer_csv])
+        clasificador.fit_from_csvs([segundo_csv])
+
+        self.assertEqual(len(clasificador.training_texts), 4)
+        self.assertEqual(len(clasificador.training_labels), 4)
+        self.assertEqual(len(clasificador.training_sources), 2)

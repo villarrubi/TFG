@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Muestra una advertencia de riesgo de phishing dentro de Gmail Web usando el detector local del TFG.",
   "permissions": ["storage"],
+  "options_page": "options.html",
   "host_permissions": [
     "http://127.0.0.1:8765/*",
     "http://localhost:8765/*"

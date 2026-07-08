@@ -42,6 +42,19 @@ SUSPICIOUS_EXPLANATIONS = {
 }
 
 
+def _recortar(texto: str, limite: int = 90) -> str:
+    texto = " ".join(str(texto).split())
+    return texto if len(texto) <= limite else f"{texto[: limite - 3]}..."
+
+
+def _clasificacion(score: float) -> str:
+    if score >= 70:
+        return "Riesgo alto"
+    if score >= 45:
+        return "Riesgo medio"
+    return "Riesgo bajo"
+
+
 @dataclass
 class TelegramNotifier:
     """Cliente mínimo para enviar mensajes a un chat de Telegram."""
@@ -85,21 +98,29 @@ def construir_mensaje_alerta(datos_email: dict, resultado: dict, modo: str) -> s
         for nombre, texto in SUSPICIOUS_EXPLANATIONS.items()
         if signals.get(nombre)
     ][:5]
+    urls_resumen = [escape(_recortar(url)) for url in urls[:3]]
     modo_seguro = escape(str(modo))
+    score = float(resultado["risk_score"])
     lineas = [
-        "<b>Posible phishing detectado</b>",
+        "<b>ALERTA DE PHISHING</b>",
+        f"<b>{_clasificacion(score)}</b> - {score:.1f}%",
         "",
-        f"<b>Riesgo:</b> {resultado['risk_score']:.1f}%",
         f"<b>Modo:</b> {modo_seguro}",
         f"<b>Remitente:</b> {remitente}",
         f"<b>Asunto:</b> {asunto}",
-        f"<b>URLs detectadas:</b> {len(urls)}",
+        f"<b>URLs:</b> {len(urls)} detectadas",
     ]
     if explicaciones:
         lineas.append("")
-        lineas.append("<b>Motivos principales:</b>")
+        lineas.append("<b>Señales activas:</b>")
         lineas.extend(f"- {item}" for item in explicaciones)
     else:
         lineas.append("")
         lineas.append("No hay señales heurísticas sospechosas destacadas en el mensaje.")
+    if urls_resumen:
+        lineas.append("")
+        lineas.append("<b>Primeros enlaces:</b>")
+        lineas.extend(f"- {url}" for url in urls_resumen)
+    lineas.append("")
+    lineas.append("Revisa el correo antes de abrir enlaces o responder.")
     return "\n".join(lineas)

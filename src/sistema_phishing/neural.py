@@ -17,6 +17,7 @@ from .dataset import (
     obtener_texto_de_fila as _obtener_texto_de_fila,
 )
 from .modelo_neural import (
+    HiperparametrosModelo,
     ModelStorage,
     NeuralModelTrainer,
     NeuralPhishingClassifier,
@@ -26,6 +27,7 @@ from .modelo_neural import (
 )
 
 __all__ = [
+    "HiperparametrosModelo",
     "ModelStorage",
     "NeuralModelTrainer",
     "NeuralPhishingClassifier",

@@ -52,34 +52,56 @@ class SignalBuilder:
         """Ejecuta las reglas disponibles sobre el correo normalizado."""
         # El orden se conserva para que la tabla de la interfaz y las
         # explicaciones aparezcan siempre de forma predecible.
+        signals: Dict[str, bool] = {}
+        signals.update(self._identity_signals())
+        signals.update(self._url_and_auth_signals())
+        signals.update(self._content_signals())
+        signals.update(self._html_and_attachment_signals())
+        return signals
+
+    def _identity_signals(self) -> Dict[str, bool]:
+        """Señales de identidad del remitente y coherencia de cabeceras."""
         return {
-            # Señales de identidad del remitente y coherencia de cabeceras.
             "reply_to_diferente": tiene_reply_to_diferente(self.correo.full_text),
             "nombre_display_engano": nombre_display_engano(self.correo.from_address),
             "remitente_marca_engano": remitente_marca_engano(self.correo.from_address),
             "cabecera_spoofing": cabecera_spoofing(self.correo.full_text),
             "incoherencia_remitente": incoherencia_remitente(self.correo.full_text),
-            # Señales derivadas de URLs, dominios y reputación local.
+        }
+
+    def _url_and_auth_signals(self) -> Dict[str, bool]:
+        """Señales derivadas de URLs, dominios, reputación y autenticación."""
+        has_urls = len(self.correo.urls) > 0
+        return {
             "enlaces_sospechosos": len(self.correo.urls) > 0 and dominios_sospechosos(self.correo.urls),
-            "dominio_blacklist": len(self.correo.urls) > 0 and any(es_dominio_listado_negro(url) for url in self.correo.urls),
+            "dominio_blacklist": has_urls and any(es_dominio_listado_negro(url) for url in self.correo.urls),
             "autenticacion_fallida": tiene_fallo_autenticacion(self.correo.full_text),
             "recibidos_sospechosos": tiene_recibidos_sospechosos(self.correo.full_text),
             "dmarc_fallido": dmarc_fallido(self.correo.full_text),
             "dkim_mal_formado": dkim_mal_formado(self.correo.full_text),
-            # Señales de contenido social: presión, saludo genérico y petición de datos.
+        }
+
+    def _content_signals(self) -> Dict[str, bool]:
+        """Señales de contenido social: presión, saludo genérico y petición de datos."""
+        return {
             "saludo_generico": saludo_generico(self.correo.body),
             "solicitud_credenciales": solicitud_datos_credenciales(self.correo.body),
             "mensaje_id_sospechoso": mensaje_id_sospechoso(self.correo.full_text, self.correo.from_address),
-            # Señales propias del HTML y de adjuntos.
+        }
+
+    def _html_and_attachment_signals(self) -> Dict[str, bool]:
+        """Señales propias del HTML, enlaces enriquecidos y adjuntos."""
+        has_urls = len(self.correo.urls) > 0
+        return {
             "meta_refresh_html": contiene_meta_refresh(self.correo.html_body),
             "javascript_redireccion": contiene_javascript_redireccion(self.correo.html_body),
             "html_sospechoso": contiene_html_sospechoso(self.correo.html_body),
             "adjunto_sospechoso": adjuntos_sospechosos(self.correo.attachments),
             "lenguaje_urgente": contiene_palabras_urgentes(self.correo.full_text),
             "asunto_sospechoso": asunto_sospechoso(self.correo.subject),
-            "url_parametros_sospechosos": len(self.correo.urls) > 0 and any(tiene_parametros_sospechosos_url(url) for url in self.correo.urls),
-            "dominio_punycode_unicode": len(self.correo.urls) > 0 and any(contiene_punycode_o_unicode(url) for url in self.correo.urls),
-            "enlace_shortener": len(self.correo.urls) > 0 and any(enlace_shortener(url) for url in self.correo.urls),
+            "url_parametros_sospechosos": has_urls and any(tiene_parametros_sospechosos_url(url) for url in self.correo.urls),
+            "dominio_punycode_unicode": has_urls and any(contiene_punycode_o_unicode(url) for url in self.correo.urls),
+            "enlace_shortener": has_urls and any(enlace_shortener(url) for url in self.correo.urls),
             "anchor_distinto": texto_enlace_distinto(self.correo.anchors),
             "formulario_html": contiene_formulario_html(self.correo.html_body),
             "formulario_action_sospechoso": formulario_action_sospechoso(self.correo.html_body),

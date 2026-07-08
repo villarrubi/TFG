@@ -10,6 +10,26 @@ import os
 from typing import IO, List, Tuple, Union
 
 
+LABEL_COLUMN_CANDIDATES = ["label", "is_phishing", "phishing", "spam", "target"]
+TEXT_COLUMN_CANDIDATES = ("message", "email", "content")
+
+
+def _valor_no_vacio(fila: dict, columna: str) -> str:
+    """Devuelve el valor limpio de una columna o cadena vacía."""
+    if columna in fila and fila[columna] and fila[columna].strip():
+        return fila[columna].strip()
+    return ""
+
+
+def _primer_valor_no_vacio(fila: dict, columnas: Tuple[str, ...]) -> str:
+    """Busca el primer valor no vacío respetando el orden de preferencia."""
+    for columna in columnas:
+        valor = _valor_no_vacio(fila, columna)
+        if valor:
+            return valor
+    return ""
+
+
 def construir_texto_para_entrenamiento(subject: str, body: str, headers: str = "") -> str:
     """Combina asunto, cuerpo y cabeceras en un solo texto para el modelo."""
     # El modelo recibe texto libre; las partes vacías se eliminan para no añadir
@@ -47,9 +67,9 @@ def normalizar_etiqueta(valor: str) -> int:
     if valor is None:
         raise ValueError("Etiqueta ausente en el dataset")
     texto = str(valor).strip().lower()
-    if texto in {"1", "true", "phishing", "spam", "malicious", "sospechoso", "1.0"}:
+    if texto in {"1", "true", "phishing", "spam", "malicious", "sospechoso", "1.0", "safe email"}:
         return 1
-    if texto in {"0", "false", "legit", "ham", "clean", "benigno", "no phishing", "no_phishing", "0.0"}:
+    if texto in {"0", "false", "legit", "ham", "clean", "benigno", "no phishing", "no_phishing", "0.0", "phishing email"}:
         return 0
     raise ValueError(f"Etiqueta desconocida: {valor}")
 
@@ -61,14 +81,7 @@ def encontrar_columna_etiqueta(fila: dict, label_column: str) -> str:
 
     # Se admiten nombres comunes para facilitar el uso de datasets públicos sin
     # tener que editarlos previamente.
-    candidatos = [
-        "label",
-        "is_phishing",
-        "phishing",
-        "spam",
-        "target",
-    ]
-    for candidato in candidatos:
+    for candidato in LABEL_COLUMN_CANDIDATES:
         if candidato in fila:
             return candidato
     raise ValueError(
@@ -81,23 +94,22 @@ def obtener_campos_adicionales(fila: dict) -> str:
     partes: List[str] = []
     # Remitente, destinatario, URLs y fecha pueden aportar información útil al
     # clasificador aunque no formen parte del cuerpo del mensaje.
-    if "sender" in fila and fila["sender"].strip():
-        partes.append(f"From: {fila['sender'].strip()}")
-    elif "from" in fila and fila["from"].strip():
-        partes.append(f"From: {fila['from'].strip()}")
+    sender = _primer_valor_no_vacio(fila, ("sender", "from"))
+    receiver = _primer_valor_no_vacio(fila, ("receiver", "to"))
+    urls = _valor_no_vacio(fila, "urls")
+    links = _valor_no_vacio(fila, "links")
+    date = _valor_no_vacio(fila, "date")
 
-    if "receiver" in fila and fila["receiver"].strip():
-        partes.append(f"To: {fila['receiver'].strip()}")
-    elif "to" in fila and fila["to"].strip():
-        partes.append(f"To: {fila['to'].strip()}")
-
-    if "urls" in fila and fila["urls"].strip():
-        partes.append(f"URLs: {fila['urls'].strip()}")
-    elif "links" in fila and fila["links"].strip():
-        partes.append(f"Links: {fila['links'].strip()}")
-
-    if "date" in fila and fila["date"].strip():
-        partes.append(f"Date: {fila['date'].strip()}")
+    if sender:
+        partes.append(f"From: {sender}")
+    if receiver:
+        partes.append(f"To: {receiver}")
+    if urls:
+        partes.append(f"URLs: {urls}")
+    elif links:
+        partes.append(f"Links: {links}")
+    if date:
+        partes.append(f"Date: {date}")
 
     if partes:
         return "\n".join(partes).strip()
@@ -112,30 +124,24 @@ def obtener_texto_de_fila(
 ) -> str:
     """Construye el texto de entrenamiento a partir de formatos de CSV flexibles."""
     texto = ""
-    if text_column and text_column in fila and fila[text_column].strip():
-        texto = fila[text_column].strip()
-    elif "text_combined" in fila and fila["text_combined"].strip():
-        texto = fila["text_combined"].strip()
-    else:
-        partes: List[str] = []
-        if subject_column and subject_column in fila and fila[subject_column].strip():
-            partes.append(fila[subject_column].strip())
-        elif "subject" in fila and fila["subject"].strip():
-            partes.append(fila["subject"].strip())
+    if text_column:
+        texto = _valor_no_vacio(fila, text_column)
 
-        if body_column and body_column in fila and fila[body_column].strip():
-            partes.append(fila[body_column].strip())
-        elif "body" in fila and fila["body"].strip():
-            partes.append(fila["body"].strip())
+    if not texto:
+        texto = _valor_no_vacio(fila, "text_combined")
 
-        if partes:
-            texto = "\n".join(partes).strip()
-        else:
-            # Compatibilidad con nombres frecuentes en datasets públicos.
-            for candidato in ("message", "email", "content"):
-                if candidato in fila and fila[candidato].strip():
-                    texto = fila[candidato].strip()
-                    break
+    if not texto:
+        subject = _valor_no_vacio(fila, subject_column) if subject_column else ""
+        body = _valor_no_vacio(fila, body_column) if body_column else ""
+        partes = [
+            subject or _valor_no_vacio(fila, "subject"),
+            body or _valor_no_vacio(fila, "body"),
+        ]
+        texto = "\n".join(parte for parte in partes if parte).strip()
+
+    if not texto:
+        # Compatibilidad con nombres frecuentes en datasets públicos.
+        texto = _primer_valor_no_vacio(fila, TEXT_COLUMN_CANDIDATES)
 
     texto_adicional = obtener_campos_adicionales(fila)
     if texto and texto_adicional:

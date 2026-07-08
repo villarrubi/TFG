@@ -1,13 +1,22 @@
 """Punto de entrada principal con navegación entre las pantallas del TFG."""
 
+import os
+
 import streamlit as st
 
 import config_app
 import detect_app
 import monitor_app
 import train_app
+from sistema_phishing.env_loader import cargar_env_local, leer_env_file
+from ui_components import aplicar_estilos_base, estado_badge, render_html
 
 
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+ENV_LOCAL_PATH = os.path.join(ROOT_DIR, ".env.local")
+GMAIL_TOKEN_PATH = os.path.join(ROOT_DIR, "token.json")
+MODEL_PATH_ES = os.path.join(ROOT_DIR, "modelo_neural_es.joblib")
+MODEL_PATH_EN = os.path.join(ROOT_DIR, "modelo_neural_en.joblib")
 VISTA_INICIO = "inicio"
 VISTA_CONFIGURACION = "configuracion"
 VISTA_DETECCION = "deteccion"
@@ -51,27 +60,56 @@ def mostrar_navegacion(vista: str) -> None:
 
 def aplicar_estilos_globales() -> None:
     """Ajustes visuales comunes para todas las vistas."""
-    st.markdown(
+    aplicar_estilos_base()
+
+
+def _mostrar_estado_inicio() -> None:
+    """Muestra el estado general del sistema en la pantalla de inicio."""
+    cargar_env_local(ROOT_DIR)
+    valores = leer_env_file(ENV_LOCAL_PATH)
+    gmail_ok = os.path.exists(GMAIL_TOKEN_PATH)
+    telegram_ok = bool(
+        valores.get("TELEGRAM_BOT_TOKEN", os.getenv("TELEGRAM_BOT_TOKEN", ""))
+        and valores.get("TELEGRAM_CHAT_ID", os.getenv("TELEGRAM_CHAT_ID", ""))
+    )
+    models_count = sum(1 for path in (MODEL_PATH_ES, MODEL_PATH_EN) if os.path.exists(path))
+    extension_ready = os.path.exists(os.path.join(ROOT_DIR, "extension_gmail", "manifest.json"))
+
+    render_html(
+        f"""
+        <div class="ui-grid ui-grid-4">
+            <div class="ui-card">
+                <div class="ui-label">Gmail</div>
+                <div class="ui-value">{estado_badge(gmail_ok, "Conectado", "Sin token")}</div>
+                <div class="ui-note">Permite analizar correos reales desde la API.</div>
+            </div>
+            <div class="ui-card">
+                <div class="ui-label">Telegram</div>
+                <div class="ui-value">{estado_badge(telegram_ok, "Configurado", "Pendiente")}</div>
+                <div class="ui-note">Envía alertas cuando el monitor detecta riesgo.</div>
+            </div>
+            <div class="ui-card">
+                <div class="ui-label">Modelos</div>
+                <div class="ui-value">{models_count}/2 disponibles</div>
+                <div class="ui-note">Español e inglés pueden entrenarse por separado.</div>
+            </div>
+            <div class="ui-card">
+                <div class="ui-label">Extensión Gmail</div>
+                <div class="ui-value">{estado_badge(extension_ready, "Disponible", "No encontrada")}</div>
+                <div class="ui-note">Integra el análisis dentro de Gmail Web.</div>
+            </div>
+        </div>
         """
-        <style>
-        h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
-            display: none !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
     )
 
 
 def mostrar_inicio() -> None:
     """Pantalla inicial que actúa como pivote del sistema."""
-    st.title("TFG - Sistema de detección de phishing")
-    st.markdown(
-        "Herramienta para analizar correos electrónicos mediante heurísticas, "
-        "modelo neuronal y conexión opcional con Gmail."
-    )
+    st.title("Sistema de detección de phishing")
+    st.caption("Análisis heurístico, modelo neuronal, Gmail Web, monitor automático y alertas por Telegram.")
+    _mostrar_estado_inicio()
 
-    col_config, col_deteccion, col_monitor, col_entrenamiento = st.columns(4)
+    col_config, col_deteccion = st.columns(2)
     with col_config:
         st.subheader("Configuración")
         st.write("Gestiona Gmail, Telegram y los parámetros del monitor.")
@@ -84,6 +122,7 @@ def mostrar_inicio() -> None:
         if st.button("Ir a detección", use_container_width=True):
             _cambiar_vista(VISTA_DETECCION)
 
+    col_monitor, col_entrenamiento = st.columns(2)
     with col_monitor:
         st.subheader("Monitor")
         st.write("Comprueba Gmail periódicamente y envía alertas por Telegram.")
@@ -95,6 +134,15 @@ def mostrar_inicio() -> None:
         st.write("Entrena y evalúa los modelos neuronales en español e inglés.")
         if st.button("Ir a entrenamiento", use_container_width=True):
             _cambiar_vista(VISTA_ENTRENAMIENTO)
+
+    st.markdown("### Comandos rápidos")
+    col_ext, col_mon = st.columns(2)
+    with col_ext:
+        st.code("python src/gmail_extension_server.py", language="powershell")
+        st.caption("Servidor local usado por la extensión de Gmail Web.")
+    with col_mon:
+        st.code("python src/monitor_gmail.py", language="powershell")
+        st.caption("Proceso 24/7 para revisar Gmail y enviar alertas.")
 
 
 def main() -> None:
