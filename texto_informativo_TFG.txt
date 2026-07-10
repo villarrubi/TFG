@@ -1,0 +1,132 @@
+Alcance del sistema
+
+El proyecto desarrollado consiste en un prototipo para la detección de phishing en correos electrónicos. El sistema analiza mensajes a partir de texto pegado manualmente, archivos .eml, correos obtenidos mediante la API de Gmail y correos visibles en Gmail Web a través de una extensión de navegador.
+
+El alcance funcional se centra en el análisis estático del correo y de los elementos que contiene. El sistema extrae cabeceras, remitente, asunto, cuerpo en texto plano, contenido HTML, enlaces, anclas y adjuntos, y aplica sobre ellos reglas heurísticas y un clasificador neuronal. No realiza navegación activa hacia las páginas enlazadas, no descarga contenido externo ni consulta servicios de reputación online en tiempo real. Esta decisión reduce riesgos durante las pruebas, mejora la reproducibilidad y mantiene el prototipo dentro de un entorno controlado.
+
+No obstante, la arquitectura queda preparada para ampliaciones futuras. Podrían añadirse consultas a listas negras externas, reputación de dominios, validación de certificados TLS, análisis dinámico de páginas o integración con sistemas corporativos de alerta. Por tanto, el sistema no se plantea como un producto cerrado, sino como una base funcional y extensible.
+
+Arquitectura general
+
+La versión actual del proyecto sigue una arquitectura cliente-servidor híbrida. Inicialmente el sistema estaba organizado principalmente como una aplicación Streamlit con módulos internos de análisis. Actualmente se ha incorporado un backend HTTP centralizado que permite separar la lógica sensible de los clientes y reutilizar el mismo motor de detección desde distintas interfaces.
+
+La arquitectura puede resumirse así:
+
+Clientes: aplicación Streamlit, extensión Gmail Web y monitor Gmail.
+Backend HTTP centralizado: servicio que expone endpoints de análisis.
+Servicio común de análisis: capa que coordina heurística, red neuronal y combinación de resultados.
+Motor de detección: reglas, extracción de señales, scoring, explicaciones y modelos neuronales.
+
+Esta separación permite que varios clientes consuman el mismo servicio sin duplicar modelos ni reglas. Además, facilita un despliegue más parecido a un entorno real, en el que los clientes no necesitan acceso directo a archivos sensibles, rutas internas, modelos entrenados o configuración avanzada.
+
+Backend centralizado
+
+El backend principal se encuentra en src/backend_server.py. Es un servidor HTTP sencillo que expone dos rutas:
+
+GET /health: devuelve el estado básico del servicio.
+POST /analyze: recibe un correo normalizado en formato JSON y devuelve la clasificación de phishing.
+
+El backend utiliza src/sistema_phishing/backend_service.py para transformar el payload recibido por HTTP al formato interno que entiende el motor de análisis. A su vez, este servicio delega en src/sistema_phishing/analysis_service.py, que es la capa común que ejecuta el análisis heurístico, neuronal o combinado.
+
+La configuración del backend se realiza mediante variables de entorno. Entre las más importantes se encuentran BACKEND_URL, BACKEND_HOST, BACKEND_PORT, BACKEND_API_TOKEN, BACKEND_ALLOWED_ORIGINS, BACKEND_ANALYSIS_MODE, BACKEND_PHISHING_THRESHOLD, BACKEND_HEUR_WEIGHT y BACKEND_NEURAL_WEIGHT.
+
+Si BACKEND_API_TOKEN está definido, el backend exige que las peticiones incluyan el token en la cabecera Authorization o X-API-Key. Este mecanismo no sustituye a una solución completa de autenticación corporativa, pero sí evita que el endpoint quede completamente abierto en despliegues de prueba o demostración.
+
+Cliente HTTP común
+
+El módulo src/sistema_phishing/backend_client.py implementa el cliente HTTP usado por el resto del sistema para comunicarse con el backend. Este cliente lee BACKEND_URL y BACKEND_API_TOKEN, envía las peticiones al endpoint /analyze y devuelve la respuesta JSON.
+
+Además, incluye una función de ayuda que permite intentar primero el backend y, si no está disponible, ejecutar un análisis local como fallback. Esto resulta útil durante el desarrollo y en demostraciones, porque la aplicación puede seguir funcionando aunque el servidor central no se haya arrancado.
+
+Aplicación Streamlit
+
+La aplicación principal se inicia desde src/app.py. Actúa como interfaz central del prototipo y agrupa varias pantallas:
+
+Inicio: muestra el estado general del sistema.
+Configuración: permite gestionar Gmail, Telegram, backend, monitor, extensión Gmail Web e hiperparámetros de la red neuronal.
+Detección: permite analizar texto pegado, archivos .eml o correos obtenidos desde Gmail.
+Monitor: muestra parámetros y acciones relacionadas con la monitorización.
+Entrenamiento: permite entrenar, evaluar y comparar modelos neuronales.
+
+La pantalla de detección, implementada en src/detect_app.py, funciona ahora como cliente del backend centralizado. Cuando el backend está disponible, envía el correo normalizado al servidor. Si el backend no responde, puede ejecutar el análisis local para no bloquear el uso del prototipo.
+
+Extensión para Gmail Web
+
+La carpeta extension_gmail contiene una extensión de navegador para Gmail Web. La extensión no utiliza directamente la API de Gmail ni almacena credenciales. Su función es leer el correo abierto en la interfaz de Gmail, extraer asunto, remitente, cuerpo y enlaces, y enviar esa información a un servidor local.
+
+Ese servidor local se encuentra en src/gmail_extension_server.py. Actúa como puente entre la extensión del navegador y el sistema de análisis. En la versión actual, este servidor intenta delegar primero en el backend centralizado. Si el backend no está disponible, puede recurrir al análisis local.
+
+Este diseño evita introducir modelos o lógica compleja dentro de la extensión. La extensión se mantiene ligera y limitada a la captura de información visible en Gmail, mientras que el análisis se conserva en Python.
+
+Monitor Gmail y alertas Telegram
+
+El monitor se ejecuta desde src/monitor_gmail.py. Su objetivo es revisar periódicamente una cuenta de Gmail mediante la API oficial, detectar correos nuevos y analizarlos automáticamente. La lógica de control de estado se encuentra en src/sistema_phishing/gmail_monitor.py.
+
+El monitor guarda los identificadores de correos ya procesados para no analizarlos repetidamente. También permite configurar si en la primera ejecución se deben marcar como vistos los correos existentes o analizarlos desde el primer ciclo.
+
+Cuando un correo supera el umbral de phishing, el sistema puede enviar una alerta mediante Telegram. Esta funcionalidad está implementada en src/sistema_phishing/telegram_notifier.py. Las alertas incluyen datos como asunto, remitente, puntuación de riesgo, modo de análisis y señales principales.
+
+Motor heurístico
+
+El sistema heurístico sigue siendo una de las partes más importantes del proyecto porque permite explicar por qué un correo se considera sospechoso. El análisis se basa en señales agrupadas por tipo:
+
+Cabeceras e identidad: incoherencias entre From, Reply-To, Return-Path, Message-ID, Received-SPF, DKIM o DMARC.
+Enlaces y dominios: URLs sospechosas, acortadores, dominios en listas locales, punycode, caracteres Unicode y parámetros de redirección.
+Contenido textual: lenguaje urgente, saludos genéricos, solicitudes de credenciales, asuntos sospechosos y referencias a adjuntos.
+HTML: formularios, redirecciones mediante JavaScript, meta refresh, iframes, base href y anclas engañosas.
+
+Los módulos principales de esta parte son heuristicas.py, header_signals.py, content_signals.py, html_signals.py, url_utils.py, signal_builder.py, scorer.py y explanations.py. La separación en módulos facilita añadir nuevas reglas sin modificar todo el sistema.
+
+Clasificador neuronal
+
+El sistema incorpora un clasificador neuronal basado en scikit-learn. Utiliza un pipeline compuesto por TF-IDF y MLPClassifier. El vectorizador convierte el texto del correo en una representación numérica, y el perceptrón multicapa aprende a distinguir entre correos legítimos y phishing.
+
+El proyecto soporta modelos separados para español e inglés: modelo_neural_es.joblib y modelo_neural_en.joblib. Durante el análisis se intenta detectar el idioma del correo para elegir el modelo adecuado. Si no hay modelo disponible, el sistema puede usar un modelo sintético mínimo para mantener la funcionalidad demostrativa.
+
+La pantalla de entrenamiento permite cargar uno o varios CSV, seleccionar columnas, configurar idioma, entrenar hasta tres redes en memoria, evaluar con un conjunto de prueba y comparar resultados. También se han centralizado hiperparámetros como n-gramas, número máximo de características, capas ocultas, función de activación, regularización, learning rate y early stopping.
+
+Análisis combinado
+
+El modo combinado mezcla el resultado heurístico y el resultado neuronal mediante ponderación. Por defecto se utiliza un peso heurístico del 60% y un peso neuronal del 40%, aunque estos valores pueden configurarse. En las interfaces actuales se evita que los pesos queden descompensados: el peso neuronal se calcula como complemento del peso heurístico cuando el modo combinado está activo.
+
+Este enfoque permite aprovechar la explicabilidad de las reglas heurísticas y la capacidad de generalización del modelo neuronal. En un entorno académico resulta especialmente útil porque permite comparar ambos enfoques y justificar sus diferencias.
+
+Configuración y variables de entorno
+
+El proyecto utiliza archivos .env.local y .env para cargar configuración local. El archivo .env.example documenta las variables disponibles sin incluir secretos reales. Entre los secretos que no deben subirse al repositorio se encuentran credentials.json, token.json, .env.local y estado_monitor.json.
+
+La pantalla de configuración de Streamlit permite editar parte de estos valores desde la interfaz. Esto incluye parámetros de Telegram, monitor, backend, extensión Gmail Web e hiperparámetros de red neuronal.
+
+Despliegue
+
+El backend puede ejecutarse directamente con:
+
+python src/backend_server.py
+
+También puede arrancarse mediante:
+
+python start_backend.py
+
+Y se ha añadido soporte básico para Docker mediante Dockerfile y docker-compose.yml:
+
+docker compose up --build
+
+Para el alcance del TFG no es necesario comprar un dominio. La arquitectura cliente-servidor puede demostrarse en localhost, en una red local o mediante Docker. Si se desea una demostración pública temporal, puede usarse un túnel como ngrok, Cloudflare Tunnel o localhost.run. En ese caso, la URL temporal se configura como BACKEND_URL en los clientes.
+
+En un entorno de producción real, el backend debería situarse detrás de un proxy inverso como Nginx, Caddy o Traefik, que gestionaría HTTPS, certificados TLS, dominio, logs y exposición segura hacia Internet. Esta capa se considera una mejora de infraestructura y no un requisito funcional del prototipo.
+
+Seguridad y separación de responsabilidades
+
+La separación cliente-servidor mejora la seguridad del diseño. Los clientes no necesitan conocer rutas de modelos, reglas internas ni credenciales de servicios. El backend conserva la lógica sensible y puede protegerse mediante token. La extensión de Gmail se limita a capturar datos visibles en el navegador, y el monitor concentra la integración con Gmail API y Telegram.
+
+Aun así, el sistema sigue siendo un prototipo. Para un despliegue público permanente serían necesarias medidas adicionales: HTTPS obligatorio, gestión robusta de autenticación, control de usuarios, rotación de secretos, rate limiting, logs persistentes, monitorización y actualización segura de dependencias.
+
+Limitaciones
+
+El prototipo presenta varias limitaciones. No consulta reputación externa de dominios, no navega a URLs, no analiza dinámicamente páginas web, no valida certificados TLS de enlaces y no incorpora modelos transformer ni LLMs. El rendimiento del clasificador neuronal depende de la calidad de los datasets utilizados para entrenamiento y evaluación.
+
+Además, aunque existe backend centralizado y soporte Docker, el despliegue actual sigue orientado a demostración académica, desarrollo local o red privada. Para convertirlo en un servicio de producción habría que añadir una capa completa de infraestructura, autenticación, observabilidad y mantenimiento.
+
+Conclusión técnica
+
+El proyecto ha evolucionado desde una aplicación local de análisis de phishing hacia una arquitectura modular con backend centralizado y varios clientes. La solución actual permite analizar correos desde Streamlit, Gmail Web, Gmail API y monitorización automática, combinando reglas explicables con aprendizaje automático. La estructura modular facilita el mantenimiento, permite ampliar reglas o modelos y deja preparado el camino para un despliegue más robusto sin exigirlo como condición del TFG.

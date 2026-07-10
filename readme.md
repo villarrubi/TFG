@@ -119,6 +119,37 @@ Backend Python interno en http://127.0.0.1:8766
 
 En ese esquema, `BACKEND_ALLOWED_ORIGINS` debe limitarse al dominio de la web o extensión autorizada, y `BACKEND_API_TOKEN` debe compartirse solo con los clientes controlados.
 
+### Despliegue sin dominio de pago
+
+Para el alcance del TFG no es obligatorio comprar un dominio. La arquitectura cliente-servidor puede validarse de forma completa con un backend local, en red privada o mediante una URL temporal.
+
+Opciones recomendadas:
+
+- **Localhost**: suficiente para desarrollo y pruebas en la misma máquina.
+- **Red local**: ejecutar el backend en una máquina y acceder desde otros equipos mediante su IP privada, por ejemplo `http://192.168.1.50:8766`.
+- **Docker Compose local**: permite demostrar empaquetado y despliegue reproducible sin infraestructura externa.
+- **Túnel temporal**: servicios como ngrok, Cloudflare Tunnel o localhost.run pueden exponer el backend durante una demo sin comprar dominio.
+
+Ejemplo en red local:
+
+```bash
+BACKEND_HOST=0.0.0.0
+BACKEND_PORT=8766
+BACKEND_API_TOKEN=un-token-largo-y-aleatorio
+python src/backend_server.py
+```
+
+En los clientes:
+
+```bash
+BACKEND_URL=http://192.168.1.50:8766
+BACKEND_API_TOKEN=un-token-largo-y-aleatorio
+```
+
+Con túnel temporal, la URL pública que entregue el proveedor sustituye a `BACKEND_URL`. Esta alternativa es útil para enseñar el sistema durante una defensa, pero no debe tratarse como despliegue permanente.
+
+En la memoria del TFG puede justificarse así: el prototipo implementa un backend HTTP centralizado desplegable en local, red privada o Docker; para producción real se recomienda situarlo detrás de HTTPS y proxy inverso, pero esa capa se considera una mejora de infraestructura y no un requisito funcional del sistema.
+
 ### Separación de clientes
 
 El objetivo del despliegue cliente-servidor es que los clientes no necesiten conocer rutas internas, modelos ni credenciales sensibles:
@@ -331,6 +362,7 @@ Si se modifica la extensión, recargarla desde `chrome://extensions` y luego rec
 ```text
 src/
 ├── app.py
+├── backend_server.py
 ├── config_app.py
 ├── detect_app.py
 ├── gmail_extension_server.py
@@ -341,6 +373,8 @@ src/
     ├── analizador_email.py
     ├── analysis_service.py
     ├── analyzer.py
+    ├── backend_client.py
+    ├── backend_service.py
     ├── configuracion.py
     ├── content_signals.py
     ├── correo.py
