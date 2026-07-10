@@ -236,6 +236,92 @@ def _mostrar_config_monitor(valores: dict) -> None:
         st.success("Configuración del monitor guardada.")
 
 
+def _mostrar_config_backend(valores: dict) -> None:
+    """Muestra y guarda la configuración del backend centralizado."""
+    st.markdown("### Backend centralizado")
+    st.caption(
+        "Estos valores permiten que la web, la extensión y el monitor consulten el mismo servicio HTTP "
+        "en lugar de cargar modelos y reglas en cada cliente."
+    )
+
+    backend_url = st.text_input(
+        "URL del backend para clientes",
+        value=valores.get("BACKEND_URL", os.getenv("BACKEND_URL", "http://127.0.0.1:8766")),
+        help="Ejemplo local: http://127.0.0.1:8766. En producción: https://detector.tu-dominio.com",
+        key="backend_url",
+    )
+    backend_token_actual = valores.get("BACKEND_API_TOKEN", os.getenv("BACKEND_API_TOKEN", ""))
+    st.caption(f"Token actual: {_mask_secret(backend_token_actual)}")
+    backend_token = st.text_input(
+        "Nuevo token del backend",
+        type="password",
+        placeholder="Déjalo vacío para conservar el actual",
+        key="backend_token",
+    )
+    col_host, col_port = st.columns(2)
+    host = col_host.text_input(
+        "Host de escucha del backend",
+        value=valores.get("BACKEND_HOST", "127.0.0.1"),
+        key="backend_host",
+    )
+    port = col_port.number_input(
+        "Puerto del backend",
+        min_value=1,
+        max_value=65535,
+        value=_valor_entero(valores, "BACKEND_PORT", 8766),
+        key="backend_port",
+    )
+    allowed_origins = st.text_input(
+        "Orígenes CORS permitidos",
+        value=valores.get("BACKEND_ALLOWED_ORIGINS", "*"),
+        help="Usa * en local. En producción indica dominios separados por comas.",
+        key="backend_allowed_origins",
+    )
+    mode_options = ["combinado", "heuristico", "neural"]
+    mode = st.selectbox(
+        "Modo de análisis del backend",
+        mode_options,
+        index=mode_options.index(valores.get("BACKEND_ANALYSIS_MODE", valores.get("MONITOR_ANALYSIS_MODE", "combinado")))
+        if valores.get("BACKEND_ANALYSIS_MODE", valores.get("MONITOR_ANALYSIS_MODE", "combinado")) in mode_options
+        else 0,
+        key="backend_mode",
+    )
+    threshold = st.slider(
+        "Umbral del backend (%)",
+        0,
+        100,
+        int(_valor_float(valores, "BACKEND_PHISHING_THRESHOLD", _valor_float(valores, "PHISHING_THRESHOLD", 45))),
+        key="backend_threshold",
+    )
+    heur_weight = st.slider(
+        "Peso heurístico del backend (%)",
+        0,
+        100,
+        _valor_entero(valores, "BACKEND_HEUR_WEIGHT", _valor_entero(valores, "MONITOR_HEUR_WEIGHT", 60)),
+        disabled=mode != "combinado",
+        key="backend_heur_weight",
+    )
+    neural_weight = 100 - int(heur_weight) if mode == "combinado" else _valor_entero(valores, "BACKEND_NEURAL_WEIGHT", 40)
+    if mode == "combinado":
+        st.markdown(f"**Peso neuronal del backend (%)**: {neural_weight} _(derivado automáticamente)_")
+
+    if st.button("Guardar backend", use_container_width=True):
+        nuevos_valores = {
+            "BACKEND_URL": backend_url.strip().rstrip("/"),
+            "BACKEND_HOST": host.strip(),
+            "BACKEND_PORT": str(int(port)),
+            "BACKEND_ALLOWED_ORIGINS": allowed_origins.strip(),
+            "BACKEND_ANALYSIS_MODE": mode,
+            "BACKEND_PHISHING_THRESHOLD": str(int(threshold)),
+            "BACKEND_HEUR_WEIGHT": str(int(heur_weight)),
+            "BACKEND_NEURAL_WEIGHT": str(int(neural_weight)),
+        }
+        if backend_token.strip():
+            nuevos_valores["BACKEND_API_TOKEN"] = backend_token.strip()
+        actualizar_env_local(ROOT_DIR, nuevos_valores)
+        st.success("Configuración del backend guardada.")
+
+
 def _mostrar_config_gmail_extension(valores: dict) -> None:
     """Muestra y guarda la configuración de la extensión Gmail Web."""
     st.markdown("### Extensión Gmail Web")
@@ -445,6 +531,8 @@ def main() -> None:
     _mostrar_config_gmail()
     st.markdown("---")
     _mostrar_config_telegram(valores)
+    st.markdown("---")
+    _mostrar_config_backend(valores)
     st.markdown("---")
     _mostrar_config_monitor(valores)
     st.markdown("---")

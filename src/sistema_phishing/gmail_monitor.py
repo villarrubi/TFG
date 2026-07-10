@@ -14,6 +14,7 @@ from .analysis_service import (
     construir_resultado_combinado as _construir_resultado_combinado,
 )
 from .analizador_email import parsear_eml_bytes
+from .backend_client import BackendAnalysisClient
 from .telegram_notifier import TelegramNotifier, construir_mensaje_alerta
 
 
@@ -73,7 +74,11 @@ def cargar_detector_neural(config: MonitorConfig):
 
 def analizar_email_monitor(datos_email: dict, config: MonitorConfig) -> dict:
     """Analiza un correo con el modo seleccionado para el monitor."""
-    return EmailAnalysisService(config).analyze(datos_email)
+    client = BackendAnalysisClient(os.getenv("BACKEND_URL", "http://127.0.0.1:8766"))
+    try:
+        return client.analyze(datos_email)
+    except Exception:
+        return EmailAnalysisService(config).analyze(datos_email)
 
 
 def analizar_correos_nuevos(correos_gmail, config: MonitorConfig, notifier: TelegramNotifier | None = None) -> List[MonitorResult]:

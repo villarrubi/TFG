@@ -9,6 +9,7 @@ from sistema_phishing.gmail_client import construir_servicio_gmail, obtener_ulti
 from sistema_phishing.env_loader import cargar_env_local
 from sistema_phishing.gmail_monitor import MonitorConfig, analizar_correos_nuevos
 from sistema_phishing.telegram_notifier import TelegramNotifier
+from sistema_phishing.backend_client import analyze_via_backend
 
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

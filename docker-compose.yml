@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8766:8766"
+    environment:
+      BACKEND_HOST: 0.0.0.0
+      BACKEND_PORT: 8766
+      BACKEND_URL: http://127.0.0.1:8766
+      BACKEND_API_TOKEN: ${BACKEND_API_TOKEN:-}
+      BACKEND_ALLOWED_ORIGINS: ${BACKEND_ALLOWED_ORIGINS:-*}
+      BACKEND_ANALYSIS_MODE: ${BACKEND_ANALYSIS_MODE:-combinado}
+      BACKEND_PHISHING_THRESHOLD: ${BACKEND_PHISHING_THRESHOLD:-45}
+      BACKEND_HEUR_WEIGHT: ${BACKEND_HEUR_WEIGHT:-60}
+      BACKEND_NEURAL_WEIGHT: ${BACKEND_NEURAL_WEIGHT:-40}
+      BACKEND_LOG_LEVEL: ${BACKEND_LOG_LEVEL:-INFO}

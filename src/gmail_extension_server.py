@@ -21,6 +21,7 @@ from sistema_phishing.analysis_service import (
     VALID_MODES,
     EmailAnalysisService,
 )
+from sistema_phishing.backend_client import BackendAnalysisClient
 from sistema_phishing.env_loader import cargar_env_local
 from sistema_phishing.gmail_monitor import MonitorConfig
 
@@ -146,16 +147,20 @@ def construir_datos_email(payload: Dict[str, object]) -> Dict[str, object]:
 
 
 class GmailWebAnalyzer:
-    """Analizador reutilizable para no recargar el modelo neuronal en cada peticion."""
+    """Analizador reutilizable que delega en el backend centralizado."""
 
     def __init__(self, config: MonitorConfig):
         self.config = config
+        self.client = BackendAnalysisClient(os.getenv("BACKEND_URL", "http://127.0.0.1:8766"))
         self.service = EmailAnalysisService(config)
         self.request_count = 0
 
     def analyze(self, payload: Dict[str, object]) -> Dict[str, object]:
         datos_email = construir_datos_email(payload)
-        resultado = self.service.analyze(datos_email)
+        try:
+            resultado = self.client.analyze(datos_email)
+        except Exception:
+            resultado = self.service.analyze(datos_email)
         self.request_count += 1
         return resultado
 

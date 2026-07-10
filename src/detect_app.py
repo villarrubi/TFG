@@ -12,6 +12,7 @@ from sistema_phishing import (
 )
 from sistema_phishing.analysis_service import construir_resultado_combinado as combinar_resultados
 from sistema_phishing.analizador_email import construir_texto_para_analisis, parsear_eml_bytes
+from sistema_phishing.backend_client import analyze_via_backend
 from sistema_phishing.gmail_client import (
     GmailIntegrationError,
     construir_servicio_gmail,
@@ -389,6 +390,33 @@ def construir_resultado_combinado(resultado_heur, resultado_neural, heur_weight,
     }
 
 
+def _normalizar_payload_analisis(entrada, texto_modelo: str, remitente: str, subject: str) -> dict:
+    """Convierte texto pegado o .eml parseado en el payload común del backend."""
+    if isinstance(entrada, dict):
+        return {
+            "subject": subject,
+            "from": remitente,
+            "body": entrada.get("body", ""),
+            "html_body": entrada.get("html_body", ""),
+            "headers": entrada.get("headers", {}),
+            "anchors": entrada.get("anchors", []),
+            "attachments": entrada.get("attachments", []),
+            "urls": entrada.get("urls", []),
+            "full_text": texto_modelo,
+        }
+    return {
+        "subject": subject,
+        "from": remitente,
+        "body": str(entrada),
+        "html_body": "",
+        "headers": {},
+        "anchors": [],
+        "attachments": [],
+        "urls": [],
+        "full_text": texto_modelo,
+    }
+
+
 def cargar_detector(idioma: str) -> NeuralPhishingDetector:
     """Carga el modelo del idioma detectado y usa alternativas si no existe."""
     path = MODEL_PATH_EN if idioma == "en" else MODEL_PATH_ES
@@ -409,17 +437,36 @@ def cargar_detector(idioma: str) -> NeuralPhishingDetector:
 
 def analizar_entrada(entrada, texto_modelo: str, remitente: str, subject: str, heur_weight: int, neural_weight: int):
     """Ejecuta análisis heurístico, neuronal y combinado sobre una entrada."""
-    idioma = detectar_idioma_correo(texto_modelo)
-    detector = cargar_detector(idioma)
-    resultado_heuristico = analizar_correo(entrada)
-    resultado_neural = detector.analyze(texto_modelo, remitente, subject)
-    resultado_combinado = construir_resultado_combinado(
-        resultado_heuristico,
-        resultado_neural,
-        heur_weight,
-        neural_weight,
-    )
-    return idioma, resultado_heuristico, resultado_neural, resultado_combinado
+    payload = _normalizar_payload_analisis(entrada, texto_modelo, remitente, subject)
+
+    def _analisis_local(local_payload):
+        idioma_local = detectar_idioma_correo(local_payload.get("full_text", ""))
+        detector = cargar_detector(idioma_local)
+        datos_locales = entrada if isinstance(entrada, dict) else str(entrada)
+        resultado_heur = analizar_correo(datos_locales)
+        resultado_neur = detector.analyze(local_payload.get("full_text", ""), remitente, subject)
+        return {
+            "source": "local",
+            "idioma": idioma_local,
+            "heuristico": resultado_heur,
+            "neural": resultado_neur,
+            "combinado": construir_resultado_combinado(
+                resultado_heur,
+                resultado_neur,
+                heur_weight,
+                neural_weight,
+            ),
+        }
+
+    resultado_backend = analyze_via_backend(payload, fallback=_analisis_local)
+    if resultado_backend.get("source") == "local":
+        return (
+            resultado_backend["idioma"],
+            resultado_backend["heuristico"],
+            resultado_backend["neural"],
+            resultado_backend["combinado"],
+        )
+    return "backend", resultado_backend, resultado_backend, resultado_backend
 
 
 def seleccionar_resultado_principal(tipo_analisis: str, resultado_heur, resultado_neural, resultado_combinado):

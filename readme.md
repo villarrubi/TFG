@@ -72,6 +72,63 @@ Enviar una petición de ejemplo:
 curl -X POST http://127.0.0.1:8766/analyze -H "Content-Type: application/json" -d '{"subject":"Verificación de cuenta","from":"soporte@ejemplo.com","body":"Haga clic para confirmar su cuenta."}'
 ```
 
+### Opciones de despliegue
+
+Arranque directo:
+
+```bash
+python start_backend.py
+```
+
+Con Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+El backend quedará disponible en el puerto 8766 y los clientes pueden apuntar a `http://127.0.0.1:8766` mediante la variable `BACKEND_URL`. Para un despliegue remoto basta con definir `BACKEND_URL=https://tu-dominio-o-ip` antes de lanzar los clientes.
+
+Variables recomendadas para producción:
+
+```bash
+BACKEND_URL=https://detector.tu-dominio.com
+BACKEND_HOST=0.0.0.0
+BACKEND_PORT=8766
+BACKEND_API_TOKEN=un-token-largo-y-aleatorio
+BACKEND_ALLOWED_ORIGINS=https://tu-web.example
+BACKEND_ANALYSIS_MODE=combinado
+BACKEND_PHISHING_THRESHOLD=45
+BACKEND_HEUR_WEIGHT=60
+BACKEND_NEURAL_WEIGHT=40
+BACKEND_LOG_LEVEL=INFO
+```
+
+Si `BACKEND_API_TOKEN` está definido, el backend exige ese token en `Authorization: Bearer ...` o `X-API-Key`. Los clientes Python lo envían automáticamente leyendo la misma variable de entorno.
+
+Para exponerlo en Internet no conviene servir TLS directamente desde este servidor simple. La opción práctica es situarlo detrás de un proxy inverso como Nginx, Caddy o Traefik:
+
+```text
+Internet HTTPS
+    |
+    v
+Proxy inverso con certificado TLS y dominio real
+    |
+    v
+Backend Python interno en http://127.0.0.1:8766
+```
+
+En ese esquema, `BACKEND_ALLOWED_ORIGINS` debe limitarse al dominio de la web o extensión autorizada, y `BACKEND_API_TOKEN` debe compartirse solo con los clientes controlados.
+
+### Separación de clientes
+
+El objetivo del despliegue cliente-servidor es que los clientes no necesiten conocer rutas internas, modelos ni credenciales sensibles:
+
+- **Backend**: conserva modelos, reglas, umbrales, logging y token de acceso.
+- **Streamlit/web**: usa `BACKEND_URL` y `BACKEND_API_TOKEN`; si el backend local no responde, puede hacer fallback local para desarrollo.
+- **Extensión Gmail Web**: mantiene su servidor local ligero y delega primero en el backend central.
+- **Monitor Gmail**: usa Gmail OAuth local/servidor y consulta el backend antes de recurrir al análisis embebido.
+- **Telegram**: permanece como salida de alertas del monitor; sus secretos se guardan fuera del cliente final.
+
 Módulos principales:
 
 - `src/app.py`: entrada principal con navegación.
@@ -81,6 +138,9 @@ Módulos principales:
 - `src/train_app.py`: entrenamiento, evaluación y gestión de modelos neuronales.
 - `src/monitor_gmail.py`: proceso de monitorización continua de Gmail.
 - `src/gmail_extension_server.py`: servidor local usado por la extensión de Gmail.
+- `src/backend_server.py`: backend HTTP centralizado para análisis remoto.
+- `src/sistema_phishing/backend_client.py`: cliente HTTP común usado por web, extensión y monitor.
+- `src/sistema_phishing/backend_service.py`: adaptación del servicio de análisis al backend.
 - `src/sistema_phishing/analysis_service.py`: servicio común que unifica heurística, neuronal y análisis combinado.
 - `src/sistema_phishing/gmail_client.py`: integración OAuth con Gmail API.
 - `src/sistema_phishing/gmail_monitor.py`: lógica del monitor y gestión de estado.
