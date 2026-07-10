@@ -38,16 +38,38 @@ $env:PYTHONPATH='src'; python -m unittest discover -s tests -p "test_*.py"
 ## Arquitectura
 
 ```text
-Gmail API / EML / texto pegado / Gmail Web
+Clientes (Streamlit / Gmail Web / Telegram / monitor)
         |
         v
-Parser y normalización de correo
+Backend HTTP centralizado
         |
         v
-Análisis heurístico + modelo neuronal
+Servicio de análisis compartido (heurístico + neuronal)
         |
         v
-Streamlit / extensión Gmail / monitor / Telegram
+Modelos neuronales y reglas de negocio
+```
+
+### Nuevo modelo cliente-servidor
+
+El proyecto ya puede arrancar una capa de backend independiente para centralizar el motor de phishing. Esto permite que la web, la extensión de Gmail y otras integraciones consuman el mismo servicio sin duplicar la lógica ni los modelos.
+
+Arrancar el backend:
+
+```bash
+python src/backend_server.py
+```
+
+Comprobar estado:
+
+```bash
+curl http://127.0.0.1:8766/health
+```
+
+Enviar una petición de ejemplo:
+
+```bash
+curl -X POST http://127.0.0.1:8766/analyze -H "Content-Type: application/json" -d '{"subject":"Verificación de cuenta","from":"soporte@ejemplo.com","body":"Haga clic para confirmar su cuenta."}'
 ```
 
 Módulos principales:

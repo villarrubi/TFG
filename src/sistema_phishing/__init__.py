@@ -14,10 +14,13 @@ __all__ = [
     "ModelStorage",
     "SignalBuilder",
     "ExplanationBuilder",
+    "AnalysisBackendConfig",
+    "AnalysisBackendService",
     "generar_dataset_sintetico",
 ]
 
 from .analizador_email import parsear_eml_archivo, parsear_eml_bytes
+from .backend_service import AnalysisBackendConfig, AnalysisBackendService
 from .explanations import ExplanationBuilder
 from .heuristicas import analizar_correo, extraer_urls
 from .neural import (
