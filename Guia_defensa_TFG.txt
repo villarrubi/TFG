@@ -1,0 +1,877 @@
+GUÍA COMPLETA DE DEFENSA
+
+Detección de phishing en correos electrónicos
+
+Aplicación web autocontenida con análisis heurístico y clasificador TF-IDF + MLP
+
+Documento de estudio, guion oral y preparación de preguntas
+
+Autor: Alejandro Villarrubia García
+
+Rama de referencia: feature/web
+
+Versión revisada: 10 de agosto de 2026
+
+Objetivo: poder explicar qué hace el sistema, cómo circulan los datos, por qué se tomaron las decisiones y cuáles son sus límites reales.
+
+
+Índice
+
+	La idea central que debes defender	3
+
+	Qué problema resuelve	3
+
+	Qué no pretende resolver	4
+
+	Guion oral recomendado	4
+
+	Apertura sugerida	4
+
+	Cierre sugerido	5
+
+	Arquitectura web y organización del sistema	5
+
+	Capas y responsabilidades	5
+
+	Por qué esta separación es importante	5
+
+	Por qué Streamlit	6
+
+	Flujo completo de un análisis	6
+
+	Qué datos conserva el resultado	7
+
+	Fuentes de entrada	7
+
+	Parseo MIME	7
+
+	Gmail como origen	7
+
+	Motor heurístico	8
+
+	Familias de señales	8
+
+	Cómo se calcula el riesgo	8
+
+	Pesos de las 28 señales	8
+
+	Qué aporta la explicabilidad	9
+
+	Clasificador neuronal	9
+
+	TF-IDF: convertir texto en números	10
+
+	MLP: clasificar la representación	10
+
+	Entrenamiento y persistencia	10
+
+	Modelos guardados en la rama	11
+
+	Por qué TF-IDF + MLP y no un transformer	11
+
+	Modo combinado	11
+
+	Ejemplo reproducible con los modelos actuales	11
+
+	La aplicación Streamlit	12
+
+	Estado de sesión y fallos controlados	12
+
+	Gmail, monitorización y Telegram	13
+
+	OAuth y privacidad	13
+
+	Monitor de correos	13
+
+	Alertas de Telegram	13
+
+	¿El monitor contradice el enfoque solo web?	13
+
+	Entrenamiento y evaluación	14
+
+	Carga flexible de CSV	14
+
+	Entrenar	14
+
+	Evaluar	14
+
+	Comparar	14
+
+	Pruebas y lectura de resultados	15
+
+	Evaluación documentada	15
+
+	Dataset sintético de fallback	15
+
+	Qué significan las métricas	16
+
+	Seguridad, privacidad y ética	16
+
+	Decisiones de diseño que debes justificar	16
+
+	Limitaciones técnicas y trabajo futuro	17
+
+	Preguntas difíciles del tribunal	17
+
+	Demostración en directo	19
+
+	Mensajes de demo	20
+
+	Plan B	20
+
+	Coherencia pendiente antes de la defensa	20
+
+	README y archivos heredados	21
+
+	Inicio y Configuración	21
+
+	Idioma en monitor	21
+
+	Métricas de la interfaz	21
+
+	10 frente a 25 ejemplos	21
+
+	Etiquetas CSV	21
+
+	Regla de nombre visible	21
+
+	Reentrenamiento acumulativo	21
+
+	Alcance de las pruebas	21
+
+	Lo que debes decir y lo que debes evitar	22
+
+	Comandos y mapa rápido	22
+
+	Arranque y pruebas	22
+
+	Monitor opcional	22
+
+	Archivos que conviene dominar	22
+
+	Glosario para responder con precisión	23
+
+	Lista final de preparación	23
+
+	Resumen de treinta segundos	24
+
+
+
+Esta guía no sustituye a la memoria. Su función es convertir el proyecto en una explicación defendible: primero fija la idea central, después recorre el flujo técnico real y, por último, prepara respuestas honestas para las preguntas difíciles.
+
+Tesis del trabajo: es viable reunir en una única aplicación web un detector explicable basado en reglas y un clasificador neuronal entrenable. La heurística aporta trazabilidad; el modelo aprende patrones; el modo combinado equilibra ambos. El prototipo demuestra integración y funcionamiento, no sustituye a una plataforma empresarial de seguridad.
+
+
+La idea central que debes defender
+
+El problema no es solamente reconocer palabras como 'urgente' o 'contraseña'. El phishing combina suplantación técnica, manipulación psicológica y enlaces o adjuntos preparados para inducir una acción. Por eso un detector basado en una sola señal es frágil: una regla fija puede ser muy explicable pero no generaliza bien, mientras que un modelo estadístico puede reconocer patrones menos obvios pero resulta más opaco.
+
+La propuesta del TFG es una aplicación web local y autocontenida. Streamlit organiza la interacción y llama directamente a módulos Python que parsean el correo, construyen señales, calculan el riesgo y ejecutan el clasificador. No existe una API de análisis separada en el alcance que se defiende. Gmail y Telegram son integraciones externas opcionales; no son clientes de un backend propio.
+
+Frase de apertura: Mi trabajo diseña y evalúa una aplicación web para analizar correos sospechosos mediante dos perspectivas complementarias: reglas explicables sobre cabeceras, contenido, HTML y URLs, y un clasificador neuronal TF-IDF + MLP entrenable en español e inglés.
+
+
+Qué problema resuelve
+
+	•	Permite analizar un correo sin abrir sus enlaces ni ejecutar sus adjuntos.
+
+	•	Convierte cabeceras y estructuras difíciles de interpretar en señales comprensibles.
+
+	•	Ofrece una puntuación común de 0 a 100 y tres modos: heurístico, neuronal y combinado.
+
+	•	Facilita trabajar con texto pegado, archivos .eml o mensajes autorizados desde Gmail.
+
+	•	Permite entrenar y evaluar modelos desde la misma interfaz web.
+
+	•	Puede revisar periódicamente Gmail y enviar una alerta por Telegram, de forma opcional.
+
+Qué no pretende resolver
+
+El prototipo no es un filtro corporativo completo, un antivirus, un sandbox de adjuntos ni una pasarela de correo. No navega por las URLs, no consulta reputación en tiempo real, no valida certificados TLS, no ejecuta código HTML y no bloquea mensajes en Gmail. Tampoco ofrece autenticación multiusuario o aislamiento de sesiones para un despliegue público.
+
+Respuesta madura: delimitar el alcance no debilita el proyecto. Demuestra que se conoce la diferencia entre un prototipo académico verificable y un producto de seguridad listo para producción.
+
+
+Guion oral recomendado
+
+El siguiente reparto sirve para una defensa de aproximadamente doce minutos. Si el tiempo disponible cambia, conserva el orden y recorta ejemplos, no la lógica.
+
+Tiempo	Bloque	Mensaje que debe quedar
+0:00-0:45	Apertura	Problema, objetivo y propuesta híbrida.
+0:45-1:45	Contexto	El phishing mezcla técnica e ingeniería social; una señal aislada no basta.
+1:45-3:00	Alcance y arquitectura	Aplicación web autocontenida, modular y ejecutada en un único proceso Python.
+3:00-5:15	Flujo	Entrada, parseo, normalización, heurística, modelo y combinación.
+5:15-6:45	Heurística	28 señales explicables y puntuación ponderada.
+6:45-8:15	Modelo	TF-IDF, MLP, modelos por idioma y persistencia.
+8:15-9:15	Interfaz e integraciones	Streamlit, Gmail OAuth, monitor y Telegram.
+9:15-10:30	Pruebas y resultados	33 pruebas, evaluación controlada y lectura prudente de métricas.
+10:30-11:30	Limitaciones	Datos, falsos positivos, seguridad y despliegue.
+11:30-12:00	Cierre	Qué demuestra el prototipo y cómo evolucionaría.
+
+
+Apertura sugerida
+
+El phishing sigue siendo eficaz porque no ataca únicamente a la tecnología: explota la confianza, la urgencia y la apariencia de legitimidad. Mi TFG parte de esa idea y desarrolla una aplicación web que analiza correos desde dos puntos de vista. El primero es heurístico y explica qué indicios técnicos o psicológicos aparecen. El segundo es un clasificador neuronal que aprende patrones de ejemplos etiquetados. Ambos pueden usarse por separado o combinarse para producir una puntuación de riesgo única.
+
+Cierre sugerido
+
+El resultado es una base funcional, explicable y extensible. El valor del trabajo no está en afirmar que se ha resuelto por completo la detección de phishing, sino en demostrar un flujo reproducible que integra análisis estático, aprendizaje supervisado, Gmail y una interfaz web, y en identificar con precisión qué mejoras serían necesarias para llevarlo a un entorno real.
+
+Arquitectura web y organización del sistema
+
+Idea clave: Streamlit actúa como capa de presentación y orquestación. La lógica de análisis vive en módulos Python reutilizables y se invoca mediante llamadas locales. Técnicamente Streamlit sirve una página al navegador, pero no existe un backend REST independiente diseñado por el proyecto.
+
+
+Usuario
+  -> Streamlit: Inicio / Configuración / Detección / Monitor / Entrenamiento
+      -> Entrada: texto | EML | Gmail API (OAuth, solo lectura)
+          -> Parser y normalización: CorreoAnalizado
+              -> Rama heurística: señales -> pesos -> explicación
+              -> Rama neuronal: idioma -> TF-IDF -> MLP -> probabilidad
+          -> Modo elegido: heurístico | neuronal | combinado
+      -> Resultado en Streamlit y, si procede, alerta por Telegram
+
+Capas y responsabilidades
+
+Capa	Archivos principales	Responsabilidad
+Presentación	src/app.py, *_app.py, ui_components.py	Navegación, formularios, estado visual y presentación del resultado.
+Casos de uso	detect_app.py, gmail_monitor.py, analysis_service.py	Coordinar análisis, selección de modo, combinación y monitorización.
+Dominio heurístico	correo.py, signal_builder.py, scorer.py, explanations.py	Representar el correo, construir señales, puntuar y explicar.
+Reglas	header_signals.py, content_signals.py, html_signals.py, url_utils.py	Detectar indicadores técnicos y de ingeniería social.
+Aprendizaje	dataset.py, modelo_neural.py, idioma.py	Cargar datos, vectorizar, entrenar, persistir y seleccionar el idioma.
+Integraciones	gmail_client.py, telegram_notifier.py	OAuth de Gmail, lectura raw y envío de alertas.
+Persistencia local	.env.local, token.json, estado_monitor.json, *.joblib	Configuración, token OAuth, deduplicación y modelos entrenados.
+
+
+Por qué esta separación es importante
+
+	•	Responsabilidad única: SignalBuilder decide señales, RiskScorer calcula riesgo y ExplanationBuilder redacta explicaciones.
+
+	•	Sustitución: se puede cambiar el modelo neuronal sin reescribir el parser o la interfaz.
+
+	•	Pruebas: cada componente puede validarse con entradas controladas.
+
+	•	Reutilización: la detección manual y el monitor comparten las mismas piezas de dominio.
+
+	•	Mantenibilidad: una regla nueva se añade en el módulo adecuado y después se registra en SignalBuilder y RiskScorer.
+
+Por qué Streamlit
+
+Streamlit reduce el trabajo de frontend y permite dedicar el TFG al motor de análisis. Sus widgets, pestañas, tablas, métricas y estado de sesión son suficientes para construir una demostración interactiva en Python. La contrapartida es que cada interacción vuelve a ejecutar el script y que el framework no aporta por sí solo autenticación, control multiusuario ni aislamiento de datos. Por eso es apropiado para un prototipo académico local, pero no basta para publicar el sistema como servicio abierto.
+
+Flujo completo de un análisis
+
+El recorrido siempre intenta llegar a la misma representación interna. Esto evita que las reglas tengan que saber si el mensaje vino de un cuadro de texto, de MIME o de Gmail.
+
+	1.	El usuario elige el origen del correo y el tipo de análisis.
+
+	2.	La entrada se convierte en texto o en un diccionario estructurado con remitente, asunto, cuerpo, HTML, cabeceras, URLs, anclas y adjuntos.
+
+	3.	CorreoAnalizado.from_input normaliza el formato y reúne las URLs del texto y de los href HTML.
+
+	4.	SignalBuilder ejecuta 28 reglas agrupadas por identidad, autenticación/URLs, contenido y HTML/adjuntos.
+
+	5.	RiskScorer suma los pesos activos, multiplica por 100 y limita el resultado al rango 0-100.
+
+	6.	ExplanationBuilder genera una frase legible por cada señal evaluada.
+
+	7.	Si el modo usa el clasificador, langdetect selecciona español o inglés en la vista de detección y se carga el .joblib correspondiente.
+
+	8.	TF-IDF transforma el texto en un vector numérico y MLPClassifier devuelve una probabilidad de phishing.
+
+	9.	En modo combinado se calcula una media ponderada; por defecto 60 % heurística y 40 % red neuronal.
+
+	10.	La interfaz muestra veredicto, porcentaje, señales, enlaces y cabeceras. El monitor puede además registrar el ID de Gmail y avisar por Telegram.
+
+Qué datos conserva el resultado
+
+La salida heurística es un diccionario estable con is_phishing, risk_score, signals, urls, anchors, headers, html_body, from, subject y explanation. Mantener esta forma estable desacopla la interfaz de los detalles internos. El resultado neuronal es más pequeño: clasificación, puntuación, descripción, remitente y asunto. En el combinado se conserva el contexto y las explicaciones de la rama heurística.
+
+Matiz importante: la explicación del modo combinado describe las señales heurísticas; no explica qué n-gramas impulsaron la probabilidad del MLP. Por tanto, el sistema es explicable en su componente de reglas, pero no ofrece explicabilidad completa del modelo neuronal.
+
+
+Fuentes de entrada
+
+Origen	Información disponible	Ventaja	Limitación
+Texto pegado	Texto y, si se incluyen, From/Subject.	Demo rápida y sin archivos.	No hay MIME, HTML estructurado, adjuntos ni cabeceras completas.
+Archivo .eml	Cabeceras, cuerpo plano, HTML, anclas, adjuntos y URLs.	Es la entrada más rica y reproducible.	Depende de la calidad del fichero exportado.
+Gmail API	Mensaje raw base64url, convertido a bytes EML.	Trabaja con correos reales y consultas de Gmail.	Requiere OAuth, red y una cuenta de prueba.
+
+
+Parseo MIME
+
+analizador_email.py usa BytesParser con policy.default. Si el mensaje es multipart, recorre sus partes y conserva el primer cuerpo text/plain, el primer text/html y los nombres de los adjuntos. Si solo existe HTML, extrae el texto visible para que el clasificador pueda analizarlo. También obtiene las anclas <a>, sus href y el texto mostrado, lo que permite detectar enlaces cuyo destino no coincide con lo que ve el usuario.
+
+La representación plana incluye From, Reply-To, Subject y cuerpo. Es una simplificación deliberada: algunas reglas buscan cabeceras adicionales en full_text, de modo que un EML cuyo full_text no incluya Authentication-Results, Return-Path o Received puede perder señales que sí estaban en el diccionario headers. Esta es una mejora técnica razonable: incorporar todas las cabeceras relevantes al texto normalizado o hacer que las reglas consulten directamente headers.
+
+Gmail como origen
+
+gmail_client.py solicita únicamente el alcance gmail.readonly. El flujo OAuth carga credentials.json, abre el consentimiento local la primera vez y guarda token.json. Después lista mensajes con una query de Gmail, descarga cada mensaje en formato raw, corrige el padding base64url y reutiliza exactamente el parser EML. El sistema no borra, etiqueta ni modifica mensajes.
+
+Motor heurístico
+
+La heurística convierte conocimiento experto en indicadores booleanos. No intenta demostrar que una señal aislada sea phishing; acumula evidencia. Esta decisión es importante porque muchos comportamientos también aparecen en correos legítimos: un Reply-To distinto puede ser una plataforma de marketing, un acortador puede ser inocuo y un mensaje urgente puede ser real.
+
+Familias de señales
+
+Familia	Ejemplos	Qué intenta detectar
+Identidad y cabeceras	From/Reply-To, Return-Path, Message-ID, nombre visible, marcas.	Suplantación y divergencias entre identidad visible y técnica.
+Autenticación y ruta	SPF, DKIM, DMARC, Received.	Fallos de autenticación y rutas de entrega anómalas.
+URLs y dominios	Blacklist local, IP, punycode, acortadores, redirect/next.	Ocultación del destino y dominios diseñados para parecer legítimos.
+Contenido	Urgencia, saludo genérico, credenciales, asunto, referencias a archivos.	Principios de ingeniería social y llamadas a la acción.
+HTML y adjuntos	Form, iframe, base, javascript:, meta refresh, extensiones peligrosas.	Captura de datos, redirección o entrega de payloads.
+
+
+Cómo se calcula el riesgo
+
+Cada señal activa aporta un peso. La suma se multiplica por 100 y se limita entre 0 y 100. Los 27 pesos positivos suman 1,97; por tanto, varios indicadores pueden saturar la puntuación y el límite evita superar 100. La firma o cifrado S/MIME/PGP resta 0,03, porque constituye una evidencia débil de autenticidad, nunca una garantía.
+
+riesgo_heurístico = clamp(100 * suma(peso_i * señal_i), 0, 100)
+phishing_heurístico = riesgo_heurístico >= 45
+
+El umbral 45 es una decisión operativa del prototipo. No procede de una calibración estadística exhaustiva y debe presentarse como parámetro ajustable. Para producción habría que optimizarlo con una curva precision-recall y con costes explícitos de falsos positivos y falsos negativos.
+
+Pesos de las 28 señales
+
+Señal	Peso	Señal	Peso
+Reply-To diferente	14	Nombre visible engañoso	14
+Marca engañosa	10	Cabecera de spoofing	10
+Enlaces sospechosos	10	Dominio en blacklist local	10
+Autenticación fallida	14	DMARC fallido	8
+DKIM mal formado	5	Received sospechoso	8
+Saludo genérico	6	Solicitud de credenciales	6
+Message-ID sospechoso	6	Meta refresh	6
+Redirección JavaScript	6	HTML sospechoso	6
+Adjunto sospechoso	6	Lenguaje urgente	6
+Asunto sospechoso	5	Parámetros URL sospechosos	5
+Punycode/Unicode	5	Incoherencia remitente	8
+Acortador	5	Texto de enlace distinto	5
+Formulario HTML	4	Action sospechoso	5
+Referencia a archivo	4	Firmado/cifrado	-3
+
+
+Ejemplo de falso positivo controlado: la regla nombre_display_engano marca incluso remitentes legítimos como 'Recursos Humanos <rrhh@empresa.com>' porque el nombre no aparece literalmente en la dirección. Aporta 14 puntos, pero no basta para superar 45. Es un buen ejemplo de por qué se acumulan señales y de por qué la regla debe refinarse.
+
+
+Qué aporta la explicabilidad
+
+ExplanationBuilder genera una explicación positiva o negativa para cada señal, en el mismo orden que SignalBuilder. El usuario no recibe solo 'phishing/no phishing': puede revisar qué cabecera falló, si hubo un dominio extraño o si el HTML contenía un formulario. Esta trazabilidad permite corregir reglas, discutir falsos positivos y justificar el resultado durante la defensa.
+
+Clasificador neuronal
+
+La segunda rama aprende patrones a partir de correos etiquetados. No recibe directamente una lista de señales: recibe texto y aprende qué términos o combinaciones suelen asociarse a phishing o correo legítimo.
+
+TF-IDF: convertir texto en números
+
+TfidfVectorizer asigna peso alto a términos que son frecuentes en un correo pero no aparecen en todos los correos. Los unigramas capturan palabras individuales y los bigramas expresiones como 'verifica cuenta' o 'pago pendiente'. strip_accents='unicode' reduce variaciones ortográficas. En español se usa una lista local de stopwords; en inglés, la lista incluida en scikit-learn.
+
+La configuración por defecto limita el vocabulario a 3.000 características, acepta términos que aparezcan al menos una vez y usa n-gramas de 1 a 2. Es un compromiso entre memoria, velocidad y capacidad. Un vocabulario demasiado pequeño pierde información; uno muy grande aumenta ruido y riesgo de sobreajuste.
+
+MLP: clasificar la representación
+
+MLPClassifier recibe el vector TF-IDF. La configuración actual usa dos capas ocultas de 64 y 32 neuronas, activación ReLU, regularización L2 alpha=0,0001, learning rate inicial 0,001, hasta 500 iteraciones y semilla 42. La salida predict_proba se interpreta como probabilidad de la clase phishing; el modo neuronal considera phishing cuando la probabilidad es al menos 0,5.
+
+Parámetro	Valor	Función
+n-gramas	(1, 2)	Palabras y parejas de palabras.
+max_features	3.000	Límite del vocabulario TF-IDF.
+capas ocultas	(64, 32)	Capacidad del perceptrón multicapa.
+activación	ReLU	Introduce no linealidad.
+alpha	0,0001	Regularización para contener el sobreajuste.
+learning rate	0,001	Tamaño de los pasos de optimización.
+max_iter	500	Límite de iteraciones de entrenamiento.
+random_state	42	Reproducibilidad del componente aleatorio.
+
+
+Entrenamiento y persistencia
+
+El pipeline reúne vectorizador y MLP en un solo objeto. Se entrena con fit, se predice con predict o predict_proba y se guarda completo con joblib. Hay un archivo para español y otro para inglés. ModelStorage encapsula la existencia, carga y guardado; si el fichero falta o no puede deserializarse devuelve None, lo que activa el fallback.
+
+La aplicación conserva dentro del modelo los textos y etiquetas de entrenamiento, las fuentes, columnas, fecha, hiperparámetros y estadísticas. Esto facilita reentrenar y mostrar metadatos, pero aumenta el tamaño del .joblib y puede conservar texto sensible. Para producción sería mejor separar el artefacto de inferencia de los datos de entrenamiento.
+
+Modelos guardados en la rama
+
+Modelo	Datos acumulados	Distribución	Exactitud de entrenamiento
+Español	1.298 ejemplos	686 phishing / 612 legítimos	99,85 %
+Inglés	164.971 ejemplos	85.781 phishing / 79.190 legítimos	99,98 %
+
+
+No confundas métricas: esas exactitudes se calculan sobre los mismos datos usados para entrenar. Sirven como comprobación de ajuste, no como evidencia de generalización. Una cifra cercana al 100 % puede indicar memorización y exige evaluación separada.
+
+
+Por qué TF-IDF + MLP y no un transformer
+
+La elección es coherente con el alcance: requiere menos recursos, se entrena localmente, permite experimentar con CSV propios y ofrece una línea base comprensible. Un transformer podría captar mejor contexto y semántica, pero aumentaría coste, complejidad de despliegue y necesidad de datos. La respuesta correcta no es que MLP sea mejor que un transformer, sino que es una solución proporcional al objetivo académico y deja una comparación futura bien definida.
+
+Modo combinado
+
+El modo combinado calcula una media ponderada de las dos puntuaciones. En la interfaz, el usuario elige el peso heurístico y el peso neuronal se deriva como 100 menos ese valor, evitando configuraciones que no sumen 100.
+
+riesgo_combinado = (riesgo_heurístico * peso_heurístico + riesgo_neuronal * peso_neuronal) / (peso_heurístico + peso_neuronal)
+configuración habitual: 60 % heurística + 40 % neuronal
+umbral habitual del combinado: 45
+
+El resultado es una puntuación de riesgo, no una probabilidad calibrada. Mezcla una suma experta con una probabilidad del clasificador; ambas comparten la escala 0-100, pero su significado estadístico es distinto. Esta combinación es operativa y explicable, aunque una versión científica más fuerte debería calibrar ambos componentes y aprender los pesos sobre un conjunto de validación.
+
+Ejemplo reproducible con los modelos actuales
+
+Caso	Idioma	Heurística	Neuronal	Combinado 60/40	Veredicto
+Sospechoso español	ES	81,0	99,8	88,5	Phishing
+Legítimo español	ES	14,0	9,2	12,1	Legítimo
+Sospechoso inglés	EN	70,0	100,0	82,0	Phishing
+Legítimo inglés	EN	14,0	0,0	8,4	Legítimo
+
+
+Estos resultados corresponden a cuatro mensajes de control ejecutados el 10 de agosto de 2026 con los .joblib actuales. Cambiar el texto, el modelo o los datos de entrenamiento cambia la puntuación. Durante la defensa hay que mostrar el procedimiento, no presentar esos porcentajes como constantes universales.
+
+La aplicación Streamlit
+
+src/app.py es el punto de entrada. Guarda la vista en query_params, ofrece cinco botones de navegación y delega el contenido en módulos de pantalla. Cada cambio de vista actualiza el parámetro y ejecuta st.rerun. La interfaz comparte estilos de tarjetas, estados y grids mediante ui_components.py.
+
+Vista	Qué hace	Qué conviene enseñar
+Inicio	Resumen de estado y accesos rápidos.	La idea global; evita centrarte en elementos heredados de extensión.
+Configuración	Gmail, Telegram, monitor e hiperparámetros.	OAuth de solo lectura, secretos en .env.local y parámetros ajustables.
+Detección	Texto, EML o Gmail; tres modos de análisis.	Una comparación entre mensaje sospechoso y legítimo.
+Monitor	Comprobación manual y estado de alertas.	Deduplicación, umbral y aviso opcional.
+Entrenamiento	Entrenar, evaluar, comparar y revisar modelos.	Metadatos y evaluación; no reentrenes el modelo grande en directo.
+
+
+Estado de sesión y fallos controlados
+
+Streamlit conserva en session_state la cuenta Gmail y los resultados importados para que no desaparezcan con cada rerun. La interfaz muestra mensajes específicos si faltan dependencias, credenciales, token o modelos. Si no existe un modelo válido, se prueba el del otro idioma y finalmente se entrena un modelo sintético mínimo para mantener la demostración.
+
+Cómo explicarlo: el fallback mejora la disponibilidad de la demo, pero debe mostrarse con un aviso claro porque un modelo sintético de arranque no equivale a un modelo validado.
+
+
+Gmail, monitorización y Telegram
+
+OAuth y privacidad
+
+La integración de Gmail usa un cliente OAuth de escritorio y el scope gmail.readonly. credentials.json identifica la aplicación y token.json almacena la autorización del usuario. Si el token ha caducado y contiene refresh_token, se renueva; si no existe, se abre el consentimiento. El código solo lista y descarga mensajes, no solicita permisos de modificación.
+
+Monitor de correos
+
+El monitor consulta Gmail mediante una query configurable, por ejemplo 'in:inbox newer_than:1d'. estado_monitor.json guarda los IDs ya vistos. En la primera ejecución puede marcar los mensajes existentes sin analizarlos, evitando una avalancha inicial de alertas. En ciclos posteriores solo procesa IDs nuevos, guarda el estado y espera el intervalo configurado.
+
+	•	La vista Monitor permite una comprobación manual desde Streamlit.
+
+	•	monitor_gmail.py puede ejecutarse una vez con --once o permanecer en bucle.
+
+	•	El intervalo, query, límite, umbral, modo y pesos se leen de .env.local o del entorno.
+
+	•	Los errores de un ciclo se registran y el bucle continúa; Ctrl+C detiene el proceso.
+
+Alertas de Telegram
+
+Cuando la puntuación supera el umbral, TelegramNotifier llama a la Bot API mediante HTTPS. El mensaje incluye nivel, puntuación, modo, remitente, asunto, número de URLs, hasta cinco señales activas y hasta tres enlaces recortados. Los valores se escapan como HTML para impedir que un remitente malicioso inyecte marcado en el mensaje.
+
+Límite de privacidad: enviar remitente, asunto, señales y URLs a Telegram saca metadatos del entorno local. Debe ser opcional, informarse al usuario y evitarse con correos sensibles si no existe una base jurídica y una política de tratamiento.
+
+
+¿El monitor contradice el enfoque solo web?
+
+No, si se presenta correctamente. La aplicación web es la interfaz principal y el motor se ejecuta localmente. monitor_gmail.py es un proceso opcional de automatización que reutiliza módulos locales; no expone una API de análisis ni establece una arquitectura de cliente y servidor propia. Si se desea una versión estrictamente web, la comprobación manual de la vista Monitor cubre el mismo caso de uso sin mantener un proceso adicional.
+
+Entrenamiento y evaluación
+
+Carga flexible de CSV
+
+dataset.py acepta rutas o archivos subidos, aumenta el límite de tamaño de los campos y usa DictReader. Busca una columna de etiqueta indicada o alternativas habituales. El texto puede venir completo o construirse con asunto y cuerpo; también añade remitente, destinatario, URLs y fecha cuando existen. Las filas vacías o sin texto se descartan.
+
+Antes de entrenar, la interfaz resume cuántas filas válidas, phishing y legítimas hay por archivo. Esto permite detectar errores de columnas o un fuerte desequilibrio. Varios CSV se concatenan antes del ajuste para que TF-IDF construya un vocabulario común.
+
+Entrenar
+
+El usuario selecciona idioma, columnas y, opcionalmente, hiperparámetros personalizados. NeuralModelTrainer carga el modelo previo si existe. Si cambia el idioma o se proporcionan hiperparámetros, crea un clasificador nuevo pero conserva los textos y etiquetas anteriores. Después añade los nuevos CSV, ajusta el pipeline y guarda el .joblib.
+
+Precaución: reentrenar sobre un modelo ya guardado acumula datos anteriores. Si se vuelven a subir los mismos CSV pueden duplicarse ejemplos. Para un experimento limpio hay que eliminar o versionar el modelo previo y registrar exactamente las fuentes.
+
+
+Evaluar
+
+La pestaña Evaluar carga un CSV que no modifica el modelo. Calcula predicciones, exactitud y la matriz de confusión: verdaderos positivos, verdaderos negativos, falsos positivos y falsos negativos. La interfaz actual no muestra directamente precision, recall y F1, aunque pueden calcularse a partir de la matriz.
+
+precision = VP / (VP + FP)
+recall = VP / (VP + FN)
+F1 = 2 * precision * recall / (precision + recall)
+
+En phishing, el recall es especialmente importante porque mide cuánto phishing real se detecta. Sin embargo, maximizarlo sin controlar precision puede llenar el sistema de falsas alarmas. La decisión adecuada depende del coste de cada error.
+
+Comparar
+
+La pestaña Comparar entrena en memoria hasta tres configuraciones sobre el mismo conjunto y las evalúa en un CSV de prueba común. Muestra accuracy y VP/VN/FP/FN. Los modelos comparados no se guardan automáticamente, lo que evita llenar el repositorio de artefactos experimentales.
+
+Pruebas y lectura de resultados
+
+La suite actual ejecuta 33 pruebas con unittest. Todas pasan. Dos pruebas neuronales reducen max_iter a 20 para ser rápidas y generan ConvergenceWarning; es un aviso esperado de optimización incompleta, no un fallo funcional.
+
+Área	Qué se comprueba	Casos actuales
+Heurística	Fraude básico, cabeceras, DMARC/DKIM, URLs, HTML, adjuntos y correo legítimo.	10
+Modelo neuronal	Dataset, entrenamiento, probabilidad y acumulación de CSV.	4
+Refactorización	Fachadas, señales, parser de datasets y persistencia.	4
+Telegram	Petición HTTP, contenido, escape HTML y señales activas.	4
+Configuración	Carga y actualización de .env.local.	2
+Gmail/monitor	Base64url, estado y primera ejecución.	3
+Parser EML	Extracción de campos y anclas.	1
+Servicio común	Combinación ponderada y modo heurístico.	2
+Legado fuera de alcance	Servicio backend y extensión Gmail conservados en la rama.	3
+
+
+Por tanto, una formulación rigurosa es: 'La rama ejecuta 33 pruebas; 30 cubren componentes comunes o del flujo web y 3 corresponden a artefactos heredados que todavía no se han eliminado'. Esta precisión evita afirmar que las 33 validan exclusivamente la solución web final.
+
+Evaluación documentada
+
+La memoria describe un conjunto controlado de 25 correos, 13 phishing y 12 legítimos, con separación aproximada 70/30. Sobre ocho mensajes de prueba se reportan 75 % de accuracy, 67 % de precision, 100 % de recall y F1=0,80. El resultado sugiere que se detectó todo el phishing de esa muestra, a costa de algún falso positivo.
+
+Interpretación correcta: ocho mensajes no permiten estimar el rendimiento real. Las métricas sirven para demostrar el flujo de evaluación y discutir errores, no para afirmar una eficacia general del 75 % o del 100 %.
+
+
+Dataset sintético de fallback
+
+El código de generar_dataset_sintetico contiene diez ejemplos, cinco positivos y cinco negativos. Este conjunto solo permite que un clon limpio ejecute la demo cuando faltan .joblib. No es el mismo conjunto de 25 usado en la evaluación descrita en la memoria. La defensa debe distinguir claramente 'fallback de demostración' y 'conjunto controlado de evaluación'.
+
+Qué significan las métricas
+
+Accuracy: proporción total de aciertos; puede engañar si las clases están desequilibradas.
+
+Precision: de los correos marcados como phishing, cuántos lo eran realmente.
+
+Recall: de todo el phishing real, cuánto logró detectar el modelo.
+
+F1: media armónica de precision y recall; resume el equilibrio entre ambas.
+
+Matriz de confusión: muestra los cuatro tipos de resultado y permite entender el coste de los errores.
+
+Seguridad, privacidad y ética
+
+El sistema analiza contenido potencialmente sensible. El diseño local reduce exposición, pero no elimina responsabilidades. Si Streamlit se ejecuta en otro equipo o se despliega en la nube, el límite de confianza cambia: el correo se procesa en ese host.
+
+	•	Gmail usa scope de solo lectura; principio de mínimo privilegio.
+
+	•	credentials.json, token.json y .env.local deben permanecer fuera de Git.
+
+	•	No se deben usar cuentas personales ni correos reales en una defensa pública.
+
+	•	Telegram debe tratarse como salida externa de metadatos y mantenerse desactivado en demos sensibles.
+
+	•	Los modelos joblib solo deben cargarse desde fuentes confiables: la deserialización puede ejecutar código.
+
+	•	Los .joblib actuales almacenan textos de entrenamiento; deben revisarse antes de compartirlos públicamente.
+
+	•	La clasificación es una ayuda a la decisión, no una orden automática de borrar o bloquear mensajes.
+
+Decisiones de diseño que debes justificar
+
+¿Por qué combinar reglas y aprendizaje supervisado?
+
+Porque sus errores son distintos. Las reglas son transparentes y aprovechan cabeceras y HTML; el modelo reconoce patrones de texto aprendidos. El modo combinado conserva explicaciones y reduce la dependencia de una única técnica.
+
+¿Por qué ejecutar el análisis en una sola aplicación?
+
+Reduce complejidad, superficie de ataque, configuración y movimiento de datos. Para un TFG local no se necesita una API independiente. Si el sistema creciera a múltiples consumidores o alto volumen, entonces sí se evaluaría separar servicios.
+
+¿Por qué un umbral de 45?
+
+Es un umbral operativo del prototipo para exigir varias señales sin esperar a una puntuación extrema. No está calibrado de forma definitiva; debe ajustarse con datos representativos y el coste de FP/FN.
+
+¿Por qué pesos 60/40?
+
+Se prioriza ligeramente la trazabilidad heurística y se usa el modelo como complemento. Son configurables y no se presentan como óptimos; una mejora sería aprenderlos o calibrarlos sobre validación.
+
+¿Por qué no consultar VirusTotal o reputación online?
+
+Para mantener pruebas seguras, reproducibles y sin enviar URLs sensibles a terceros. Es una extensión futura, no una omisión desconocida.
+
+Limitaciones técnicas y trabajo futuro
+
+Limitación actual	Impacto	Evolución razonable
+Listas locales y estáticas	No reflejan amenazas recientes.	Reputación de dominio/URL con caché, privacidad y límites de tasa.
+No hay análisis dinámico	No observa redirecciones finales ni contenido servido.	Sandbox aislado y validación TLS/DNS.
+Reglas simples	Falsos positivos como nombres visibles legítimos.	Comparar dominios organizativos y usar listas permitidas.
+TF-IDF pierde contexto profundo	Menor comprensión semántica.	Comparar con transformers multilingües.
+Métricas pequeñas	Baja generalización estadística.	Datasets recientes, separación temporal y validación cruzada.
+Streamlit sin control de acceso	No apto para exposición pública.	Autenticación, secretos, sesiones aisladas y auditoría.
+Polling de Gmail	Latencia y consultas periódicas.	Gmail Push Notifications y Pub/Sub.
+Puntuación no calibrada	El 70 no equivale necesariamente a 70 % real.	Calibración probabilística y curva precision-recall.
+
+
+Preguntas difíciles del tribunal
+
+¿Esto es realmente una aplicación web si se ejecuta en local?
+
+Sí. Streamlit sirve una interfaz web accesible desde el navegador. 'Local' describe dónde se ejecuta y dónde se procesan los datos, no el tipo de interfaz. No se defiende una SPA con API propia, sino una aplicación web Python autocontenida.
+
+¿No existe siempre un servidor en Streamlit?
+
+Internamente Streamlit usa HTTP para mostrar la UI, pero arquitectónicamente el proyecto no separa un cliente propio y un backend REST. La vista y el dominio pertenecen al mismo proceso y las funciones se invocan localmente.
+
+¿MLP es deep learning?
+
+Es una red neuronal feed-forward. Puede tener varias capas, pero en este trabajo se presenta como un clasificador neuronal ligero. No conviene equipararlo a transformers o a modelos profundos del estado del arte.
+
+¿La puntuación combinada es una probabilidad?
+
+No. Es un índice de riesgo ponderado que mezcla una puntuación experta y una probabilidad. Comparten escala, pero no interpretación estadística. La calibración queda como mejora.
+
+¿Por qué una exactitud de entrenamiento cercana al 100 % no demuestra calidad?
+
+Porque se evalúa sobre los mismos ejemplos usados para ajustar el modelo. Puede ser memorización. La evidencia válida debe venir de datos separados y, mejor aún, de otro periodo o fuente.
+
+¿Qué error es más grave?
+
+En seguridad suele preocupar más el falso negativo porque deja pasar phishing, pero demasiados falsos positivos generan fatiga y hacen que el usuario ignore alertas. El umbral debe equilibrar ambos costes.
+
+¿Qué ocurre si el idioma se detecta mal?
+
+La vista de detección agrupa todo lo que no sea inglés como español y usa un modelo alternativo si falta el adecuado. Los textos cortos pueden fallar; una mejora sería combinar detección de idioma, confianza y un modelo multilingüe.
+
+¿Qué pasa si no hay modelos?
+
+Se crea un modelo sintético de diez ejemplos para que la demo funcione. La interfaz avisa. Ese fallback no debe confundirse con un modelo validado.
+
+¿Puede el sistema abrir un enlace peligroso?
+
+No. Extrae y analiza cadenas de URL, pero no navega ni descarga la página. Esto reduce riesgo y también limita la información disponible.
+
+¿Cómo protege Gmail?
+
+Usa OAuth y gmail.readonly. El token se guarda localmente y no se modifica la bandeja. Para una demo se usa una cuenta de prueba y se protege el token.
+
+¿Qué aporta el sistema frente a un filtro de Gmail?
+
+No pretende reemplazarlo. Es una herramienta académica para inspección explicable, experimentación y entrenamiento. Gmail opera con infraestructura y señales de reputación mucho más amplias.
+
+¿Cómo se añaden nuevas reglas?
+
+Se implementan en el módulo de su familia, se exportan por signals.py, se registran en SignalBuilder, se asigna un peso en RiskScorer, se añade una explicación y se crea una prueba.
+
+¿Por qué no se usa el HTML directamente en el modelo?
+
+El modelo recibe texto normalizado; el HTML se reserva para reglas estructurales. Podría añadirse una representación específica, pero mezclar etiquetas crudas puede introducir ruido y riesgo de sobreajuste.
+
+¿Por qué guardar modelos con joblib?
+
+Serializa el pipeline completo y simplifica inferencia. Debe cargarse solo desde fuentes confiables y convendría versionar dependencias y separar datos de entrenamiento.
+
+¿Cómo demostrarías mejora real?
+
+Congelaría un conjunto de prueba independiente y temporalmente posterior, compararía heurística, MLP y combinado, reportaría intervalos o validación cruzada, y analizaría errores por tipo de ataque.
+
+¿Qué harías primero para producción?
+
+Autenticación, gestión de secretos, aislamiento de sesiones, logging seguro, modelo sin textos de entrenamiento, reputación controlada, calibración y evaluación con datos recientes.
+
+¿El monitor elige hoy el modelo por idioma para cada mensaje?
+
+La vista Detección sí. El servicio usado por el monitor carga primero el modelo español y después el inglés como fallback; por tanto, la selección por mensaje no está unificada todavía. Es una deuda técnica identificada.
+
+¿Por qué siguen apareciendo archivos de backend y extensión en la rama?
+
+Son restos de una iteración descartada. No forman parte del alcance que se defiende y deben eliminarse o aislarse antes de la entrega final para que repositorio, README y memoria sean coherentes.
+
+¿La interfaz muestra precision, recall y F1?
+
+La versión actual muestra accuracy y matriz de confusión. Las otras métricas se calcularon para el experimento documentado, pero la afirmación de que aparecen en la vista debe corregirse o implementarse.
+
+¿Qué aspecto del trabajo demuestra más control?
+
+La separación entre entrada, normalización, señales, puntuación, explicación y modelo; permite razonar sobre cada decisión, probarla y sustituir componentes sin rehacer todo el sistema.
+
+Demostración en directo
+
+La demo debe durar entre dos y cuatro minutos y funcionar sin depender de Internet. Usa primero texto o un .eml local. Gmail y Telegram se enseñan solo si ya están preparados.
+
+	1.	Ejecuta streamlit run src/app.py y confirma que estás en la rama feature/web.
+
+	2.	Abre Detección y selecciona Combinado con 60 % heurística.
+
+	3.	Pega un mensaje sospechoso con From, Reply-To, asunto urgente, credenciales y URL; analiza.
+
+	4.	Explica la puntuación, abre las señales y relaciona dos o tres con el correo.
+
+	5.	Pega un mensaje legítimo y muestra que una señal débil aislada no supera el umbral.
+
+	6.	Abre Entrenamiento > Modelos guardados y enseña idioma, fuentes, tamaños e hiperparámetros; no entrenes el modelo grande en directo.
+
+	7.	Si hay tiempo, muestra un .eml para enseñar HTML, anclas y adjuntos.
+
+	8.	Cierra recordando que Gmail y Telegram son opcionales y que el análisis principal es local.
+
+Mensajes de demo
+
+From: Banco Santander <seguridad@external-falso.com>
+Reply-To: soporte@otro-dominio.com
+Subject: Verifica tu cuenta ahora
+
+Estimado cliente, su cuenta ha sido bloqueada. Actualice sus credenciales urgentemente en https://secure-login.banco-seguro-login.com/verify
+
+From: Recursos Humanos <rrhh@empresa.com>
+Subject: Reunión del equipo
+
+Buenos días, la reunión semanal será el jueves a las 10:00 en la sala habitual.
+
+Plan B
+
+	•	Si Gmail falla, continúa con texto y EML: son el núcleo evaluable.
+
+	•	Si un modelo no carga, explica el aviso y el fallback; no ocultes el estado.
+
+	•	Si Streamlit tarda, ten capturas o el PDF de la memoria abierto en las páginas de arquitectura y resultados.
+
+	•	Si cambia una puntuación, explica que depende del modelo y del texto; centra la atención en el flujo y las señales.
+
+Coherencia pendiente antes de la defensa
+
+Situación actual: la memoria ya presenta una aplicación web autocontenida, pero el repositorio conserva elementos de la iteración cliente/servidor. Un tribunal puede detectarlo si abre README o la pantalla Inicio. Conviene resolverlo antes de la entrega definitiva.
+
+
+README y archivos heredados
+
+readme.md describe backend centralizado y extensión; existen backend_server.py, backend_service.py, gmail_extension_server.py y extension_gmail/. Acción: eliminar o mover a una rama histórica y reescribir README.
+
+Inicio y Configuración
+
+src/app.py muestra estado/comandos de extensión y config_app.py incluye su configuración. Acción: retirar esos bloques de la rama web.
+
+Idioma en monitor
+
+detect_app.py selecciona modelo por mensaje, pero EmailAnalysisService usado por el monitor carga ES primero. Acción: detectar idioma dentro del servicio común y cachear detectores ES/EN.
+
+Métricas de la interfaz
+
+train_app.py muestra accuracy y matriz de confusión, no precision/recall/F1. Acción: implementar las tres métricas o corregir la memoria.
+
+10 frente a 25 ejemplos
+
+generar_dataset_sintetico tiene 10; la memoria describe otro conjunto de 25. Acción: versionar el dataset de evaluación o documentar claramente ambos.
+
+Etiquetas CSV
+
+normalizar_etiqueta mapea 'safe email' a 1 y 'phishing email' a 0. Acción: verificar la semántica de cada dataset y corregir o parametrizar el mapeo.
+
+Regla de nombre visible
+
+nombre_display_engano marca muchos nombres legítimos. Acción: comparar marca/dominio, no exigir coincidencia literal del nombre.
+
+Reentrenamiento acumulativo
+
+volver a cargar el mismo CSV puede duplicar datos. Acción: versionar experimentos, hashes de fuentes o entrenamiento desde cero explícito.
+
+Alcance de las pruebas
+
+3 de 33 casos validan componentes heredados. Acción: retirar esas pruebas cuando se elimine el legado y añadir pruebas de navegación web, idioma del monitor y métricas.
+
+Lo que debes decir y lo que debes evitar
+
+Evita decir	Di mejor
+El sistema detecta el phishing con un 100 %.	El ajuste sobre entrenamiento es casi perfecto, pero la evaluación independiente es pequeña y no permite generalizar.
+La puntuación combinada es la probabilidad real.	Es un índice de riesgo ponderado; la calibración probabilística es trabajo futuro.
+Todas las 33 pruebas son de la web final.	30 cubren el flujo común/web y 3 pertenecen a legado aún presente.
+Gmail nunca sale del ordenador.	Si la app se ejecuta localmente, el análisis es local; Gmail y Telegram siguen siendo servicios externos.
+El monitor ya elige siempre el idioma correcto.	La detección interactiva sí; la unificación del monitor está identificada como ajuste pendiente.
+MLP es el estado del arte.	Es una línea base neuronal ligera y reproducible; transformers son una comparación futura.
+No hay servidor.	No hay un backend de análisis separado; Streamlit sí sirve la interfaz web.
+
+
+Comandos y mapa rápido
+
+Arranque y pruebas
+
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+streamlit run src/app.py
+$env:PYTHONPATH='src'; python -m unittest discover -s tests -p "test_*.py"
+
+Monitor opcional
+
+python src/monitor_gmail.py --once
+python src/monitor_gmail.py
+
+Archivos que conviene dominar
+
+Archivo	Pregunta que responde
+src/app.py	¿Cómo se organiza y navega la aplicación?
+src/detect_app.py	¿Cómo se seleccionan entrada, idioma, modo y resultado?
+src/sistema_phishing/analizador_email.py	¿Cómo se convierte un EML en datos analizables?
+src/sistema_phishing/correo.py	¿Cuál es la representación común?
+src/sistema_phishing/signal_builder.py	¿Qué señales se ejecutan y en qué orden?
+src/sistema_phishing/scorer.py	¿Cómo se transforma evidencia en riesgo?
+src/sistema_phishing/explanations.py	¿Cómo se explica el resultado?
+src/sistema_phishing/modelo_neural.py	¿Cómo se construye, entrena y guarda el TF-IDF + MLP?
+src/train_app.py	¿Cómo se entrenan, evalúan y comparan modelos?
+src/sistema_phishing/gmail_client.py	¿Cómo funciona OAuth y la descarga raw?
+src/sistema_phishing/gmail_monitor.py	¿Cómo se evitan duplicados y se generan alertas?
+tests/	¿Qué comportamiento está automatizado?
+
+
+Glosario para responder con precisión
+
+SPF: autoriza qué servidores pueden enviar correo por un dominio.
+
+DKIM: firma criptográficamente partes del mensaje y permite verificar integridad y dominio firmante.
+
+DMARC: aplica una política basada en SPF/DKIM y su alineación con el dominio visible.
+
+TF-IDF: pondera términos por su frecuencia en un documento y su rareza en el corpus.
+
+N-grama: secuencia de una o varias palabras usada como característica.
+
+MLP: perceptrón multicapa; red feed-forward con capas ocultas.
+
+Precision: proporción de alertas de phishing que eran phishing real.
+
+Recall: proporción del phishing real que fue detectado.
+
+Falso positivo: correo legítimo marcado como phishing.
+
+Falso negativo: phishing clasificado como legítimo.
+
+OAuth: autorización delegada sin entregar la contraseña a la aplicación.
+
+Punycode: codificación ASCII de dominios internacionalizados, a veces usada en homógrafos.
+
+Calibración: ajuste para que una puntuación probabilística corresponda a frecuencias reales.
+
+Sobreajuste: rendimiento excelente en entrenamiento pero pobre con datos nuevos.
+
+Lista final de preparación
+
+	•	Puedo explicar el problema y el objetivo en menos de un minuto.
+
+	•	Sé dibujar el flujo desde entrada hasta resultado sin mirar el código.
+
+	•	Puedo justificar Streamlit, TF-IDF, MLP, el umbral y los pesos sin llamarlos óptimos.
+
+	•	Sé diferenciar puntuación heurística, probabilidad neuronal e índice combinado.
+
+	•	Puedo explicar al menos cinco señales técnicas y cinco de ingeniería social.
+
+	•	Sé interpretar VP, VN, FP, FN, accuracy, precision, recall y F1.
+
+	•	Distingo exactitud de entrenamiento y evaluación independiente.
+
+	•	Tengo una demo offline preparada con un mensaje sospechoso y otro legítimo.
+
+	•	No muestro credenciales, tokens, correos personales ni chats reales.
+
+	•	Conozco las inconsistencias actuales del repositorio y no hago afirmaciones falsas sobre ellas.
+
+	•	He decidido si corregir o retirar los artefactos heredados antes de la entrega.
+
+	•	Tengo preparada una respuesta breve sobre limitaciones y trabajo futuro.
+
+Resumen de treinta segundos
+
+Cierre final: He construido una aplicación web local que normaliza correos procedentes de texto, EML o Gmail, evalúa 28 señales explicables, aplica un clasificador TF-IDF + MLP y permite combinar ambos resultados. La solución está modularizada, entrenable y probada; sus límites principales son la representatividad de los datos, la calibración, algunas reglas simples y la ausencia de controles para despliegue público. El trabajo demuestra el flujo completo y deja una evolución técnica clara.
+
+
+
+--- word/footnotes.xml ---
+
+--- word/endnotes.xml ---
+
+--- word/header1.xml ---
+Guía de defensa del TFG	Aplicación web de detección de phishing
+
+--- word/footer1.xml ---
+Documento de estudio - feature/web	Página 1
