@@ -5,26 +5,43 @@ Return-Path, resultados SPF/DKIM/DMARC y ruta de entrega.
 """
 
 import re
+from email.utils import parseaddr
 
-from .configuracion import KNOWN_BRAND_TOKENS
-from .url_utils import extraer_dominio
+from .configuracion import KNOWN_BRAND_DOMAINS
+from .url_utils import dominio_es_o_subdominio, extraer_dominio
 
 
 def nombre_display_engano(from_header: str) -> bool:
-    """Determina si el nombre visible del remitente es diferente de la dirección real."""
-    if "<" in from_header and ">" in from_header:
-        # Ejemplo sospechoso: "Banco Real <alerta@dominio-externo.com>".
-        nombre = from_header.split("<", 1)[0].strip().lower()
-        direccion = from_header.split("<", 1)[1].split(">", 1)[0].strip().lower()
-        if nombre and direccion and nombre not in direccion:
-            if "@" in direccion:
-                return True
-    return False
+    """Detecta cuando el nombre visible oculta otro correo o dominio.
+
+    Un nombre personal normal no tiene por qué aparecer dentro de la dirección.
+    La versión anterior marcaba por ello casi cualquier formato Nombre <correo>.
+    """
+    nombre, direccion = parseaddr(from_header or "")
+    if not nombre or not direccion:
+        return False
+
+    email_visible = obtener_email_desde_cabecera(nombre)
+    if email_visible:
+        return email_visible != direccion.lower()
+
+    dominio_visible = re.search(
+        r"\b(?:https?://)?([\w.-]+\.[a-z]{2,})\b",
+        nombre,
+        flags=re.IGNORECASE,
+    )
+    if not dominio_visible:
+        return False
+    dominio_real = obtener_dominio_desde_email(direccion)
+    return extraer_dominio(dominio_visible.group(1)) != dominio_real
 
 
 def obtener_email_desde_cabecera(texto: str) -> str:
     """Extrae la primera dirección de correo válida encontrada en un texto."""
-    match = re.search(r"[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}", texto)
+    _, direccion = parseaddr(texto or "")
+    if direccion and "@" in direccion:
+        return direccion.lower()
+    match = re.search(r"[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}", texto or "")
     return match.group(0).lower() if match else ""
 
 
@@ -65,9 +82,7 @@ def dkim_mal_formado(texto: str) -> bool:
 def dmarc_fallido(texto: str) -> bool:
     """Detecta resultados DMARC de fallo en Authentication-Results."""
     auth = obtener_cabecera(texto, "authentication-results")
-    if auth and re.search(r"(?i)\bdmarc=\s*(fail|permerror|temperror)\b", auth):
-        return True
-    return False
+    return bool(auth and re.search(r"(?i)\bdmarc=\s*(fail|permerror|temperror)\b", auth))
 
 
 def incoherencia_remitente(texto: str) -> bool:
@@ -104,20 +119,20 @@ def tiene_fallo_autenticacion(texto: str) -> bool:
         return True
     if arc and fallo_regex.search(arc):
         return True
-    if received_spf and re.search(r"(?i)\b(fail|softfail|permerror|temperror)\b", received_spf):
-        return True
-    return False
+    return bool(received_spf and re.search(r"(?i)\b(fail|softfail|permerror|temperror)\b", received_spf))
 
 
 def tiene_recibidos_sospechosos(texto: str) -> bool:
     """Busca patrones inusuales en las cabeceras Received que pueden indicar intermediarios sospechosos."""
     recibidos = re.findall(r"(?im)^received:\s*(.+)$", texto)
     for recibido in recibidos:
-        # Direcciones privadas o localhost en Received pueden indicar reenvíos,
-        # pruebas internas o rutas poco confiables para un correo externo.
-        if re.search(r"\b(127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+)\b", recibido):
-            return True
-        if re.search(r"\b(localhost|unknown|anonymous|undisclosed|relay)\b", recibido, flags=re.IGNORECASE):
+        # Las IP privadas son habituales en saltos internos legítimos. Se exige
+        # un indicador explícito de origen no identificado para reducir ruido.
+        if re.search(
+            r"\b(?:unknown|anonymous|undisclosed)\b",
+            recibido,
+            flags=re.IGNORECASE,
+        ):
             return True
     return False
 
@@ -126,9 +141,7 @@ def mensaje_firmado_o_cifrado(texto: str) -> bool:
     """Detecta si el mensaje contiene firmas o cifrado de correo (S/MIME o PGP)."""
     if re.search(r"(?im)^content-type:\s*(multipart/signed|application/(pkcs7-signature|pkcs7-mime|x-pkcs7-signature|pgp-signature|pgp-encrypted))", texto):
         return True
-    if re.search(r"-----BEGIN PGP (SIGNED MESSAGE|PGP MESSAGE)-----", texto):
-        return True
-    return False
+    return bool(re.search(r"-----BEGIN PGP (SIGNED MESSAGE|PGP MESSAGE)-----", texto))
 
 
 def mensaje_id_sospechoso(texto: str, remitente: str) -> bool:
@@ -138,19 +151,31 @@ def mensaje_id_sospechoso(texto: str, remitente: str) -> bool:
         return False
     # El dominio del Message-ID suele pertenecer a la infraestructura del
     # remitente. Una divergencia no es concluyente, pero sí útil como señal.
-    dominio_message_id = extraer_dominio("http://" + message_id.split("@", 1)[1].strip(" <>") )
-    dominio_remitente = extraer_dominio("http://" + obtener_email_desde_cabecera(remitente).split("@", 1)[1]) if obtener_email_desde_cabecera(remitente) else ""
-    return dominio_message_id and dominio_remitente and dominio_message_id != dominio_remitente
+    dominio_message_id = extraer_dominio(
+        "http://" + message_id.split("@", 1)[1].strip(" <>")
+    )
+    dominio_remitente = obtener_dominio_desde_email(remitente)
+    return bool(
+        dominio_message_id
+        and dominio_remitente
+        and not dominio_es_o_subdominio(dominio_message_id, dominio_remitente)
+        and not dominio_es_o_subdominio(dominio_remitente, dominio_message_id)
+    )
 
 
 def tiene_reply_to_diferente(texto: str) -> bool:
-    """Detecta si la cabecera Reply-To difiere de From, una señal frecuente de suplantación."""
+    """Detecta si Reply-To conduce a un dominio distinto del remitente."""
     enviar = obtener_cabecera(texto, "from")
     reply = obtener_cabecera(texto, "reply-to")
     if enviar and reply:
-        email_from = obtener_email_desde_cabecera(enviar)
-        email_reply = obtener_email_desde_cabecera(reply)
-        return email_from and email_reply and email_from != email_reply
+        dominio_from = obtener_dominio_desde_email(enviar)
+        dominio_reply = obtener_dominio_desde_email(reply)
+        return bool(
+            dominio_from
+            and dominio_reply
+            and not dominio_es_o_subdominio(dominio_from, dominio_reply)
+            and not dominio_es_o_subdominio(dominio_reply, dominio_from)
+        )
     return False
 
 
@@ -165,20 +190,21 @@ def cabecera_spoofing(texto: str) -> bool:
             return True
 
     received_spf = obtener_cabecera(texto, "received-spf")
-    if received_spf and enviar:
-        if re.search(r"(?i)domain of\s+[\w\.\-]+\s+does not designate", received_spf):
-            return True
-    return False
+    return bool(received_spf and enviar and re.search(
+        r"(?i)domain of\s+[\w\.\-]+\s+does not designate", received_spf
+    ))
 
 
 def remitente_marca_engano(from_header: str) -> bool:
     """Detecta si el nombre del remitente usa una marca conocida pero la dirección de correo no."""
-    if "<" in from_header and ">" in from_header:
-        # Se comprueba el nombre visible frente a la dirección real para detectar
-        # suplantaciones sencillas de marcas conocidas.
-        nombre = from_header.split("<", 1)[0].strip().lower()
-        direccion = from_header.split("<", 1)[1].split(">", 1)[0].strip().lower()
-        for token in KNOWN_BRAND_TOKENS:
-            if token in nombre and token not in direccion:
-                return True
+    nombre, direccion = parseaddr(from_header or "")
+    dominio = obtener_dominio_desde_email(direccion)
+    if not nombre or not dominio:
+        return False
+    nombre = nombre.lower()
+    for marca, oficiales in KNOWN_BRAND_DOMAINS.items():
+        if marca in nombre and not any(
+            dominio_es_o_subdominio(dominio, oficial) for oficial in oficiales
+        ):
+            return True
     return False

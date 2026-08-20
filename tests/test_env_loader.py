@@ -2,7 +2,11 @@ import os
 import tempfile
 import unittest
 
-from sistema_phishing.env_loader import actualizar_env_local, cargar_env_file, leer_env_file
+from sistema_phishing.env_loader import (
+    actualizar_env_local,
+    cargar_env_file,
+    leer_env_file,
+)
 
 
 class TestEnvLoader(unittest.TestCase):

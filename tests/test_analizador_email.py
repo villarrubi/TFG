@@ -1,6 +1,12 @@
 import unittest
+from tempfile import NamedTemporaryFile
 
-from sistema_phishing.analizador_email import parsear_eml_bytes
+from sistema_phishing.analizador_email import (
+    MAX_EMAIL_BYTES,
+    EmailParseError,
+    parsear_eml_archivo,
+    parsear_eml_bytes,
+)
 
 
 class TestAnalizadorEmail(unittest.TestCase):
@@ -23,3 +29,10 @@ class TestAnalizadorEmail(unittest.TestCase):
         self.assertEqual(datos["from"], "Prueba <prueba@example.com>")
         self.assertIn("Este es un mensaje de prueba", datos["body"])
         self.assertTrue(any(anchor["href"] == "https://ejemplo.com" for anchor in datos["anchors"]))
+
+    def test_parsear_eml_archivo_aplica_limite_de_tamano(self):
+        with NamedTemporaryFile(suffix=".eml") as archivo:
+            archivo.write(b"x" * (MAX_EMAIL_BYTES + 1))
+            archivo.flush()
+            with self.assertRaises(EmailParseError):
+                parsear_eml_archivo(archivo.name)

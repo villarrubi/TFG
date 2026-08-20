@@ -1,6 +1,5 @@
 """Analizador principal que combina señalización y puntuación de riesgo."""
 
-from typing import Dict
 
 from .correo import CorreoAnalizado
 from .explanations import ExplanationBuilder
@@ -23,7 +22,7 @@ class PhishingAnalyzer:
         self.signal_builder = signal_builder or SignalBuilder(correo)
         self.explanation_builder = explanation_builder or ExplanationBuilder()
 
-    def analyze(self) -> Dict[str, object]:
+    def analyze(self) -> dict[str, object]:
         """Ejecuta todas las reglas, calcula riesgo y prepara datos para la UI."""
         signals = self.signal_builder.build()
         riesgo = RiskScorer.score(signals)

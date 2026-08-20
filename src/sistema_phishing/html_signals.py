@@ -5,7 +5,6 @@ distinto del destino real; por eso se analiza separado del cuerpo plano.
 """
 
 import re
-from typing import Dict, List
 
 from .configuracion import KNOWN_BRAND_TOKENS
 from .url_utils import (
@@ -66,12 +65,10 @@ def contiene_html_sospechoso(html: str) -> bool:
         return True
     if re.search(r"(?i)<base\b", html):
         return True
-    if re.search(r"(?i)(href|src)=['\"]\s*(javascript:|data:)", html):
-        return True
-    return False
+    return bool(re.search(r"(?i)(href|src)=['\"]\s*(javascript:|data:)", html))
 
 
-def texto_enlace_distinto(anchors: List[Dict[str, str]]) -> bool:
+def texto_enlace_distinto(anchors: list[dict[str, str]]) -> bool:
     """Detecta si el texto visible de un enlace difiere de la URL real del href."""
     for anchor in anchors:
         texto = anchor.get("text", "").strip().lower()
@@ -79,12 +76,15 @@ def texto_enlace_distinto(anchors: List[Dict[str, str]]) -> bool:
         if texto and href and href.startswith("http"):
             # Solo se compara dominio cuando el texto visible parece contener
             # una URL; si el texto es "pincha aquí" no hay dominio que contrastar.
-            if texto_contiene_dominio(texto):
-                if extraer_dominio(texto) != extraer_dominio(href):
-                    return True
-            if any(token in texto for token in KNOWN_BRAND_TOKENS) and texto_contiene_dominio(texto):
-                if extraer_dominio(texto) != extraer_dominio(href):
-                    return True
+            dominios_distintos = extraer_dominio(texto) != extraer_dominio(href)
+            if texto_contiene_dominio(texto) and dominios_distintos:
+                return True
+            if (
+                any(token in texto for token in KNOWN_BRAND_TOKENS)
+                and texto_contiene_dominio(texto)
+                and dominios_distintos
+            ):
+                return True
     return False
 
 
@@ -104,7 +104,7 @@ def formulario_action_sospechoso(html: str) -> bool:
         # se marca como sospechosa.
         if not action:
             return True
-        if action.startswith("/") or action.startswith("./") or action.startswith("../"):
+        if action.startswith(("/", "./", "../")):
             return True
         if not action.lower().startswith("http"):
             return True

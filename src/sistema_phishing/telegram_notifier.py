@@ -1,8 +1,8 @@
 """Notificación de alertas mediante Telegram Bot API."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from html import escape
-from typing import Callable, Optional
 
 import requests
 
@@ -62,7 +62,7 @@ class TelegramNotifier:
     bot_token: str
     chat_id: str
     timeout: int = 10
-    post: Optional[Callable] = None
+    post: Callable | None = None
 
     def enviar_mensaje(self, texto: str) -> None:
         """Envía un mensaje de texto al chat configurado."""

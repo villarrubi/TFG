@@ -6,12 +6,18 @@ from types import SimpleNamespace
 import streamlit as st
 
 from sistema_phishing import (
+    AnalysisBackendConfig,
     ModelStorage,
-    NeuralPhishingClassifier,
     NeuralPhishingDetector,
 )
-from sistema_phishing.analysis_service import construir_resultado_combinado as combinar_resultados
-from sistema_phishing.analizador_email import construir_texto_para_analisis, parsear_eml_bytes
+from sistema_phishing.analizador_email import (
+    construir_texto_para_analisis,
+    parsear_eml_bytes,
+)
+from sistema_phishing.analysis_service import EmailAnalysisService
+from sistema_phishing.analysis_service import (
+    construir_resultado_combinado as _combinar_resultados,
+)
 from sistema_phishing.gmail_client import (
     GmailIntegrationError,
     construir_servicio_gmail,
@@ -19,7 +25,6 @@ from sistema_phishing.gmail_client import (
     obtener_perfil_gmail,
     obtener_ultimos_correos,
 )
-from sistema_phishing.heuristicas import analizar_correo
 from sistema_phishing.idioma import detectar_idioma_correo
 from ui_components import aplicar_estilos_base, render_html
 
@@ -183,13 +188,13 @@ def _color_riesgo(score: float) -> str:
     elif score <= 70:
         # Tramo medio: transición de amarillo a naranja.
         ratio = (score - 30.0) / 40.0
-        r = int(255)
+        r = 255
         g = int(235 - (128 * ratio))
         b = int(0 + (0 * ratio))
     else:
         # Tramo alto: transición de naranja a rojo intenso.
         ratio = (score - 70.0) / 30.0
-        r = int(255)
+        r = 255
         g = int(107 - (40 * ratio))
         b = int(0 + (0 * ratio))
     return f"#{r:02x}{g:02x}{b:02x}"
@@ -246,7 +251,7 @@ def _render_metric_strip(resultado) -> None:
 
 def mostrar_resultado_basico(resultado, titulo: str = "Resultado del análisis"):
     """Pinta los datos comunes a cualquier tipo de análisis."""
-    risk_score = max(0, min(100, int(round(resultado["risk_score"]))))
+    risk_score = max(0, min(100, round(resultado["risk_score"])))
     color = _color_riesgo(risk_score)
     nivel, clase, resumen = _nivel_riesgo(risk_score, resultado["is_phishing"])
     veredicto = "Phishing probable" if resultado["is_phishing"] else "No parece phishing"
@@ -366,7 +371,12 @@ def mostrar_resultado_neural(resultado):
 
 def mostrar_combinado(resultado_heur, resultado_neural, heur_weight, neural_weight):
     """Combina los dos análisis con los pesos elegidos en la interfaz."""
-    resultado = construir_resultado_combinado(resultado_heur, resultado_neural, heur_weight, neural_weight)
+    resultado = construir_resultado_combinado(
+        resultado_heur,
+        resultado_neural,
+        heur_weight,
+        neural_weight,
+    )
     mostrar_resultado_basico(resultado, "Resultado combinado")
     st.markdown("### Ponderación aplicada")
     st.write(f"Peso heurístico: {heur_weight}%")
@@ -378,48 +388,47 @@ def construir_resultado_combinado(resultado_heur, resultado_neural, heur_weight,
     # Se mantiene el mismo umbral que la heurística para que la interpretación
     # del porcentaje sea homogénea en los tres modos de análisis.
     config = SimpleNamespace(threshold=45, heur_weight=heur_weight, neural_weight=neural_weight)
-    resultado = combinar_resultados(resultado_heur, resultado_neural, config)
-    return {
-        "is_phishing": resultado["is_phishing"],
-        "risk_score": resultado["risk_score"],
-        "description": resultado["description"],
-        "urls": resultado["urls"],
-        "anchors": resultado["anchors"],
-        "headers": resultado["headers"],
-    }
+    return _combinar_resultados(resultado_heur, resultado_neural, config)
 
 
 def cargar_detector(idioma: str) -> NeuralPhishingDetector:
-    """Carga el modelo del idioma detectado y usa alternativas si no existe."""
-    path = MODEL_PATH_EN if idioma == "en" else MODEL_PATH_ES
-    storage = ModelStorage(path)
-    classifier = storage.load()
-    if classifier is None:
-        # Si falta el modelo del idioma detectado, reutiliza el otro modelo
-        # entrenado antes de recurrir al dataset sintético.
-        path_alt = MODEL_PATH_ES if idioma == "en" else MODEL_PATH_EN
-        storage_alt = ModelStorage(path_alt)
-        classifier = storage_alt.load()
-    if classifier is None:
-        # Último recurso para que la demo siga funcionando en un clon limpio.
-        classifier = NeuralPhishingClassifier()
-        classifier.fit_default()
-    return NeuralPhishingDetector(classifier)
+    """Compatibilidad para scripts antiguos; la UI usa el servicio central."""
+    config = AnalysisBackendConfig(
+        mode="neural",
+        model_path_es=MODEL_PATH_ES,
+        model_path_en=MODEL_PATH_EN,
+    )
+    return EmailAnalysisService(config)._detector_loader(config, idioma)
 
 
-def analizar_entrada(entrada, texto_modelo: str, remitente: str, subject: str, heur_weight: int, neural_weight: int):
+def analizar_entrada(
+    entrada,
+    texto_modelo: str,
+    remitente: str,
+    subject: str,
+    heur_weight: int,
+    neural_weight: int,
+    analysis_service: EmailAnalysisService | None = None,
+):
     """Ejecuta análisis heurístico, neuronal y combinado sobre una entrada."""
     idioma = detectar_idioma_correo(texto_modelo)
-    detector = cargar_detector(idioma)
-    resultado_heuristico = analizar_correo(entrada)
-    resultado_neural = detector.analyze(texto_modelo, remitente, subject)
-    resultado_combinado = construir_resultado_combinado(
-        resultado_heuristico,
-        resultado_neural,
-        heur_weight,
-        neural_weight,
+    service = analysis_service or EmailAnalysisService(
+        AnalysisBackendConfig(
+            threshold=45,
+            mode="combinado",
+            heur_weight=heur_weight,
+            neural_weight=neural_weight,
+            model_path_es=MODEL_PATH_ES,
+            model_path_en=MODEL_PATH_EN,
+        )
     )
-    return idioma, resultado_heuristico, resultado_neural, resultado_combinado
+    resultados = service.analyze_all(entrada)
+    return (
+        idioma,
+        resultados["heuristico"],
+        resultados["neural"],
+        resultados["combinado"],
+    )
 
 
 def seleccionar_resultado_principal(tipo_analisis: str, resultado_heur, resultado_neural, resultado_combinado):
@@ -434,6 +443,16 @@ def seleccionar_resultado_principal(tipo_analisis: str, resultado_heur, resultad
 def analizar_correos_gmail(correos_gmail, tipo_analisis: str, heur_weight: int, neural_weight: int):
     """Analiza correos de Gmail y devuelve datos listos para la interfaz."""
     registros = []
+    service = EmailAnalysisService(
+        AnalysisBackendConfig(
+            threshold=45,
+            mode="combinado",
+            heur_weight=heur_weight,
+            neural_weight=neural_weight,
+            model_path_es=MODEL_PATH_ES,
+            model_path_en=MODEL_PATH_EN,
+        )
+    )
     barra = st.progress(0)
 
     for indice, correo_gmail in enumerate(correos_gmail, start=1):
@@ -447,6 +466,7 @@ def analizar_correos_gmail(correos_gmail, tipo_analisis: str, heur_weight: int, 
                 datos_email.get("subject", ""),
                 heur_weight,
                 neural_weight,
+                service,
             )
             resultado_principal = seleccionar_resultado_principal(
                 tipo_analisis,
@@ -465,7 +485,7 @@ def analizar_correos_gmail(correos_gmail, tipo_analisis: str, heur_weight: int, 
                 "resultado_combinado": resultado_combinado,
                 "resultado_principal": resultado_principal,
             })
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - un correo no debe cortar el lote
             registros.append({
                 "ok": False,
                 "gmail_id": correo_gmail.gmail_id,
@@ -584,7 +604,7 @@ def cargar_email_gmail_desde_token() -> None:
         servicio = construir_servicio_gmail(GMAIL_CREDENTIALS_PATH, GMAIL_TOKEN_PATH)
         perfil = obtener_perfil_gmail(servicio)
         st.session_state["gmail_email"] = perfil.get("emailAddress", "")
-    except Exception:
+    except Exception:  # noqa: BLE001 - token inválido se resuelve desde la UI
         # Si el token local está caducado o revocado, el botón de conectar
         # permitirá repetir el flujo OAuth sin bloquear la interfaz.
         st.session_state.pop("gmail_email", None)
@@ -700,7 +720,7 @@ def main():
                     st.session_state["gmail_tipo_analisis"] = tipo_analisis
             except GmailIntegrationError as exc:
                 st.error(str(exc))
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 - límite de la integración UI
                 st.error(f"No se pudo completar la integración con Gmail: {exc}")
         if st.session_state.get("gmail_resultados"):
             mostrar_resultados_gmail(

@@ -3,13 +3,15 @@
 import argparse
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
-from sistema_phishing.gmail_client import construir_servicio_gmail, obtener_ultimos_correos
 from sistema_phishing.env_loader import cargar_env_local
+from sistema_phishing.gmail_client import (
+    construir_servicio_gmail,
+    obtener_ultimos_correos,
+)
 from sistema_phishing.gmail_monitor import MonitorConfig, analizar_correos_nuevos
 from sistema_phishing.telegram_notifier import TelegramNotifier
-
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 cargar_env_local(ROOT_DIR)
@@ -28,7 +30,7 @@ ASCII_TITLE = r"""
 
 
 def _hora_actual() -> str:
-    return datetime.now().strftime("%H:%M:%S")
+    return datetime.now(timezone.utc).strftime("%H:%M:%S")
 
 
 def _recortar(texto: str, limite: int = 72) -> str:
@@ -103,24 +105,24 @@ def mostrar_banner(args: argparse.Namespace, config: MonitorConfig, interval: in
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
     chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
 
-    print("")
+    print()
     print("=" * 78)
     print(ASCII_TITLE.strip("\n"))
     print("TFG Phishing Monitor - Gmail API + Telegram")
     print("=" * 78)
     print("Vigilancia automatica de correos nuevos.")
-    print("")
+    print()
     print("Ejecucion")
     print(_linea_clave_valor("Modo:", "una comprobacion" if args.once else "continuo"))
     print(_linea_clave_valor("Intervalo:", f"{interval} segundos"))
     print(_linea_clave_valor("Primera ejecucion:", "marca existentes como vistos" if config.mark_existing_as_seen else "analiza existentes"))
-    print("")
+    print()
     print("Gmail")
     print(_linea_clave_valor("Credenciales:", f"{_ruta_legible(credentials_path)} ({_estado_archivo(credentials_path)})"))
     print(_linea_clave_valor("Token:", f"{_ruta_legible(token_path)} ({_estado_archivo(token_path)})"))
     print(_linea_clave_valor("Consulta:", query))
     print(_linea_clave_valor("Limite:", limit))
-    print("")
+    print()
     print("Analisis")
     print(_linea_clave_valor("Modo:", config.mode))
     print(_linea_clave_valor("Umbral phishing:", f"{config.threshold:.1f}%"))
@@ -128,16 +130,16 @@ def mostrar_banner(args: argparse.Namespace, config: MonitorConfig, interval: in
     print(_linea_clave_valor("Peso neuronal:", f"{config.neural_weight}%"))
     print(_linea_clave_valor("Modelo ES:", f"{_ruta_legible(config.model_path_es)} ({_estado_archivo(config.model_path_es)})"))
     print(_linea_clave_valor("Modelo EN:", f"{_ruta_legible(config.model_path_en)} ({_estado_archivo(config.model_path_en)})"))
-    print("")
+    print()
     print("Alertas")
     print(_linea_clave_valor("Telegram bot:", _estado_configurado(bot_token)))
     print(_linea_clave_valor("Telegram chat:", _estado_configurado(chat_id)))
-    print("")
+    print()
     print("Actividad")
     print("  Esperando el primer ciclo...")
     print("  Pulsa Ctrl+C para detener el monitor.")
     print("=" * 78)
-    print("")
+    print()
 
 
 def ejecutar_ciclo(config: MonitorConfig, notifier: TelegramNotifier | None) -> None:
@@ -157,6 +159,12 @@ def ejecutar_ciclo(config: MonitorConfig, notifier: TelegramNotifier | None) -> 
         return
 
     for resultado in resultados:
+        if resultado.error:
+            print(
+                f"[{_hora_actual()}] ERROR    correo={resultado.gmail_id} | "
+                f"{_recortar(resultado.error)}"
+            )
+            continue
         estado = "PHISHING" if resultado.is_phishing else "OK"
         aviso = "notificado" if resultado.notified else "sin notificar"
         subject = _recortar(resultado.subject or "(sin asunto)")
@@ -183,7 +191,7 @@ def main() -> None:
         except KeyboardInterrupt:
             print(f"[{_hora_actual()}] Monitor detenido por el usuario.")
             break
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - el monitor debe continuar
             print(f"[{_hora_actual()}] ERROR en el ciclo de monitorizacion: {exc}")
 
         if args.once:

@@ -27,15 +27,17 @@ import argparse
 import sys
 from pathlib import Path
 
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 # Permite ejecutar el script directamente sin instalar el paquete.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from sistema_phishing.dataset import cargar_dataset_csv
-from sistema_phishing.modelo_neural import HiperparametrosModelo, NeuralPhishingClassifier
-
+from sistema_phishing.modelo_neural import (
+    HiperparametrosModelo,
+    NeuralPhishingClassifier,
+)
 
 # ---------------------------------------------------------------------------
 # EDITA ESTA LISTA para probar las combinaciones que quieras.

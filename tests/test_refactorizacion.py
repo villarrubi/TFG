@@ -6,9 +6,19 @@ from io import StringIO
 from sistema_phishing import ExplanationBuilder, SignalBuilder
 from sistema_phishing.correo import CorreoAnalizado
 from sistema_phishing.dataset import cargar_dataset_csv
-from sistema_phishing.modelo_neural import ModelStorage, NeuralPhishingClassifier, NeuralPhishingDetector
-from sistema_phishing.neural import generar_dataset_sintetico as generar_dataset_desde_fachada
-from sistema_phishing.signals import contiene_formulario_html, extraer_urls, tiene_parametros_sospechosos_url
+from sistema_phishing.modelo_neural import (
+    ModelStorage,
+    NeuralPhishingClassifier,
+    NeuralPhishingDetector,
+)
+from sistema_phishing.neural import (
+    generar_dataset_sintetico as generar_dataset_desde_fachada,
+)
+from sistema_phishing.signals import (
+    contiene_formulario_html,
+    extraer_urls,
+    tiene_parametros_sospechosos_url,
+)
 
 
 class TestRefactorizacion(unittest.TestCase):
@@ -54,6 +64,14 @@ class TestRefactorizacion(unittest.TestCase):
         self.assertEqual(etiquetas, [1, 0])
         self.assertIn("From: alerta@banco-falso.com", textos[0])
         self.assertIn("Links: https://tienda.com", textos[1])
+
+    def test_dataset_csv_ignora_columnas_sobrantes(self):
+        csv_data = StringIO("label,text\n1,Mensaje de prueba,valor sobrante\n")
+
+        textos, etiquetas = cargar_dataset_csv(csv_data)
+
+        self.assertEqual(textos, ["Mensaje de prueba"])
+        self.assertEqual(etiquetas, [1])
 
     def test_neural_fachada_y_storage_funcionan_con_modulos_refactorizados(self):
         textos, etiquetas = generar_dataset_desde_fachada()

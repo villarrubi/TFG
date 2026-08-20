@@ -31,5 +31,5 @@ def detectar_idioma_correo(texto: str) -> str:
     try:
         lang = _detect(texto)
         return "en" if lang == "en" else "es"
-    except Exception:
+    except Exception:  # noqa: BLE001 - langdetect falla con textos ambiguos
         return "es"

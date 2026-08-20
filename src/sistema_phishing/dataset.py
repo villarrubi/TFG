@@ -7,21 +7,25 @@ tolerancia a datasets externos fuera del clasificador neuronal.
 
 import csv
 import os
-from typing import IO, List, Tuple, Union
-
+from typing import IO
 
 LABEL_COLUMN_CANDIDATES = ["label", "is_phishing", "phishing", "spam", "target"]
 TEXT_COLUMN_CANDIDATES = ("message", "email", "content")
 
 
+class DatasetFormatError(ValueError):
+    """Describe un CSV que no cumple el contrato mínimo de entrenamiento."""
+
+
 def _valor_no_vacio(fila: dict, columna: str) -> str:
     """Devuelve el valor limpio de una columna o cadena vacía."""
-    if columna in fila and fila[columna] and fila[columna].strip():
-        return fila[columna].strip()
-    return ""
+    valor = fila.get(columna)
+    if valor is None or isinstance(valor, list):
+        return ""
+    return str(valor).strip()
 
 
-def _primer_valor_no_vacio(fila: dict, columnas: Tuple[str, ...]) -> str:
+def _primer_valor_no_vacio(fila: dict, columnas: tuple[str, ...]) -> str:
     """Busca el primer valor no vacío respetando el orden de preferencia."""
     for columna in columnas:
         valor = _valor_no_vacio(fila, columna)
@@ -38,24 +42,44 @@ def construir_texto_para_entrenamiento(subject: str, body: str, headers: str = "
     return "\n".join([elemento for elemento in elementos if elemento])
 
 
-def generar_dataset_sintetico() -> Tuple[List[str], List[int]]:
-    """Genera ejemplos sintéticos de correos phishing y legítimos."""
+def generar_dataset_sintetico(
+    language: str = "spanish",
+) -> tuple[list[str], list[int]]:
+    """Genera un conjunto mínimo de demostración en el idioma solicitado."""
     # Dataset mínimo de arranque: permite probar la demo cuando todavía no se
     # ha entrenado un modelo con CSV reales.
-    positivos = [
-        "From: Banco Falso <soporte@banco-falso.com>\nSubject: Verifica tu cuenta\n\nEstimado cliente, su cuenta ha sido bloqueada. Ingrese sus credenciales en https://banco-falso.com/actualizar.",
-        "From: Servicio de Pago <alerta@pagos-seguro.com>\nSubject: Pago pendiente\n\nHay un pago pendiente en su cuenta. Confirme los detalles en https://pagos-seguro.com/confirmar.",
-        "From: Atención al Cliente <soporte@cliente-seguro.com>\nSubject: Acción requerida\n\nActualice su información de inicio de sesión ahora para evitar la suspensión de su cuenta.",
-        "From: Caja Directa <info@caja-directa.com>\nSubject: Actualización necesaria\n\nSu cuenta requiere verificación urgente. Haga clic en el enlace y confirme sus datos.",
-        "From: Amazon Servicio <no-reply@amazon-verifica.com>\nSubject: Problema con su pedido\n\nHemos detectado actividad inusual. Ingrese con su usuario y contraseña aquí.",
-    ]
-    negativos = [
-        "From: Tienda Online <ventas@tienda-online.com>\nSubject: Confirmación de pedido\n\nGracias por su compra. Su pedido ha sido enviado y llegará en los próximos días.",
-        "From: Recursos Humanos <rrhh@empresa.com>\nSubject: Convocatoria de entrevista\n\nLe invitamos cordialmente a una entrevista. Por favor confirme su asistencia.",
-        "From: Boletín Informativo <newsletter@empresa.com>\nSubject: Novedades del mes\n\nEn este boletín hablamos sobre nuestras últimas novedades y eventos próximos.",
-        "From: Soporte Técnico <soporte@servicio.com>\nSubject: Actualización de mantenimiento\n\nInformamos que habrá un corte de servicio programado mañana de 2:00 a 4:00 AM.",
-        "From: Contacto Personal <amigo@example.com>\nSubject: Nos vemos esta semana\n\n¿Te apetece tomar un café el viernes? Avísame si te viene bien.",
-    ]
+    if language == "english":
+        positivos = [
+            "From: Account Support <alert@fake-bank.com>\nSubject: Verify your account\n\nYour account is locked. Confirm your password at https://fake-bank.com/verify.",
+            "From: Payment Service <security@payment-check.com>\nSubject: Payment pending\n\nSign in immediately to stop an unauthorized payment.",
+            "From: Cloud Admin <admin@external-login.com>\nSubject: Action required\n\nUpdate your credentials now to keep access.",
+            "From: Delivery Team <parcel@track-now.example>\nSubject: Delivery problem\n\nPay the outstanding fee through the attached link.",
+            "From: Microsoft Security <notice@microsoft-login.example>\nSubject: Unusual activity\n\nValidate your account and security code.",
+        ]
+        negativos = [
+            "From: Online Store <sales@shop.example>\nSubject: Order confirmation\n\nThank you. Your order has shipped.",
+            "From: Human Resources <hr@company.example>\nSubject: Team meeting\n\nThe weekly meeting is Thursday at ten.",
+            "From: Newsletter <news@company.example>\nSubject: Monthly news\n\nHere are this month's product updates.",
+            "From: IT Support <support@company.example>\nSubject: Scheduled maintenance\n\nThe service will be unavailable tomorrow from two to four.",
+            "From: Alex <alex@example.com>\nSubject: Coffee this week\n\nAre you free on Friday afternoon?",
+        ]
+    elif language != "spanish":
+        raise ValueError("El idioma sintético debe ser 'spanish' o 'english'.")
+    else:
+        positivos = [
+            "From: Banco Falso <soporte@banco-falso.com>\nSubject: Verifica tu cuenta\n\nEstimado cliente, su cuenta ha sido bloqueada. Ingrese sus credenciales en https://banco-falso.com/actualizar.",
+            "From: Servicio de Pago <alerta@pagos-seguro.com>\nSubject: Pago pendiente\n\nHay un pago pendiente en su cuenta. Confirme los detalles en https://pagos-seguro.com/confirmar.",
+            "From: Atención al Cliente <soporte@cliente-seguro.com>\nSubject: Acción requerida\n\nActualice su información de inicio de sesión ahora para evitar la suspensión de su cuenta.",
+            "From: Caja Directa <info@caja-directa.com>\nSubject: Actualización necesaria\n\nSu cuenta requiere verificación urgente. Haga clic en el enlace y confirme sus datos.",
+            "From: Amazon Servicio <no-reply@amazon-verifica.com>\nSubject: Problema con su pedido\n\nHemos detectado actividad inusual. Ingrese con su usuario y contraseña aquí.",
+        ]
+        negativos = [
+            "From: Tienda Online <ventas@tienda-online.com>\nSubject: Confirmación de pedido\n\nGracias por su compra. Su pedido ha sido enviado y llegará en los próximos días.",
+            "From: Recursos Humanos <rrhh@empresa.com>\nSubject: Convocatoria de entrevista\n\nLe invitamos cordialmente a una entrevista. Por favor confirme su asistencia.",
+            "From: Boletín Informativo <newsletter@empresa.com>\nSubject: Novedades del mes\n\nEn este boletín hablamos sobre nuestras últimas novedades y eventos próximos.",
+            "From: Soporte Técnico <soporte@servicio.com>\nSubject: Actualización de mantenimiento\n\nInformamos que habrá un corte de servicio programado mañana de 2:00 a 4:00 AM.",
+            "From: Contacto Personal <amigo@example.com>\nSubject: Nos vemos esta semana\n\n¿Te apetece tomar un café el viernes? Avísame si te viene bien.",
+        ]
 
     textos = positivos + negativos
     etiquetas = [1] * len(positivos) + [0] * len(negativos)
@@ -65,13 +89,35 @@ def generar_dataset_sintetico() -> Tuple[List[str], List[int]]:
 def normalizar_etiqueta(valor: str) -> int:
     """Convierte etiquetas habituales de datasets externos a 0 o 1."""
     if valor is None:
-        raise ValueError("Etiqueta ausente en el dataset")
+        raise DatasetFormatError("Etiqueta ausente en el dataset")
     texto = str(valor).strip().lower()
-    if texto in {"1", "true", "phishing", "spam", "malicious", "sospechoso", "1.0", "safe email"}:
+    if texto in {
+        "1",
+        "true",
+        "phishing",
+        "phishing email",
+        "spam",
+        "malicious",
+        "sospechoso",
+        "1.0",
+    }:
         return 1
-    if texto in {"0", "false", "legit", "ham", "clean", "benigno", "no phishing", "no_phishing", "0.0", "phishing email"}:
+    if texto in {
+        "0",
+        "false",
+        "legit",
+        "legitimate",
+        "safe",
+        "safe email",
+        "ham",
+        "clean",
+        "benigno",
+        "no phishing",
+        "no_phishing",
+        "0.0",
+    }:
         return 0
-    raise ValueError(f"Etiqueta desconocida: {valor}")
+    raise DatasetFormatError(f"Etiqueta desconocida: {valor!r}.")
 
 
 def encontrar_columna_etiqueta(fila: dict, label_column: str) -> str:
@@ -91,7 +137,7 @@ def encontrar_columna_etiqueta(fila: dict, label_column: str) -> str:
 
 def obtener_campos_adicionales(fila: dict) -> str:
     """Añade metadatos útiles al texto cuando el CSV los trae separados."""
-    partes: List[str] = []
+    partes: list[str] = []
     # Remitente, destinatario, URLs y fecha pueden aportar información útil al
     # clasificador aunque no formen parte del cuerpo del mensaje.
     sender = _primer_valor_no_vacio(fila, ("sender", "from"))
@@ -151,7 +197,7 @@ def obtener_texto_de_fila(
     return texto
 
 
-def obtener_nombre_fuente(archivo: Union[str, IO[str]]) -> str:
+def obtener_nombre_fuente(archivo: str | IO[str]) -> str:
     """Obtiene un nombre legible de ruta o archivo subido desde Streamlit."""
     if isinstance(archivo, str):
         return os.path.basename(archivo)
@@ -161,18 +207,18 @@ def obtener_nombre_fuente(archivo: Union[str, IO[str]]) -> str:
 
 
 def cargar_dataset_csv(
-    archivo: Union[str, IO[str]],
+    archivo: str | IO[str],
     label_column: str = "label",
     text_column: str = "text",
     subject_column: str = "subject",
     body_column: str = "body",
-) -> Tuple[List[str], List[int]]:
+) -> tuple[list[str], list[int]]:
     """Carga un dataset de entrenamiento desde un CSV."""
     cerrar_al_final = False
     if isinstance(archivo, str):
         # Si se recibe una ruta, este módulo se responsabiliza de abrir y cerrar
         # el fichero. Los objetos ya abiertos se dejan en manos del llamador.
-        fichero = open(archivo, newline="", encoding="utf-8")
+        fichero = open(archivo, newline="", encoding="utf-8")  # noqa: SIM115
         cerrar_al_final = True
     else:
         if hasattr(archivo, "read"):
@@ -184,17 +230,30 @@ def cargar_dataset_csv(
         try:
             # Algunos datasets contienen cuerpos de correo largos; se amplía el
             # límite de campo para que csv.DictReader no los rechace.
-            csv.field_size_limit(1000000000)
+            csv.field_size_limit(10_000_000)
         except OverflowError:
             csv.field_size_limit(10000000)
 
         lector = csv.DictReader(fichero)
-        textos: List[str] = []
-        etiquetas: List[int] = []
-        for fila in lector:
+        if lector.fieldnames is None:
+            raise DatasetFormatError("El CSV no contiene una fila de cabecera.")
+        lector.fieldnames = [
+            (nombre or "").lstrip("\ufeff").strip() for nombre in lector.fieldnames
+        ]
+        etiqueta_col = encontrar_columna_etiqueta(
+            {nombre: "" for nombre in lector.fieldnames},
+            label_column,
+        )
+        textos: list[str] = []
+        etiquetas: list[int] = []
+        for numero_fila, fila in enumerate(lector, start=2):
             # Se ignoran filas vacías o incompletas para tolerar CSV reales con
             # separadores finales, notas o registros mal exportados.
-            if not any(value and value.strip() for value in fila.values()):
+            if not any(
+                str(value).strip()
+                for key, value in fila.items()
+                if key is not None and value is not None
+            ):
                 continue
 
             texto = obtener_texto_de_fila(fila, text_column, subject_column, body_column)
@@ -202,18 +261,14 @@ def cargar_dataset_csv(
                 continue
 
             try:
-                etiqueta_col = encontrar_columna_etiqueta(fila, label_column)
-            except ValueError:
-                # Las filas sin columna de etiqueta no sirven para entrenamiento
-                # supervisado, así que se descartan.
-                continue
-
-            etiqueta = normalizar_etiqueta(fila[etiqueta_col])
+                etiqueta = normalizar_etiqueta(fila.get(etiqueta_col))
+            except DatasetFormatError as exc:
+                raise DatasetFormatError(f"Fila {numero_fila}: {exc}") from exc
             textos.append(texto)
             etiquetas.append(etiqueta)
 
         if not textos:
-            raise ValueError("El CSV no contiene filas de entrenamiento válidas.")
+            raise DatasetFormatError("El CSV no contiene filas de entrenamiento válidas.")
         return textos, etiquetas
     finally:
         if cerrar_al_final:

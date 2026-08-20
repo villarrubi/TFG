@@ -1,6 +1,10 @@
 import unittest
 
-from gmail_extension_server import GmailWebAnalyzer, construir_datos_email, limpiar_resultado
+from gmail_extension_server import (
+    GmailWebAnalyzer,
+    construir_datos_email,
+    limpiar_resultado,
+)
 from sistema_phishing.gmail_monitor import MODO_HEURISTICO, MonitorConfig
 
 

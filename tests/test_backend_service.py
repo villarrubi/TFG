@@ -1,11 +1,13 @@
-import os
 import sys
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from sistema_phishing.backend_service import AnalysisBackendConfig, AnalysisBackendService
+from sistema_phishing.backend_service import (
+    AnalysisBackendConfig,
+    AnalysisBackendService,
+)
 
 
 class BackendServiceTests(unittest.TestCase):

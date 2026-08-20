@@ -1,6 +1,9 @@
 import unittest
 
-from sistema_phishing.telegram_notifier import TelegramNotifier, construir_mensaje_alerta
+from sistema_phishing.telegram_notifier import (
+    TelegramNotifier,
+    construir_mensaje_alerta,
+)
 
 
 class FakeResponse:

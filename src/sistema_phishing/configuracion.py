@@ -99,6 +99,24 @@ KNOWN_BRAND_TOKENS = [
     "ibank",
 ]
 
+# Dominios oficiales usados únicamente para detectar suplantaciones evidentes.
+# No se pretende mantener un inventario global de marcas: la tabla acota la
+# regla y evita considerar legítimo un dominio como paypal.com.ejemplo.net.
+KNOWN_BRAND_DOMAINS = {
+    "paypal": ("paypal.com",),
+    "amazon": ("amazon.com", "amazon.es"),
+    "apple": ("apple.com", "icloud.com"),
+    "google": ("google.com", "gmail.com"),
+    "microsoft": ("microsoft.com", "outlook.com", "live.com"),
+    "facebook": ("facebook.com", "meta.com"),
+    "telefónica": ("telefonica.com", "telefonica.es"),
+    "movistar": ("movistar.es",),
+    "iberdrola": ("iberdrola.es",),
+    "bbva": ("bbva.com",),
+    "santander": ("santander.com", "bancosantander.es"),
+    "caixa": ("caixabank.com",),
+}
+
 # Lista local de stopwords en español para no depender de recursos externos de
 # scikit-learn o NLTK durante el entrenamiento.
 SPANISH_STOP_WORDS = {
@@ -110,7 +128,7 @@ SPANISH_STOP_WORDS = {
     "dos", "el", "ella", "ellas", "ellos", "empleais", "emplean", "emplear",
     "empleas", "en", "encima", "entre", "era", "erais", "eramos", "eran", "eras",
     "eres", "es", "esta", "estaba", "estado", "estais", "estamos", "estan", "este",
-    "esto", "estos", "estoy", "esta", "etc", "fin", "fue", "fueron", "fui",
+    "esto", "estos", "estoy", "etc", "fin", "fue", "fueron", "fui",
     "fuimos", "ha", "hace", "haceis", "hacemos", "hacen", "hacer", "haces", "hacia",
     "han", "hasta", "incluso", "intenta", "intentais", "intentamos", "intentan", "intentar",
     "intentas", "ir", "jamas", "junto", "la", "lado", "las", "le", "les", "lo", "los",

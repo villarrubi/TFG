@@ -2,9 +2,17 @@
 
 import re
 from email import policy
+from email.message import Message
 from email.parser import BytesParser
 from html.parser import HTMLParser
-from typing import Dict, List
+
+from .url_utils import extraer_urls
+
+MAX_EMAIL_BYTES = 10 * 1024 * 1024
+
+
+class EmailParseError(ValueError):
+    """Indica que un mensaje no puede analizarse de forma segura."""
 
 
 def _limpiar_html(html: str) -> str:
@@ -33,7 +41,7 @@ def _limpiar_html(html: str) -> str:
     return texto.strip()
 
 
-def _extraer_anclas(html: str) -> List[Dict[str, str]]:
+def _extraer_anclas(html: str) -> list[dict[str, str]]:
     """Extrae los enlaces <a> de un HTML y devuelve su texto y href."""
     class AnchorExtractor(HTMLParser):
         def __init__(self):
@@ -69,30 +77,45 @@ def _extraer_anclas(html: str) -> List[Dict[str, str]]:
     return extractor.anchors
 
 
-def parsear_eml_bytes(data: bytes) -> Dict[str, object]:
+def parsear_eml_bytes(data: bytes) -> dict[str, object]:
     """Parsea un mensaje EML pasado como bytes y devuelve los campos extraídos."""
+    if not isinstance(data, bytes):
+        raise TypeError("El mensaje EML debe proporcionarse como bytes.")
+    if not data:
+        raise EmailParseError("El archivo EML está vacío.")
+    if len(data) > MAX_EMAIL_BYTES:
+        raise EmailParseError(
+            f"El archivo EML supera el límite de {MAX_EMAIL_BYTES // (1024 * 1024)} MB."
+        )
     # `policy.default` decodifica cabeceras y cuerpos de forma más cómoda que la
     # política legacy, especialmente con asuntos o remitentes internacionalizados.
     msg = BytesParser(policy=policy.default).parsebytes(data)
     return _extraer_campos(msg)
 
 
-def parsear_eml_archivo(ruta: str) -> Dict[str, object]:
+def parsear_eml_archivo(ruta: str) -> dict[str, object]:
     """Parsea un archivo .eml desde disco y devuelve los campos extraídos."""
-    with open(ruta, "rb") as f:
-        msg = BytesParser(policy=policy.default).parse(f)
-    return _extraer_campos(msg)
+    # Se lee como máximo un byte más que el límite para poder distinguir un
+    # archivo válido de uno demasiado grande sin cargarlo completo en memoria.
+    # Así la entrada desde disco aplica exactamente la misma política que la
+    # entrada recibida por HTTP o Streamlit.
+    try:
+        with open(ruta, "rb") as f:
+            data = f.read(MAX_EMAIL_BYTES + 1)
+    except OSError as exc:
+        raise EmailParseError("No se pudo leer el archivo EML.") from exc
+    return parsear_eml_bytes(data)
 
 
-def _contenido_seguro(part) -> str:
+def _contenido_seguro(part: Message) -> str:
     """Obtiene el contenido de una parte MIME tolerando partes no decodificables."""
     try:
         return str(part.get_content())
-    except Exception:
+    except (AttributeError, LookupError, TypeError, UnicodeError):
         return ""
 
 
-def _extraer_partes_mime(msg) -> Dict[str, object]:
+def _extraer_partes_mime(msg: Message) -> dict[str, object]:
     """Separa texto, HTML y adjuntos de un mensaje MIME."""
     cuerpo_texto = ""
     cuerpo_html = ""
@@ -105,7 +128,7 @@ def _extraer_partes_mime(msg) -> Dict[str, object]:
             tipo = part.get_content_type()
             disposicion = part.get_content_disposition()
             if disposicion == "attachment":
-                attachments.append(part.get_filename())
+                attachments.append(part.get_filename() or "(adjunto sin nombre)")
                 continue
             contenido = _contenido_seguro(part)
             if tipo == "text/plain" and not cuerpo_texto:
@@ -128,12 +151,16 @@ def _extraer_partes_mime(msg) -> Dict[str, object]:
     }
 
 
-def _extraer_urls_texto(texto: str) -> List[str]:
-    """Extrae URLs HTTP/HTTPS desde texto plano."""
-    return re.findall(r"https?://[\w\-\.\:\/\?\#\&\=\%\+\;]+", texto, flags=re.IGNORECASE)
+def _agrupar_cabeceras(msg: Message) -> dict[str, str]:
+    """Conserva cabeceras repetidas sin perder saltos Received o Authentication."""
+    cabeceras: dict[str, list[str]] = {}
+    for nombre, valor in msg.raw_items():
+        limpio = " ".join(str(valor).splitlines()).strip()
+        cabeceras.setdefault(nombre, []).append(limpio)
+    return {nombre: "\n".join(valores) for nombre, valores in cabeceras.items()}
 
 
-def _extraer_campos(msg) -> Dict[str, object]:
+def _extraer_campos(msg: Message) -> dict[str, object]:
     """Extrae datos relevantes del objeto de correo parseado."""
     # Se separan cuerpo de texto, HTML, anclas y adjuntos porque cada familia de
     # reglas necesita mirar una representación distinta del mismo correo.
@@ -150,13 +177,13 @@ def _extraer_campos(msg) -> Dict[str, object]:
     if cuerpo_html:
         anclas = _extraer_anclas(cuerpo_html)
 
-    headers = {k: v for k, v in msg.items()}
-    # full_text conserva cabeceras relevantes junto al cuerpo para que las
-    # heurísticas puedan trabajar con una representación plana del correo.
-    full_text = _construir_texto_para_analisis(headers, cuerpo_texto)
+    headers = _agrupar_cabeceras(msg)
+    # Se conservan todas las cabeceras: SPF, DKIM, DMARC, Return-Path,
+    # Message-ID y Received son parte esencial de las reglas técnicas.
+    full_text = _construir_texto_para_analisis(msg.raw_items(), cuerpo_texto)
     # Se extraen URLs del texto plano final; las URLs de anclas HTML se añaden
     # después al normalizar el correo en CorreoAnalizado.
-    urls = _extraer_urls_texto(full_text)
+    urls = extraer_urls(full_text)
 
     return {
         "subject": msg.get("subject", ""),
@@ -172,19 +199,31 @@ def _extraer_campos(msg) -> Dict[str, object]:
     }
 
 
-def _construir_texto_para_analisis(headers: Dict[str, str], cuerpo: str) -> str:
+def _construir_texto_para_analisis(
+    headers,
+    cuerpo: str,
+) -> str:
     """Construye una representación plana del correo a partir de cabeceras y cuerpo."""
-    partes: List[str] = []
-    if headers.get("From"):
-        partes.append(f"From: {headers['From']}")
-    if headers.get("Reply-To"):
-        partes.append(f"Reply-To: {headers['Reply-To']}")
-    if headers.get("Subject"):
-        partes.append(f"Subject: {headers['Subject']}")
-    partes.append(cuerpo)
+    items = headers.items() if isinstance(headers, dict) else headers
+    partes = [
+        f"{nombre}: {' '.join(str(valor).splitlines()).strip()}"
+        for nombre, valor in items
+        if valor is not None
+    ]
+    if cuerpo:
+        partes.append(cuerpo)
     return "\n".join(partes)
 
 
-def construir_texto_para_analisis(datos: Dict[str, object]) -> str:
-    """Devuelve el texto plano preparado para ser analizado por las heurísticas."""
-    return datos.get("full_text", "")
+def construir_texto_para_analisis(datos: dict[str, object]) -> str:
+    """Devuelve una representación completa aunque el origen no sea un EML."""
+    full_text = str(datos.get("full_text", "") or "").strip()
+    if full_text:
+        return full_text
+    headers = datos.get("headers", {})
+    if not isinstance(headers, dict):
+        headers = {}
+    return _construir_texto_para_analisis(
+        headers,
+        str(datos.get("body", "") or ""),
+    )

@@ -41,7 +41,7 @@ class TestNeuralPhishingClassifier(unittest.TestCase):
         self.assertEqual(len(probas), 2)
         self.assertTrue(all(0.0 <= p <= 1.0 for p in probas))
 
-    def test_fit_from_csvs_acumula_datos_de_entrenamientos_previos(self):
+    def test_fit_from_csvs_reemplaza_el_entrenamiento_anterior(self):
         clasificador = NeuralPhishingClassifier(
             hiperparametros=HiperparametrosModelo(
                 tfidf_max_features=50,
@@ -51,10 +51,20 @@ class TestNeuralPhishingClassifier(unittest.TestCase):
         )
         primer_csv = io.StringIO("label,text\n1,phishing one\n0,legit one\n")
         segundo_csv = io.StringIO("label,text\n1,phishing two\n0,legit two\n")
+        primer_csv.name = "primero.csv"
+        segundo_csv.name = "segundo.csv"
 
         clasificador.fit_from_csvs([primer_csv])
         clasificador.fit_from_csvs([segundo_csv])
 
-        self.assertEqual(len(clasificador.training_texts), 4)
-        self.assertEqual(len(clasificador.training_labels), 4)
-        self.assertEqual(len(clasificador.training_sources), 2)
+        self.assertEqual(clasificador.training_texts, [])
+        self.assertEqual(clasificador.training_labels, [])
+        self.assertEqual(clasificador.training_sources, ["segundo.csv"])
+        self.assertEqual(clasificador.last_training_stats.n_samples, 2)
+
+    def test_dataset_sintetico_ingles_contiene_textos_en_ingles(self):
+        textos, etiquetas = generar_dataset_sintetico("english")
+
+        self.assertEqual(len(textos), len(etiquetas))
+        self.assertTrue(any("password" in texto.lower() for texto in textos))
+        self.assertTrue(any("meeting" in texto.lower() for texto in textos))

@@ -11,7 +11,6 @@ import train_app
 from sistema_phishing.env_loader import cargar_env_local, leer_env_file
 from ui_components import aplicar_estilos_base, estado_badge, render_html
 
-
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 ENV_LOCAL_PATH = os.path.join(ROOT_DIR, ".env.local")
 GMAIL_TOKEN_PATH = os.path.join(ROOT_DIR, "token.json")

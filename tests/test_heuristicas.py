@@ -4,6 +4,10 @@ from sistema_phishing.heuristicas import analizar_correo
 
 
 class TestHeuristicas(unittest.TestCase):
+    def test_entrada_mapping_no_itera_cadenas_como_listas(self):
+        with self.assertRaises(TypeError):
+            analizar_correo({"body": "texto", "urls": "https://example.com"})
+
     def test_analizar_correo_identifica_fraude_basico(self):
         correo = (
             "From: Bank Support <no-reply@banco-seguro.com>\n"

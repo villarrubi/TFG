@@ -8,6 +8,7 @@ import streamlit as st
 
 from sistema_phishing import ModelStorage, NeuralModelTrainer
 from sistema_phishing.env_loader import cargar_env_local
+from sistema_phishing.metrics import calcular_metricas_clasificacion
 from sistema_phishing.modelo_neural import (
     HiperparametrosModelo,
     NeuralPhishingClassifier,
@@ -76,7 +77,7 @@ def resumir_dataset_subido(archivo, label_column: str, text_column: str, subject
             "Legítimos": legitimos,
             "Estado": "OK",
         }
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - mostrar errores de CSV en la UI
         return {
             "Archivo": archivo.name,
             "Filas válidas": 0,
@@ -286,7 +287,7 @@ def main():
                         col2.metric("Phishing", stats.phishing_count)
                         col3.metric("Legítimos", stats.legit_count)
                         col4.metric("Accuracy", f"{stats.accuracy * 100:.1f}%")
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001 - mostrar errores en la UI
                     st.error(f"Error durante el entrenamiento: {e}")
 
     with tab_eval:
@@ -332,35 +333,53 @@ def main():
                     clasificador = storage_eval.load()
                     predicciones = clasificador.predict(textos)
 
-                    total = len(etiquetas_reales)
-                    phishing_real = sum(etiquetas_reales)
-                    legitimos_real = total - phishing_real
-
-                    correctas = sum(1 for pred, real in zip(predicciones, etiquetas_reales) if pred == real)
-                    accuracy = correctas / total if total else 0.0
-
-                    verdaderos_positivos = sum(1 for pred, real in zip(predicciones, etiquetas_reales) if pred == 1 and real == 1)
-                    falsos_positivos = sum(1 for pred, real in zip(predicciones, etiquetas_reales) if pred == 1 and real == 0)
-                    verdaderos_negativos = sum(1 for pred, real in zip(predicciones, etiquetas_reales) if pred == 0 and real == 0)
-                    falsos_negativos = sum(1 for pred, real in zip(predicciones, etiquetas_reales) if pred == 0 and real == 1)
+                    metricas = calcular_metricas_clasificacion(
+                        etiquetas_reales,
+                        predicciones,
+                    )
 
                     # La matriz de confusión se muestra desglosada porque en
                     # phishing el coste de un falso negativo suele ser más alto.
                     st.success("Evaluación completada.")
                     col1, col2, col3, col4 = st.columns(4)
-                    col1.metric("Total", total)
-                    col2.metric("Accuracy", f"{accuracy * 100:.1f}%")
-                    col3.metric("Phishing reales", phishing_real)
-                    col4.metric("Legítimos reales", legitimos_real)
+                    col1.metric("Total", metricas.total)
+                    col2.metric("Accuracy", f"{metricas.accuracy * 100:.1f}%")
+                    col3.metric("Precisión", f"{metricas.precision * 100:.1f}%")
+                    col4.metric("Recall", f"{metricas.recall * 100:.1f}%")
+
+                    col_f1, col_balanced, col_phishing, col_legitimos = st.columns(4)
+                    col_f1.metric("F1-score", f"{metricas.f1 * 100:.1f}%")
+                    col_balanced.metric(
+                        "Accuracy balanceada",
+                        f"{metricas.balanced_accuracy * 100:.1f}%",
+                    )
+                    col_phishing.metric("Phishing reales", metricas.phishing_reales)
+                    col_legitimos.metric("Legítimos reales", metricas.legitimos_reales)
 
                     st.markdown("**Matriz de confusión:**")
                     col5, col6, col7, col8 = st.columns(4)
-                    col5.metric("VP", verdaderos_positivos, help="Phishing bien detectado")
-                    col6.metric("VN", verdaderos_negativos, help="Legítimos bien clasificados")
-                    col7.metric("FP", falsos_positivos, help="Legítimos clasificados como phishing")
-                    col8.metric("FN", falsos_negativos, help="Phishing clasificados como legítimos")
+                    col5.metric(
+                        "VP",
+                        metricas.verdaderos_positivos,
+                        help="Phishing bien detectado",
+                    )
+                    col6.metric(
+                        "VN",
+                        metricas.verdaderos_negativos,
+                        help="Legítimos bien clasificados",
+                    )
+                    col7.metric(
+                        "FP",
+                        metricas.falsos_positivos,
+                        help="Legítimos clasificados como phishing",
+                    )
+                    col8.metric(
+                        "FN",
+                        metricas.falsos_negativos,
+                        help="Phishing clasificados como legítimos",
+                    )
 
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001 - mostrar errores en la UI
                     st.error(f"Error durante la evaluación: {e}")
 
     with tab_compare:
@@ -428,7 +447,7 @@ def main():
             with st.expander(f"Modelo {index + 1}", expanded=(index == 0)):
                 enabled = st.checkbox(
                     "Usar este modelo",
-                    value=True if index == 0 else False,
+                    value=index == 0,
                     key=f"compare_enabled_{index}",
                 )
                 if not enabled:
@@ -594,26 +613,24 @@ def main():
                         )
                         classifier.fit(train_texts, train_labels)
                         predictions = classifier.predict(test_texts)
-                        total = len(test_labels)
-                        correctas = sum(1 for pred, real in zip(predictions, test_labels) if pred == real)
-                        phishing_real = sum(test_labels)
-                        legitimos_real = total - phishing_real
-                        vp = sum(1 for pred, real in zip(predictions, test_labels) if pred == 1 and real == 1)
-                        vn = sum(1 for pred, real in zip(predictions, test_labels) if pred == 0 and real == 0)
-                        fp = sum(1 for pred, real in zip(predictions, test_labels) if pred == 1 and real == 0)
-                        fn = sum(1 for pred, real in zip(predictions, test_labels) if pred == 0 and real == 1)
-                        accuracy = correctas / total if total else 0.0
+                        metricas = calcular_metricas_clasificacion(
+                            test_labels,
+                            predictions,
+                        )
                         results.append(
                             {
                                 "Modelo": model["name"],
-                                "Accuracy": f"{accuracy * 100:.2f}%",
-                                "Total prueba": total,
-                                "VP": vp,
-                                "VN": vn,
-                                "FP": fp,
-                                "FN": fn,
-                                "Phishing reales": phishing_real,
-                                "Legítimos reales": legitimos_real,
+                                "Accuracy": f"{metricas.accuracy * 100:.2f}%",
+                                "Precisión": f"{metricas.precision * 100:.2f}%",
+                                "Recall": f"{metricas.recall * 100:.2f}%",
+                                "F1": f"{metricas.f1 * 100:.2f}%",
+                                "Total prueba": metricas.total,
+                                "VP": metricas.verdaderos_positivos,
+                                "VN": metricas.verdaderos_negativos,
+                                "FP": metricas.falsos_positivos,
+                                "FN": metricas.falsos_negativos,
+                                "Phishing reales": metricas.phishing_reales,
+                                "Legítimos reales": metricas.legitimos_reales,
                             }
                         )
 
@@ -623,10 +640,14 @@ def main():
                     for item in results:
                         with st.expander(f"Detalle: {item['Modelo']}"):
                             st.write(f"Accuracy: {item['Accuracy']}")
+                            st.write(
+                                f"Precisión: {item['Precisión']} · "
+                                f"Recall: {item['Recall']} · F1: {item['F1']}"
+                            )
                             st.write(f"VP: {item['VP']}  VN: {item['VN']}  FP: {item['FP']}  FN: {item['FN']}")
                             st.write(f"Phishing reales: {item['Phishing reales']}  Legítimos reales: {item['Legítimos reales']}")
 
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 - mostrar errores en la UI
                     st.error(f"Error al comparar modelos: {exc}")
 
     with tab_models:

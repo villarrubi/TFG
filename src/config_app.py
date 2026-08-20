@@ -4,16 +4,25 @@ import os
 
 import streamlit as st
 
-from sistema_phishing.env_loader import actualizar_env_local, cargar_env_local, leer_env_file
+from sistema_phishing.env_loader import (
+    actualizar_env_local,
+    cargar_env_local,
+    leer_env_file,
+)
 from sistema_phishing.gmail_client import (
     GmailIntegrationError,
     construir_servicio_gmail,
     obtener_perfil_gmail,
 )
-from sistema_phishing.modelo_neural import DEFAULT_HIPERPARAMETROS, cargar_hiperparametros_desde_env
-from sistema_phishing.telegram_notifier import TelegramNotifier, TelegramNotificationError
+from sistema_phishing.modelo_neural import (
+    DEFAULT_HIPERPARAMETROS,
+    cargar_hiperparametros_desde_env,
+)
+from sistema_phishing.telegram_notifier import (
+    TelegramNotificationError,
+    TelegramNotifier,
+)
 from ui_components import aplicar_estilos_base, estado_badge, render_html
-
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 ENV_LOCAL_PATH = os.path.join(ROOT_DIR, ".env.local")
@@ -102,7 +111,7 @@ def _mostrar_config_gmail() -> None:
                 st.success(f"Cuenta conectada: {perfil.get('emailAddress', '')}")
             else:
                 st.info("No hay ninguna cuenta de Gmail conectada.")
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - límite de la integración UI
             st.error(f"No se pudo leer la cuenta conectada: {exc}")
 
     with col_actions:
@@ -113,7 +122,7 @@ def _mostrar_config_gmail() -> None:
                 st.success(f"Cuenta conectada: {perfil.get('emailAddress', '')}")
             except GmailIntegrationError as exc:
                 st.error(str(exc))
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 - límite de la integración UI
                 st.error(f"No se pudo conectar con Gmail: {exc}")
 
         if st.button("Cambiar cuenta", use_container_width=True):
@@ -160,7 +169,7 @@ def _mostrar_config_telegram(valores: dict) -> None:
             st.success("Mensaje de prueba enviado.")
         except TelegramNotificationError as exc:
             st.error(str(exc))
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - límite de la integración UI
             st.error(f"No se pudo enviar el mensaje: {exc}")
 
 

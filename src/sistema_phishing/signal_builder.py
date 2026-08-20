@@ -5,7 +5,6 @@ correo debe recibir cada una. Así `PhishingAnalyzer` no conoce detalles de cada
 heurística concreta.
 """
 
-from typing import Dict
 
 from .correo import CorreoAnalizado
 from .signals import (
@@ -48,18 +47,18 @@ class SignalBuilder:
         # señales se ejecutan y no cómo se parsea la entrada original.
         self.correo = correo
 
-    def build(self) -> Dict[str, bool]:
+    def build(self) -> dict[str, bool]:
         """Ejecuta las reglas disponibles sobre el correo normalizado."""
         # El orden se conserva para que la tabla de la interfaz y las
         # explicaciones aparezcan siempre de forma predecible.
-        signals: Dict[str, bool] = {}
+        signals: dict[str, bool] = {}
         signals.update(self._identity_signals())
         signals.update(self._url_and_auth_signals())
         signals.update(self._content_signals())
         signals.update(self._html_and_attachment_signals())
         return signals
 
-    def _identity_signals(self) -> Dict[str, bool]:
+    def _identity_signals(self) -> dict[str, bool]:
         """Señales de identidad del remitente y coherencia de cabeceras."""
         return {
             "reply_to_diferente": tiene_reply_to_diferente(self.correo.full_text),
@@ -69,7 +68,7 @@ class SignalBuilder:
             "incoherencia_remitente": incoherencia_remitente(self.correo.full_text),
         }
 
-    def _url_and_auth_signals(self) -> Dict[str, bool]:
+    def _url_and_auth_signals(self) -> dict[str, bool]:
         """Señales derivadas de URLs, dominios, reputación y autenticación."""
         has_urls = len(self.correo.urls) > 0
         return {
@@ -81,7 +80,7 @@ class SignalBuilder:
             "dkim_mal_formado": dkim_mal_formado(self.correo.full_text),
         }
 
-    def _content_signals(self) -> Dict[str, bool]:
+    def _content_signals(self) -> dict[str, bool]:
         """Señales de contenido social: presión, saludo genérico y petición de datos."""
         return {
             "saludo_generico": saludo_generico(self.correo.body),
@@ -89,7 +88,7 @@ class SignalBuilder:
             "mensaje_id_sospechoso": mensaje_id_sospechoso(self.correo.full_text, self.correo.from_address),
         }
 
-    def _html_and_attachment_signals(self) -> Dict[str, bool]:
+    def _html_and_attachment_signals(self) -> dict[str, bool]:
         """Señales propias del HTML, enlaces enriquecidos y adjuntos."""
         has_urls = len(self.correo.urls) > 0
         return {

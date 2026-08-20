@@ -4,25 +4,28 @@
 # pueden cambiar por refactorizaciones, pero estos imports se mantienen estables
 # para las aplicaciones Streamlit y para posibles usos externos.
 __all__ = [
-    "analizar_correo",
-    "extraer_urls",
-    "parsear_eml_bytes",
-    "parsear_eml_archivo",
-    "NeuralPhishingClassifier",
-    "NeuralModelTrainer",
-    "NeuralPhishingDetector",
-    "ModelStorage",
-    "SignalBuilder",
-    "ExplanationBuilder",
     "AnalysisBackendConfig",
     "AnalysisBackendService",
+    "ClassificationMetrics",
+    "ExplanationBuilder",
+    "ModelStorage",
+    "NeuralModelTrainer",
+    "NeuralPhishingClassifier",
+    "NeuralPhishingDetector",
+    "SignalBuilder",
+    "analizar_correo",
+    "calcular_metricas_clasificacion",
+    "extraer_urls",
     "generar_dataset_sintetico",
+    "parsear_eml_archivo",
+    "parsear_eml_bytes",
 ]
 
 from .analizador_email import parsear_eml_archivo, parsear_eml_bytes
 from .backend_service import AnalysisBackendConfig, AnalysisBackendService
 from .explanations import ExplanationBuilder
 from .heuristicas import analizar_correo, extraer_urls
+from .metrics import ClassificationMetrics, calcular_metricas_clasificacion
 from .neural import (
     ModelStorage,
     NeuralModelTrainer,

@@ -5,9 +5,10 @@ TF-IDF + MLP, almacenamiento del modelo y servicios de entrenamiento/detección.
 """
 
 import os
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Iterable, IO, List, Tuple, Union
+from collections.abc import Iterable
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import IO
 
 import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -15,7 +16,17 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 
 from .configuracion import SPANISH_STOP_WORDS
-from .dataset import cargar_dataset_csv, generar_dataset_sintetico, obtener_nombre_fuente
+from .dataset import (
+    cargar_dataset_csv,
+    generar_dataset_sintetico,
+    obtener_nombre_fuente,
+)
+
+MODEL_FORMAT_VERSION = 2
+
+
+class ModelTrainingError(ValueError):
+    """Indica que los datos o hiperparámetros no permiten entrenar el modelo."""
 
 
 # ---------------------------------------------------------------------------
@@ -32,18 +43,32 @@ class HiperparametrosModelo:
     """Agrupa todos los hiperparámetros ajustables del pipeline TF-IDF + MLP."""
 
     # --- TfidfVectorizer: cómo se convierte el texto en números ---
-    tfidf_ngram_range: Tuple[int, int] = (1, 2)   # (1,2)=palabras+bigramas; probar (1,3)
-    tfidf_max_features: int = 3000                # tamaño del vocabulario; sube si tienes mucho dataset
-    tfidf_min_df: int = 1                          # ignora términos muy raros si lo subes (p.ej. 2 o 3)
+    tfidf_ngram_range: tuple[int, int] = (1, 2)
+    tfidf_max_features: int = 3000
+    tfidf_min_df: int = 1
 
     # --- MLPClassifier: la red neuronal en sí ---
-    mlp_hidden_layer_sizes: Tuple[int, ...] = (64, 32)  # nº de neuronas por capa oculta
-    mlp_activation: str = "relu"                        # 'relu' o 'tanh'
-    mlp_alpha: float = 0.0001                            # regularización L2; súbelo si hay overfitting
-    mlp_learning_rate_init: float = 0.001                 # velocidad de aprendizaje
-    mlp_max_iter: int = 500                               # nº máximo de épocas de entrenamiento
-    mlp_early_stopping: bool = False                      # True = para de entrenar si deja de mejorar
-    mlp_random_state: int = 42                            # semilla, no tocar salvo que quieras variar el azar
+    mlp_hidden_layer_sizes: tuple[int, ...] = (64, 32)
+    mlp_activation: str = "relu"
+    mlp_alpha: float = 0.0001
+    mlp_learning_rate_init: float = 0.001
+    mlp_max_iter: int = 500
+    mlp_early_stopping: bool = False
+    mlp_random_state: int = 42
+
+    def __post_init__(self) -> None:
+        """Rechaza configuraciones que fallarían tarde dentro de scikit-learn."""
+        minimo, maximo = self.tfidf_ngram_range
+        if minimo < 1 or maximo < minimo:
+            raise ModelTrainingError("El rango de n-gramas debe cumplir 1 <= mínimo <= máximo.")
+        if self.tfidf_max_features < 1 or self.tfidf_min_df < 1:
+            raise ModelTrainingError("max_features y min_df deben ser enteros positivos.")
+        if not self.mlp_hidden_layer_sizes or any(capa < 1 for capa in self.mlp_hidden_layer_sizes):
+            raise ModelTrainingError("Las capas ocultas deben contener enteros positivos.")
+        if self.mlp_activation not in {"identity", "logistic", "tanh", "relu"}:
+            raise ModelTrainingError("La activación de la red neuronal no es válida.")
+        if self.mlp_alpha < 0 or self.mlp_learning_rate_init <= 0 or self.mlp_max_iter < 1:
+            raise ModelTrainingError("Los parámetros numéricos del MLP no son válidos.")
 
 
 DEFAULT_HIPERPARAMETROS = HiperparametrosModelo()
@@ -69,7 +94,10 @@ def _bool_desde_env(clave: str, valor_por_defecto: bool) -> bool:
     return os.environ[clave].strip().lower() in {"1", "true", "si", "sí", "yes"}
 
 
-def _tupla_enteros_desde_env(clave: str, valor_por_defecto: Tuple[int, ...]) -> Tuple[int, ...]:
+def _tupla_enteros_desde_env(
+    clave: str,
+    valor_por_defecto: tuple[int, ...],
+) -> tuple[int, ...]:
     """Lee algo como '64,32' desde el entorno y lo convierte en (64, 32)."""
     valor = os.environ.get(clave, "")
     if not valor.strip():
@@ -107,7 +135,7 @@ def cargar_hiperparametros_desde_env() -> HiperparametrosModelo:
     )
 
 
-def get_stop_words(language: str) -> Union[str, List[str], None]:
+def get_stop_words(language: str) -> str | list[str] | None:
     """Devuelve las stopwords adecuadas para el vectorizador TF-IDF."""
     # Scikit-learn trae stopwords inglesas incorporadas; para español se usa la
     # lista local definida en configuración.
@@ -150,6 +178,8 @@ class NeuralPhishingClassifier:
     ):
         if len(args) > 0:
             raise TypeError("NeuralPhishingClassifier() takes no positional arguments")
+        if language not in {"spanish", "english"}:
+            raise ValueError("El idioma del modelo debe ser 'spanish' o 'english'.")
         self.language = language
         # Si no se pasa una configuración explícita, se leen los valores
         # guardados en .env.local (pestaña "Configuración" de la app); si no
@@ -190,10 +220,12 @@ class NeuralPhishingClassifier:
         self.last_training_stats: TrainingStats | None = None
         # Metadatos usados por la app de entrenamiento para explicar con qué
         # datos y columnas se creó el modelo guardado.
-        self.training_sources: List[str] = []
-        self.training_sources_info: List[TrainingSourceInfo] = []
-        self.training_texts: List[str] = []
-        self.training_labels: List[int] = []
+        self.training_sources: list[str] = []
+        self.training_sources_info: list[TrainingSourceInfo] = []
+        # Se conservan vacíos solo por compatibilidad con modelos antiguos. El
+        # artefacto no debe almacenar correos ni etiquetas de entrenamiento.
+        self.training_texts: list[str] = []
+        self.training_labels: list[int] = []
         self.training_columns = {
             "label": "label",
             "text": "text",
@@ -202,16 +234,25 @@ class NeuralPhishingClassifier:
         }
         self.last_training_datetime: str | None = None
         self.trained_with_default = False
+        self.model_format_version = MODEL_FORMAT_VERSION
+
+    def __getstate__(self) -> dict:
+        """Excluye los textos de entrenamiento al serializar el clasificador."""
+        state = self.__dict__.copy()
+        state["training_texts"] = []
+        state["training_labels"] = []
+        state["model_format_version"] = MODEL_FORMAT_VERSION
+        return state
 
     def __setstate__(self, state: dict) -> None:
         """Mantiene compatibilidad al cargar modelos guardados con versiones previas."""
         self.__dict__.update(state)
         # Los atributos nuevos se rellenan con valores por defecto si el modelo
         # fue guardado por una versión anterior del proyecto.
-        self.training_sources = getattr(self, 'training_sources', [])
+        self.training_sources = getattr(self, "training_sources", [])
         self.training_columns = getattr(
             self,
-            'training_columns',
+            "training_columns",
             {
                 "label": "label",
                 "text": "text",
@@ -219,14 +260,17 @@ class NeuralPhishingClassifier:
                 "body": "body",
             },
         )
-        self.last_training_datetime = getattr(self, 'last_training_datetime', None)
-        self.trained_with_default = getattr(self, 'trained_with_default', False)
-        self.hiperparametros = getattr(self, 'hiperparametros', DEFAULT_HIPERPARAMETROS)
-        self.training_texts = getattr(self, 'training_texts', [])
-        self.training_labels = getattr(self, 'training_labels', [])
-        self.training_sources_info = getattr(self, 'training_sources_info', [])
+        self.last_training_datetime = getattr(self, "last_training_datetime", None)
+        self.trained_with_default = getattr(self, "trained_with_default", False)
+        self.hiperparametros = getattr(self, "hiperparametros", DEFAULT_HIPERPARAMETROS)
+        # Los modelos antiguos podían contener el dataset completo. Se elimina
+        # de memoria en cuanto se cargan para que el siguiente guardado lo sanee.
+        self.training_texts = []
+        self.training_labels = []
+        self.training_sources_info = getattr(self, "training_sources_info", [])
+        self.model_format_version = MODEL_FORMAT_VERSION
 
-    def _update_training_stats(self, texts: List[str], labels: List[int]) -> None:
+    def _update_training_stats(self, texts: list[str], labels: list[int]) -> None:
         """Calcula métricas básicas sobre el propio conjunto de entrenamiento."""
         # Es una métrica descriptiva del entrenamiento, no una validación
         # independiente; la app de entrenamiento incluye una evaluación aparte.
@@ -240,18 +284,29 @@ class NeuralPhishingClassifier:
             legit_count=len(labels) - phishing_count,
             accuracy=accuracy,
         )
-        self.last_training_datetime = datetime.now().isoformat(sep=" ", timespec="seconds")
+        self.last_training_datetime = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
-    def fit(self, texts: List[str], labels: List[int]) -> None:
+    def fit(self, texts: list[str], labels: list[int]) -> None:
         """Entrena el clasificador con texto y etiquetas."""
-        self.training_texts = list(texts)
-        self.training_labels = list(labels)
-        self.pipeline.fit(texts, labels)
-        self._update_training_stats(texts, labels)
+        textos_limpios = [str(texto).strip() for texto in texts]
+        etiquetas_limpias = [int(etiqueta) for etiqueta in labels]
+        if not textos_limpios:
+            raise ModelTrainingError("El conjunto de entrenamiento está vacío.")
+        if len(textos_limpios) != len(etiquetas_limpias):
+            raise ModelTrainingError("Cada texto debe tener exactamente una etiqueta.")
+        if not any(textos_limpios):
+            raise ModelTrainingError("El conjunto de entrenamiento no contiene texto.")
+        if set(etiquetas_limpias) != {0, 1}:
+            raise ModelTrainingError("El entrenamiento necesita ejemplos legítimos (0) y phishing (1).")
+
+        self.training_texts = []
+        self.training_labels = []
+        self.pipeline.fit(textos_limpios, etiquetas_limpias)
+        self._update_training_stats(textos_limpios, etiquetas_limpias)
 
     def fit_from_csv(
         self,
-        archivo: Union[str, IO[str]],
+        archivo: str | IO[str],
         label_column: str = "label",
         text_column: str = "text",
         subject_column: str = "subject",
@@ -260,7 +315,8 @@ class NeuralPhishingClassifier:
         """Entrena el clasificador usando un CSV de entrenamiento."""
         # Se guardan metadatos antes de entrenar para que queden disponibles en
         # la UI aunque el origen sea un objeto subido desde Streamlit.
-        self.training_sources = list(self.training_sources) + [obtener_nombre_fuente(archivo)]
+        fuente = obtener_nombre_fuente(archivo)
+        self.training_sources = [fuente]
         self.training_columns = {
             "label": label_column,
             "text": text_column,
@@ -275,8 +331,7 @@ class NeuralPhishingClassifier:
             subject_column=subject_column,
             body_column=body_column,
         )
-        fuente = obtener_nombre_fuente(archivo)
-        self.training_sources_info = list(self.training_sources_info) + [
+        self.training_sources_info = [
             TrainingSourceInfo(
                 source=fuente,
                 n_samples=len(etiquetas),
@@ -284,13 +339,11 @@ class NeuralPhishingClassifier:
                 legit_count=len(etiquetas) - sum(etiquetas),
             )
         ]
-        textos_entrenamiento = list(self.training_texts) + list(textos)
-        etiquetas_entrenamiento = list(self.training_labels) + list(etiquetas)
-        self.fit(textos_entrenamiento, etiquetas_entrenamiento)
+        self.fit(textos, etiquetas)
 
     def fit_from_csvs(
         self,
-        archivos: Iterable[Union[str, IO[str]]],
+        archivos: Iterable[str | IO[str]],
         label_column: str = "label",
         text_column: str = "text",
         subject_column: str = "subject",
@@ -299,7 +352,9 @@ class NeuralPhishingClassifier:
         """Entrena el clasificador con varios CSV de entrenamiento."""
         archivos = list(archivos)
         nuevas_fuentes = [obtener_nombre_fuente(archivo) for archivo in archivos]
-        self.training_sources = list(self.training_sources) + nuevas_fuentes
+        if not archivos:
+            raise ModelTrainingError("Selecciona al menos un CSV para entrenar.")
+        self.training_sources = nuevas_fuentes
         self.training_columns = {
             "label": label_column,
             "text": text_column,
@@ -307,9 +362,9 @@ class NeuralPhishingClassifier:
             "body": body_column,
         }
         self.trained_with_default = False
-        textos: List[str] = list(self.training_texts)
-        etiquetas: List[int] = list(self.training_labels)
-        fuentes_info = list(self.training_sources_info)
+        textos: list[str] = []
+        etiquetas: list[int] = []
+        fuentes_info: list[TrainingSourceInfo] = []
         for fuente, archivo in zip(nuevas_fuentes, archivos):
             # Se concatenan todos los CSV antes de ajustar el pipeline para que
             # el vocabulario TF-IDF se construya con el conjunto completo.
@@ -346,14 +401,18 @@ class NeuralPhishingClassifier:
         """Carga un clasificador entrenado desde disco."""
         return joblib.load(path)
 
-    def predict(self, texts: List[str]) -> List[int]:
+    def predict(self, texts: list[str]) -> list[int]:
         """Predice si los correos son phishing o no."""
         return self.pipeline.predict(texts).tolist()
 
-    def predict_proba(self, texts: List[str]) -> List[float]:
+    def predict_proba(self, texts: list[str]) -> list[float]:
         """Devuelve la probabilidad de que los correos sean phishing."""
         proba = self.pipeline.predict_proba(texts)
-        return [float(p[1]) for p in proba]
+        clases = self.pipeline.named_steps["classifier"].classes_.tolist()
+        if 1 not in clases:
+            raise RuntimeError("El modelo cargado no contiene la clase phishing.")
+        indice_phishing = clases.index(1)
+        return [float(fila[indice_phishing]) for fila in proba]
 
     def fit_default(self) -> None:
         """Entrena el modelo con el dataset sintético predeterminado."""
@@ -368,7 +427,7 @@ class NeuralPhishingClassifier:
             "body": "n/a",
         }
         self.trained_with_default = True
-        textos, etiquetas = generar_dataset_sintetico()
+        textos, etiquetas = generar_dataset_sintetico(self.language)
         self.training_sources_info = [
             TrainingSourceInfo(
                 source="Dataset sintético",
@@ -398,7 +457,7 @@ class ModelStorage:
             return None
         try:
             return NeuralPhishingClassifier.load(self.path)
-        except Exception:
+        except Exception:  # noqa: BLE001
             # La app puede seguir funcionando con el modelo sintético si el
             # fichero guardado está corrupto o pertenece a una versión incompatible.
             return None
@@ -414,7 +473,7 @@ class NeuralModelTrainer:
 
     def train_from_csvs(
         self,
-        archivos: Iterable[Union[str, IO[str]]],
+        archivos: Iterable[str | IO[str]],
         language: str = "spanish",
         label_column: str = "label",
         text_column: str = "text",
@@ -422,27 +481,12 @@ class NeuralModelTrainer:
         body_column: str = "body",
         hiperparametros: HiperparametrosModelo | None = None,
     ) -> NeuralPhishingClassifier:
-        classifier = self.storage.load()
-        if classifier is None:
-            classifier = NeuralPhishingClassifier(language=language, hiperparametros=hiperparametros)
-        else:
-            should_reset = classifier.language != language or hiperparametros is not None
-            if should_reset:
-                previous_texts = list(classifier.training_texts)
-                previous_labels = list(classifier.training_labels)
-                previous_sources = list(classifier.training_sources)
-                previous_sources_info = list(classifier.training_sources_info)
-                previous_columns = dict(classifier.training_columns)
-                previous_trained_default = classifier.trained_with_default
-                previous_hyper = hiperparametros or classifier.hiperparametros
-
-                classifier = NeuralPhishingClassifier(language=language, hiperparametros=previous_hyper)
-                classifier.training_texts = previous_texts
-                classifier.training_labels = previous_labels
-                classifier.training_sources = previous_sources
-                classifier.training_sources_info = previous_sources_info
-                classifier.training_columns = previous_columns
-                classifier.trained_with_default = previous_trained_default
+        # Cada ejecución parte de cero: repetirla con los mismos CSV y semilla
+        # produce el mismo modelo y nunca mezcla datos de sesiones anteriores.
+        classifier = NeuralPhishingClassifier(
+            language=language,
+            hiperparametros=hiperparametros,
+        )
 
         classifier.fit_from_csvs(
             archivos,

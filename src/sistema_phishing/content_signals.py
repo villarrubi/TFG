@@ -5,7 +5,6 @@ peticiones de credenciales y referencias a documentos descargables.
 """
 
 import re
-from typing import List
 
 from .configuracion import PALABRAS_URGENTES, SUBJECT_SOSPECHOSOS
 
@@ -22,7 +21,7 @@ def solicitud_datos_credenciales(texto: str) -> bool:
     return bool(re.search(r"\b(credenciales|contraseña|password|usuario|datos de acceso|iniciar sesión|inicie sesión|login|codigo de verificacion|código de verificación|verificación de seguridad)\b", texto, flags=re.IGNORECASE))
 
 
-def adjuntos_sospechosos(attachments: List[str]) -> bool:
+def adjuntos_sospechosos(attachments: list[str]) -> bool:
     """Detecta adjuntos con extensiones sospechosas en el correo."""
     # La lista mezcla ejecutables, scripts, comprimidos y documentos con macros:
     # formatos habituales para ocultar malware o payloads.

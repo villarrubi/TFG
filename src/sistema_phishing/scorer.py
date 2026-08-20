@@ -1,6 +1,6 @@
 """Módulo de cálculo de puntuación de riesgo para las señales de phishing."""
 
-from typing import Dict
+from typing import ClassVar
 
 
 class RiskScorer:
@@ -8,7 +8,7 @@ class RiskScorer:
 
     # Cada señal aporta una fracción del riesgo total. Los pesos negativos
     # representan indicadores que reducen ligeramente la sospecha.
-    weights = {
+    weights: ClassVar[dict[str, float]] = {
         "reply_to_diferente": 0.14,
         "nombre_display_engano": 0.14,
         "remitente_marca_engano": 0.10,
@@ -40,7 +40,7 @@ class RiskScorer:
     }
 
     @classmethod
-    def score(cls, signals: Dict[str, bool]) -> float:
+    def score(cls, signals: dict[str, bool]) -> float:
         """Suma los pesos activos y limita el resultado al rango 0-100."""
         # Las señales desconocidas pesan 0 para poder añadir reglas nuevas sin
         # romper llamadas antiguas que todavía no tengan peso asignado.

@@ -1,8 +1,10 @@
 """Fachada de heurísticas para el sistema de detección de phishing."""
 
 from .analyzer import PhishingAnalyzer
-from .signals import extraer_urls
 from .correo import CorreoAnalizado
+from .url_utils import extraer_urls
+
+__all__ = ["analizar_correo", "extraer_urls"]
 
 
 def analizar_correo(correo):

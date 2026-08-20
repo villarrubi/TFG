@@ -3,8 +3,6 @@
 import base64
 import os
 from dataclasses import dataclass
-from typing import Dict, List, Optional
-
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
@@ -53,7 +51,7 @@ def construir_servicio_gmail(credentials_path: str, token_path: str):
     from google_auth_oauthlib.flow import InstalledAppFlow
     from googleapiclient.discovery import build
 
-    creds: Optional[Credentials] = None
+    creds: Credentials | None = None
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
 
@@ -71,7 +69,7 @@ def construir_servicio_gmail(credentials_path: str, token_path: str):
 
 def obtener_correo_raw(servicio, message_id: str) -> GmailEmail:
     """Descarga un mensaje concreto de Gmail en formato raw."""
-    mensaje: Dict[str, str] = (
+    mensaje: dict[str, str] = (
         servicio.users()
         .messages()
         .get(userId="me", id=message_id, format="raw")
@@ -91,9 +89,9 @@ def obtener_ultimos_correos(
     servicio,
     limite: int = 10,
     query: str = "in:inbox",
-) -> List[GmailEmail]:
+) -> list[GmailEmail]:
     """Obtiene los últimos correos que coinciden con la consulta indicada."""
-    respuesta: Dict[str, object] = (
+    respuesta: dict[str, object] = (
         servicio.users()
         .messages()
         .list(userId="me", maxResults=limite, q=query)
@@ -103,6 +101,6 @@ def obtener_ultimos_correos(
     return [obtener_correo_raw(servicio, mensaje["id"]) for mensaje in mensajes]
 
 
-def obtener_perfil_gmail(servicio) -> Dict[str, object]:
+def obtener_perfil_gmail(servicio) -> dict[str, object]:
     """Devuelve datos básicos de la cuenta de Gmail autenticada."""
     return servicio.users().getProfile(userId="me").execute()

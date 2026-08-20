@@ -9,11 +9,21 @@ mantener responsabilidades pequeñas sin romper la API importada por la app.
 from .dataset import (
     cargar_dataset_csv,
     construir_texto_para_entrenamiento,
-    encontrar_columna_etiqueta as _encontrar_columna_etiqueta,
     generar_dataset_sintetico,
+)
+from .dataset import (
+    encontrar_columna_etiqueta as _encontrar_columna_etiqueta,
+)
+from .dataset import (
     normalizar_etiqueta as _normalizar_etiqueta,
+)
+from .dataset import (
     obtener_campos_adicionales as _obtener_campos_adicionales,
+)
+from .dataset import (
     obtener_nombre_fuente as _obtener_nombre_fuente,
+)
+from .dataset import (
     obtener_texto_de_fila as _obtener_texto_de_fila,
 )
 from .modelo_neural import (
@@ -23,6 +33,8 @@ from .modelo_neural import (
     NeuralPhishingClassifier,
     NeuralPhishingDetector,
     TrainingStats,
+)
+from .modelo_neural import (
     get_stop_words as _get_stop_words,
 )
 

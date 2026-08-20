@@ -1,7 +1,6 @@
 """Carga sencilla de variables de entorno desde archivos locales."""
 
 import os
-from typing import Dict
 
 
 def cargar_env_file(path: str) -> None:
@@ -26,9 +25,9 @@ def cargar_env_local(root_dir: str) -> None:
     cargar_env_file(os.path.join(root_dir, ".env"))
 
 
-def leer_env_file(path: str) -> Dict[str, str]:
+def leer_env_file(path: str) -> dict[str, str]:
     """Lee un archivo KEY=VALUE y devuelve sus variables."""
-    valores: Dict[str, str] = {}
+    valores: dict[str, str] = {}
     if not os.path.exists(path):
         return valores
     with open(path, "r", encoding="utf-8") as env_file:
@@ -41,7 +40,7 @@ def leer_env_file(path: str) -> Dict[str, str]:
     return valores
 
 
-def guardar_env_file(path: str, valores: Dict[str, str]) -> None:
+def guardar_env_file(path: str, valores: dict[str, str]) -> None:
     """Guarda variables KEY=VALUE y actualiza el entorno actual."""
     with open(path, "w", encoding="utf-8") as env_file:
         for key in sorted(valores):
@@ -50,7 +49,7 @@ def guardar_env_file(path: str, valores: Dict[str, str]) -> None:
             os.environ[key] = value
 
 
-def actualizar_env_local(root_dir: str, nuevos_valores: Dict[str, str]) -> None:
+def actualizar_env_local(root_dir: str, nuevos_valores: dict[str, str]) -> None:
     """Actualiza .env.local conservando valores previos no modificados."""
     path = os.path.join(root_dir, ".env.local")
     valores = leer_env_file(path)

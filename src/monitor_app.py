@@ -5,6 +5,7 @@ import os
 
 import streamlit as st
 
+from sistema_phishing.env_loader import cargar_env_local, leer_env_file
 from sistema_phishing.gmail_client import (
     GmailIntegrationError,
     construir_servicio_gmail,
@@ -12,11 +13,12 @@ from sistema_phishing.gmail_client import (
     obtener_perfil_gmail,
     obtener_ultimos_correos,
 )
-from sistema_phishing.env_loader import cargar_env_local, leer_env_file
 from sistema_phishing.gmail_monitor import MonitorConfig, analizar_correos_nuevos
-from sistema_phishing.telegram_notifier import TelegramNotifier, TelegramNotificationError
+from sistema_phishing.telegram_notifier import (
+    TelegramNotificationError,
+    TelegramNotifier,
+)
 from ui_components import aplicar_estilos_base, estado_badge, render_html
-
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 cargar_env_local(ROOT_DIR)
@@ -144,6 +146,12 @@ def _color_resultado(score: float, is_phishing: bool) -> str:
 
 def _mostrar_resultado_monitor(resultado) -> None:
     """Pinta una tarjeta de resultado de monitorización."""
+    if resultado.error:
+        st.error(
+            f"No se pudo completar el correo {resultado.gmail_id}: "
+            f"{resultado.error}"
+        )
+        return
     color = _color_resultado(resultado.risk_score, resultado.is_phishing)
     clasificacion = "Phishing probable" if resultado.is_phishing else "No parece phishing"
     aviso = "Alerta enviada por Telegram" if resultado.notified else "Sin notificación"
@@ -189,7 +197,7 @@ def main():
                 servicio = construir_servicio_gmail(GMAIL_CREDENTIALS_PATH, GMAIL_TOKEN_PATH)
                 perfil = obtener_perfil_gmail(servicio)
                 st.success(f"Cuenta conectada: {perfil.get('emailAddress', '')}")
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 - límite de la integración UI
                 st.error(f"No se pudo leer la cuenta conectada: {exc}")
         else:
             st.info("Aún no hay token de Gmail. Conecta Gmail desde la pantalla de detección.")
@@ -245,7 +253,7 @@ def main():
                 _mostrar_resultado_monitor(resultado)
         except GmailIntegrationError as exc:
             st.error(str(exc))
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - límite de la integración UI
             st.error(f"No se pudo ejecutar la comprobación: {exc}")
 
     st.markdown("### Ejecución 24/7")
