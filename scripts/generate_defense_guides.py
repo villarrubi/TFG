@@ -349,6 +349,7 @@ def tecnologias():
         _bullet(doc, text)
     _heading(doc, "6. Reproducibilidad y evaluación", 1)
     _para(doc, "Los hiperparámetros se concentran en HiperparametrosModelo y pueden leerse desde .env.local. Cada ejecución de entrenamiento comienza con los CSV seleccionados, registra procedencia y estadísticas, y no mezcla silenciosamente sesiones previas. La evaluación usa un CSV separado y comunica precision, recall, F1, accuracy balanceada y matriz de confusión.")
+    _para(doc, "El benchmark reproducible separa arranque e inferencia. La carga diferida redujo la importación fría de heurísticas de 1098,5 ms a 37,0 ms y el arranque de la aplicación de 1326,6 ms a 315,1 ms, mientras que la inferencia se mantuvo estable dentro de una variación de ±3 %.")
     _heading(doc, "7. Diferencias con la propuesta inicial", 1)
     _table(doc, ["Propuesta", "Implementación actual", "Cómo explicarlo"], [
         ("TensorFlow", "scikit-learn MLP", "Se eligió una red suficiente para el corpus y más reproducible/ligera en el entorno académico"),
@@ -397,6 +398,7 @@ def guion():
     _callout(doc, "Plan B", "Lleva capturas o una salida guardada. Si Gmail, OAuth o el servidor local fallan durante la defensa, explica el flujo y demuestra la parte offline, que es el núcleo evaluable.")
     _heading(doc, "5. Cómo explicar los resultados", 1)
     _para(doc, "La matriz de confusión separa VP, VN, FP y FN. En phishing, un FN puede ser especialmente costoso porque un correo malicioso se presenta como legítimo; por eso no basta con optimizar accuracy y se muestran precision, recall, F1 y accuracy balanceada. Aclara siempre si una cifra procede del entrenamiento o de un CSV de prueba independiente.")
+    _para(doc, "En rendimiento, presenta solo mejoras medidas: la importación fría de heurísticas bajó un 96,6 % y el arranque de la aplicación un 76,2 %. Las rutas de inferencia variaron menos de un 3 %, por lo que no se atribuye una mejora que no esté respaldada por la medición.")
     _heading(doc, "6. Preguntas previsibles y respuestas", 1)
     _table(doc, ["Pregunta", "Respuesta breve y defendible"], [
         ("¿Por qué no usar deep learning más grande?", "El corpus y el alcance no lo justificaban. TF-IDF + MLP ofrece rapidez, reproducibilidad y una línea base explicable; la arquitectura permite sustituir el modelo."),
@@ -412,7 +414,7 @@ def guion():
     _para(doc, "La aportación principal es una solución completa y mantenible: parser seguro, señales especializadas, modelo neuronal reproducible, explicación, evaluación y varias integraciones sobre un mismo núcleo. El sistema no pretende sustituir a un producto antispam; demuestra cómo diseñar, probar y comunicar un detector local de phishing con decisiones técnicas justificadas.")
     _heading(doc, "8. Checklist de la víspera", 1)
     for text in [
-        "Ejecutar la suite de 44 pruebas y guardar la salida.",
+        "Ejecutar la suite automatizada completa y guardar la salida.",
         "Comprobar que la demo funciona sin credenciales reales y que los modelos están en la raíz.",
         "Preparar un CSV de prueba pequeño con ambas clases y métricas entendibles.",
         "Ensayar el guion con cronómetro y dejar dos minutos de margen.",

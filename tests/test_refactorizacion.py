@@ -1,4 +1,6 @@
 import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from io import StringIO
@@ -23,6 +25,24 @@ from sistema_phishing.signals import (
 
 class TestRefactorizacion(unittest.TestCase):
     def test_signals_mantiene_fachada_compatible(self):
+        root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        env = os.environ.copy()
+        env["PYTHONPATH"] = os.path.join(root, "src")
+        proceso = subprocess.run(
+            [
+                sys.executable,
+                "-B",
+                "-c",
+                "import sys; import sistema_phishing; print('sklearn' in sys.modules)",
+            ],
+            cwd=root,
+            env=env,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(proceso.stdout.strip(), "False")
+
         texto = "Revise https://ejemplo.com/login?next=https://banco.com"
         urls = extraer_urls(texto)
 

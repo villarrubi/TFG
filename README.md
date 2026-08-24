@@ -9,7 +9,7 @@ Requisitos: Python 3.11 o posterior.
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
 $env:PYTHONPATH = "src"
 streamlit run src/app.py
 ```
@@ -20,9 +20,19 @@ Validación automática:
 $env:PYTHONPATH = "src"
 python -m unittest discover -s tests -p "test_*.py"
 python -m ruff check src tests scripts
+python scripts/benchmark_analysis.py
 ```
 
 La suite actual contiene 47 pruebas unitarias y de integración; las advertencias de convergencia del MLP pertenecen únicamente a pruebas rápidas con pocas iteraciones.
+
+### Rendimiento medido
+
+| Camino | Antes | Después | Mejora |
+| --- | ---: | ---: | ---: |
+| Importación fría de heurísticas | 1098,5 ms | 37,0 ms | 96,6 % |
+| Arranque frío de la aplicación | 1326,6 ms | 315,1 ms | 76,2 % |
+
+Las rutas de inferencia se mantuvieron estables dentro de una variación de ±3 %; no se modificaron reglas, pesos ni modelos. La metodología completa está en [PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md) y el mantenimiento pendiente se prioriza en [CLEANUP_PLAN.md](CLEANUP_PLAN.md).
 
 ## Componentes
 

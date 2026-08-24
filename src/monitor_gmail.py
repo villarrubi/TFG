@@ -5,7 +5,7 @@ import os
 import time
 from datetime import datetime, timezone
 
-from sistema_phishing.env_loader import cargar_env_local
+from sistema_phishing.env_loader import cargar_env_local, env_float, env_int
 from sistema_phishing.gmail_client import (
     construir_servicio_gmail,
     obtener_ultimos_correos,
@@ -57,30 +57,14 @@ def _linea_clave_valor(clave: str, valor: object) -> str:
     return f"  {clave:<24} {valor}"
 
 
-def _env_int(name: str, default: int) -> int:
-    """Lee un entero desde variables de entorno."""
-    try:
-        return int(os.getenv(name, default))
-    except ValueError:
-        return default
-
-
-def _env_float(name: str, default: float) -> float:
-    """Lee un decimal desde variables de entorno."""
-    try:
-        return float(os.getenv(name, default))
-    except ValueError:
-        return default
-
-
 def construir_config() -> MonitorConfig:
     """Construye la configuración del monitor desde variables de entorno."""
     return MonitorConfig(
         state_path=os.getenv("MONITOR_STATE_PATH", DEFAULT_STATE_PATH),
-        threshold=_env_float("PHISHING_THRESHOLD", 45.0),
+        threshold=env_float("PHISHING_THRESHOLD", 45.0),
         mode=os.getenv("MONITOR_ANALYSIS_MODE", "combinado").lower(),
-        heur_weight=_env_int("MONITOR_HEUR_WEIGHT", 60),
-        neural_weight=_env_int("MONITOR_NEURAL_WEIGHT", 40),
+        heur_weight=env_int("MONITOR_HEUR_WEIGHT", 60),
+        neural_weight=env_int("MONITOR_NEURAL_WEIGHT", 40),
         model_path_es=DEFAULT_MODEL_PATH_ES,
         model_path_en=DEFAULT_MODEL_PATH_EN,
         mark_existing_as_seen=os.getenv("MONITOR_MARK_EXISTING_AS_SEEN", "1") != "0",
@@ -101,7 +85,7 @@ def mostrar_banner(args: argparse.Namespace, config: MonitorConfig, interval: in
     credentials_path = os.getenv("GMAIL_CREDENTIALS_PATH", DEFAULT_CREDENTIALS_PATH)
     token_path = os.getenv("GMAIL_TOKEN_PATH", DEFAULT_TOKEN_PATH)
     query = os.getenv("GMAIL_MONITOR_QUERY", "in:inbox newer_than:1d")
-    limit = _env_int("GMAIL_MONITOR_LIMIT", 20)
+    limit = env_int("GMAIL_MONITOR_LIMIT", 20)
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
     chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
 
@@ -147,7 +131,7 @@ def ejecutar_ciclo(config: MonitorConfig, notifier: TelegramNotifier | None) -> 
     credentials_path = os.getenv("GMAIL_CREDENTIALS_PATH", DEFAULT_CREDENTIALS_PATH)
     token_path = os.getenv("GMAIL_TOKEN_PATH", DEFAULT_TOKEN_PATH)
     query = os.getenv("GMAIL_MONITOR_QUERY", "in:inbox newer_than:1d")
-    limit = _env_int("GMAIL_MONITOR_LIMIT", 20)
+    limit = env_int("GMAIL_MONITOR_LIMIT", 20)
 
     print(f"[{_hora_actual()}] Ciclo iniciado | query='{query}' | limite={limit}")
     servicio = construir_servicio_gmail(credentials_path, token_path)
@@ -180,7 +164,7 @@ def main() -> None:
     parser.add_argument("--once", action="store_true", help="Ejecuta una sola comprobacion y termina.")
     args = parser.parse_args()
 
-    interval = _env_int("MONITOR_INTERVAL_SECONDS", 120)
+    interval = env_int("MONITOR_INTERVAL_SECONDS", 120)
     config = construir_config()
     notifier = construir_notifier()
     mostrar_banner(args, config, interval)

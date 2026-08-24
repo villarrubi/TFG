@@ -18,7 +18,7 @@ from sistema_phishing.analysis_service import (
     EmailAnalysisService,
 )
 from sistema_phishing.backend_service import MAX_LIST_ITEMS, MAX_TEXT_CHARS
-from sistema_phishing.env_loader import cargar_env_local
+from sistema_phishing.env_loader import cargar_env_local, env_float, env_int
 from sistema_phishing.gmail_monitor import MonitorConfig
 from sistema_phishing.http_api import crear_handler as crear_handler_http
 from sistema_phishing.http_api import crear_servidor_http
@@ -59,20 +59,6 @@ def _ruta_legible(path: str) -> str:
 
 def _linea_clave_valor(clave: str, valor: object) -> str:
     return f"  {clave:<22} {valor}"
-
-
-def _env_int(name: str, default: int) -> int:
-    try:
-        return int(os.getenv(name, default))
-    except ValueError:
-        return default
-
-
-def _env_float(name: str, default: float) -> float:
-    try:
-        return float(os.getenv(name, default))
-    except ValueError:
-        return default
 
 
 def mostrar_banner(args: argparse.Namespace) -> None:
@@ -259,13 +245,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--port",
         type=int,
-        default=_env_int("GMAIL_EXTENSION_PORT", 8765),
+        default=env_int("GMAIL_EXTENSION_PORT", 8765),
         help="Puerto local usado por la extension.",
     )
     parser.add_argument(
         "--threshold",
         type=float,
-        default=_env_float("GMAIL_EXTENSION_THRESHOLD", 45.0),
+        default=env_float("GMAIL_EXTENSION_THRESHOLD", 45.0),
         help="Umbral de riesgo para marcar phishing.",
     )
     parser.add_argument(
@@ -277,13 +263,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--heur-weight",
         type=int,
-        default=_env_int("GMAIL_EXTENSION_HEUR_WEIGHT", 60),
+        default=env_int("GMAIL_EXTENSION_HEUR_WEIGHT", 60),
         help="Peso heuristico en modo combinado.",
     )
     parser.add_argument(
         "--neural-weight",
         type=int,
-        default=_env_int("GMAIL_EXTENSION_NEURAL_WEIGHT", 40),
+        default=env_int("GMAIL_EXTENSION_NEURAL_WEIGHT", 40),
         help="Peso neuronal en modo combinado.",
     )
     parser.add_argument(

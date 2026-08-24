@@ -9,16 +9,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from threading import Lock
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from .analizador_email import construir_texto_para_analisis
 from .heuristicas import analizar_correo
 from .idioma import detectar_idioma_correo
-from .modelo_neural import (
-    ModelStorage,
-    NeuralPhishingClassifier,
-    NeuralPhishingDetector,
-)
+
+if TYPE_CHECKING:
+    from .modelo_neural import NeuralPhishingDetector
 
 MODO_HEURISTICO = "heuristico"
 MODO_NEURAL = "neural"
@@ -94,6 +92,14 @@ def cargar_detector_neural(
     idioma: str = "es",
 ) -> NeuralPhishingDetector:
     """Carga el modelo del idioma indicado y aplica alternativas controladas."""
+    # Se importa aquí para que el modo puramente heurístico no pague el coste
+    # de importar scikit-learn ni joblib durante el arranque.
+    from .modelo_neural import (
+        ModelStorage,
+        NeuralPhishingClassifier,
+        NeuralPhishingDetector,
+    )
+
     ruta_principal = config.model_path_en if idioma == "en" else config.model_path_es
     classifier = ModelStorage(ruta_principal).load()
     idioma_esperado = "english" if idioma == "en" else "spanish"

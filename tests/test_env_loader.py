@@ -1,16 +1,29 @@
 import os
 import tempfile
 import unittest
+from unittest import mock
 
 from sistema_phishing.env_loader import (
     actualizar_env_local,
     cargar_env_file,
+    env_float,
+    env_int,
     leer_env_file,
 )
 
 
 class TestEnvLoader(unittest.TestCase):
     def test_cargar_env_file_carga_variables_sencillas(self):
+        with mock.patch.dict(
+            os.environ,
+            {"TEST_INT": "12", "TEST_FLOAT": "2.5", "TEST_INVALID": "no"},
+            clear=False,
+        ):
+            self.assertEqual(env_int("TEST_INT", 3), 12)
+            self.assertEqual(env_float("TEST_FLOAT", 1.0), 2.5)
+            self.assertEqual(env_int("TEST_INVALID", 3), 3)
+            self.assertEqual(env_float("TEST_INVALID", 1.0), 1.0)
+
         with tempfile.TemporaryDirectory() as tmpdir:
             path = os.path.join(tmpdir, ".env.local")
             with open(path, "w", encoding="utf-8") as env_file:

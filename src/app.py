@@ -4,10 +4,6 @@ import os
 
 import streamlit as st
 
-import config_app
-import detect_app
-import monitor_app
-import train_app
 from sistema_phishing.env_loader import cargar_env_local, leer_env_file
 from ui_components import aplicar_estilos_base, estado_badge, render_html
 
@@ -151,12 +147,20 @@ def main() -> None:
     mostrar_navegacion(vista)
 
     if vista == VISTA_CONFIGURACION:
+        import config_app
+
         config_app.main()
     elif vista == VISTA_DETECCION:
+        import detect_app
+
         detect_app.main()
     elif vista == VISTA_MONITOR:
+        import monitor_app
+
         monitor_app.main()
     elif vista == VISTA_ENTRENAMIENTO:
+        import train_app
+
         train_app.main()
     else:
         mostrar_inicio()

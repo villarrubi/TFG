@@ -3,6 +3,22 @@
 import os
 
 
+def env_int(name: str, default: int) -> int:
+    """Lee un entero del entorno y usa el valor seguro si es inválido."""
+    try:
+        return int(os.getenv(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def env_float(name: str, default: float) -> float:
+    """Lee un decimal del entorno y usa el valor seguro si es inválido."""
+    try:
+        return float(os.getenv(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
 def cargar_env_file(path: str) -> None:
     """Carga variables KEY=VALUE si el archivo existe."""
     if not os.path.exists(path):
