@@ -21,9 +21,12 @@ $env:PYTHONPATH = "src"
 python -m unittest discover -s tests -p "test_*.py"
 python -m ruff check src tests scripts
 python scripts/benchmark_analysis.py
+python scripts/generate_defense_guides.py
 ```
 
 La suite actual contiene 47 pruebas unitarias y de integración; las advertencias de convergencia del MLP pertenecen únicamente a pruebas rápidas con pocas iteraciones.
+
+El último comando regenera las tres guías enfocadas de defensa en formato DOCX. Las guías locales de defensa, incluida `Guia_defensa_TFG.docx` y su versión de texto, se mantienen fuera de Git por contener material de preparación; la guía extensa se sincroniza con el código antes de cada entrega.
 
 ### Rendimiento medido
 

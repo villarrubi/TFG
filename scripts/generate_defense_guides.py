@@ -293,19 +293,20 @@ def flujo():
     ], [1800, 2500, 2800, 2260])
     _para(doc, "La extensión de Gmail no ejecuta Python dentro del navegador: el content script recoge el correo visible y lo envía al servidor local del puerto 8765. El servidor y el backend general comparten la misma infraestructura HTTP y el mismo servicio de análisis.")
     _heading(doc, "7. Ejemplo de extremo a extremo", 1)
-    for text in [
+    for index, text in enumerate([
         "El usuario abre un correo con asunto urgente y un enlace que aparenta ser de una marca conocida.",
         "El adaptador extrae From, Subject, cuerpo, anclas y URL.",
         "Las reglas detectan urgencia, dominio externo, anchor distinto y posible incoherencia de cabeceras.",
         "El modelo neuronal calcula una probabilidad sobre el texto completo.",
         "El modo combinado pondera ambos resultados y aplica el umbral; la explicación muestra qué señales activaron el riesgo.",
         "La UI pinta la tarjeta, la extensión la inserta en Gmail y el monitor podría notificar por Telegram.",
-    ]:
-        _number(doc, text)
+    ], 1):
+        _para(doc, f"{index}. {text}")
     _heading(doc, "8. Límites que conviene decir", 1)
     _bullet(doc, "La lista de dominios y señales es local; no se afirma que exista reputación online en tiempo real.")
     _bullet(doc, "El análisis es apoyo a la decisión, no sustituto de una pasarela antispam ni garantía absoluta.")
     _bullet(doc, "El MLP necesita datos representativos y evaluación separada; una accuracy de entrenamiento no demuestra generalización.")
+    _para(doc, "La suite automatizada actual tiene 47 pruebas y el benchmark de arranque se repite en procesos limpios; estas comprobaciones validan el comportamiento y el rendimiento del prototipo, no su eficacia estadística en producción.")
     doc.save(ROOT / "Guia_01_Flujo_y_funcionamiento.docx")
 
 
@@ -350,6 +351,7 @@ def tecnologias():
     _heading(doc, "6. Reproducibilidad y evaluación", 1)
     _para(doc, "Los hiperparámetros se concentran en HiperparametrosModelo y pueden leerse desde .env.local. Cada ejecución de entrenamiento comienza con los CSV seleccionados, registra procedencia y estadísticas, y no mezcla silenciosamente sesiones previas. La evaluación usa un CSV separado y comunica precision, recall, F1, accuracy balanceada y matriz de confusión.")
     _para(doc, "El benchmark reproducible separa arranque e inferencia. La carga diferida redujo la importación fría de heurísticas de 1098,5 ms a 37,0 ms y el arranque de la aplicación de 1326,6 ms a 315,1 ms, mientras que la inferencia se mantuvo estable dentro de una variación de ±3 %.")
+    _para(doc, "La suite automatizada actual reúne 47 pruebas con unittest; las advertencias de convergencia pertenecen a dos pruebas neuronales rápidas con pocas iteraciones y no indican un fallo funcional.")
     _heading(doc, "7. Diferencias con la propuesta inicial", 1)
     _table(doc, ["Propuesta", "Implementación actual", "Cómo explicarlo"], [
         ("TensorFlow", "scikit-learn MLP", "Se eligió una red suficiente para el corpus y más reproducible/ligera en el entorno académico"),
@@ -378,7 +380,7 @@ def guion():
         ("5:00–9:00", "Arquitectura y flujo", "Entradas -> normalización -> señales/modelo -> decisión -> explicación"),
         ("9:00–12:00", "Tecnologías", "Por qué Python, Streamlit, scikit-learn, Gmail API y servidor local"),
         ("12:00–15:00", "Demostración", "Un correo sospechoso, señales activas y resultado combinado"),
-        ("15:00–17:00", "Pruebas y resultados", "Suite, matriz de confusión y métricas de un CSV de prueba"),
+        ("15:00–17:00", "Pruebas y resultados", "47 pruebas, benchmark, matriz de confusión y métricas de un CSV de prueba"),
         ("17:00–19:00", "Limitaciones y futuro", "Qué no hace hoy y qué ampliaría con evidencia"),
         ("19:00–20:00", "Cierre", "Aportación, mantenibilidad y conclusión"),
     ], [1500, 2500, 5360])
