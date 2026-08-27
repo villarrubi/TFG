@@ -1,2 +1,5 @@
 -r requirements.txt
 ruff
+playwright
+python-docx
+Pillow

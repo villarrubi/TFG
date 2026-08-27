@@ -4,14 +4,13 @@ import os
 
 import streamlit as st
 
+from sistema_phishing.backend_client import BackendClient
 from sistema_phishing.env_loader import cargar_env_local, leer_env_file
 from ui_components import aplicar_estilos_base, estado_badge, render_html
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 ENV_LOCAL_PATH = os.path.join(ROOT_DIR, ".env.local")
 GMAIL_TOKEN_PATH = os.path.join(ROOT_DIR, "token.json")
-MODEL_PATH_ES = os.path.join(ROOT_DIR, "modelo_neural_es.joblib")
-MODEL_PATH_EN = os.path.join(ROOT_DIR, "modelo_neural_en.joblib")
 VISTA_INICIO = "inicio"
 VISTA_CONFIGURACION = "configuracion"
 VISTA_DETECCION = "deteccion"
@@ -67,7 +66,16 @@ def _mostrar_estado_inicio() -> None:
         valores.get("TELEGRAM_BOT_TOKEN", os.getenv("TELEGRAM_BOT_TOKEN", ""))
         and valores.get("TELEGRAM_CHAT_ID", os.getenv("TELEGRAM_CHAT_ID", ""))
     )
-    models_count = sum(1 for path in (MODEL_PATH_ES, MODEL_PATH_EN) if os.path.exists(path))
+    try:
+        backend_health = BackendClient().health()
+        backend_ok = bool(backend_health.get("ok"))
+        models_count = sum(
+            bool(model.get("available"))
+            for model in backend_health.get("models", {}).values()
+        )
+    except Exception:  # noqa: BLE001 - la portada debe poder explicar cómo arrancar
+        backend_ok = False
+        models_count = 0
     extension_ready = os.path.exists(os.path.join(ROOT_DIR, "extension_gmail", "manifest.json"))
 
     render_html(
@@ -84,9 +92,9 @@ def _mostrar_estado_inicio() -> None:
                 <div class="ui-note">Envía alertas cuando el monitor detecta riesgo.</div>
             </div>
             <div class="ui-card">
-                <div class="ui-label">Modelos</div>
-                <div class="ui-value">{models_count}/2 disponibles</div>
-                <div class="ui-note">Español e inglés pueden entrenarse por separado.</div>
+                <div class="ui-label">Backend central</div>
+                <div class="ui-value">{estado_badge(backend_ok, "Conectado", "Detenido")}</div>
+                <div class="ui-note">{models_count}/2 artefactos encontrados; la vista de detección valida idioma e integridad.</div>
             </div>
             <div class="ui-card">
                 <div class="ui-label">Extensión Gmail</div>
@@ -131,10 +139,10 @@ def mostrar_inicio() -> None:
             _cambiar_vista(VISTA_ENTRENAMIENTO)
 
     st.markdown("### Comandos rápidos")
-    col_ext, col_mon = st.columns(2)
-    with col_ext:
-        st.code("python src/gmail_extension_server.py", language="powershell")
-        st.caption("Servidor local usado por la extensión de Gmail Web.")
+    col_backend, col_mon = st.columns(2)
+    with col_backend:
+        st.code("python src/backend_server.py", language="powershell")
+        st.caption("Backend obligatorio: análisis, entrenamiento y modelos compartidos.")
     with col_mon:
         st.code("python src/monitor_gmail.py", language="powershell")
         st.caption("Proceso 24/7 para revisar Gmail y enviar alertas.")
@@ -142,6 +150,10 @@ def mostrar_inicio() -> None:
 
 def main() -> None:
     """Renderiza la vista activa."""
+    st.set_page_config(
+        page_title="Sistema de detección de phishing",
+        layout="wide",
+    )
     aplicar_estilos_globales()
     vista = _vista_actual()
     mostrar_navegacion(vista)

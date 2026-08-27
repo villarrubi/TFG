@@ -5,6 +5,7 @@ import os
 import time
 from datetime import datetime, timezone
 
+from sistema_phishing.backend_client import BackendClient, backend_url_from_env
 from sistema_phishing.env_loader import cargar_env_local, env_float, env_int
 from sistema_phishing.gmail_client import (
     construir_servicio_gmail,
@@ -18,8 +19,6 @@ cargar_env_local(ROOT_DIR)
 DEFAULT_CREDENTIALS_PATH = os.path.join(ROOT_DIR, "credentials.json")
 DEFAULT_TOKEN_PATH = os.path.join(ROOT_DIR, "token.json")
 DEFAULT_STATE_PATH = os.path.join(ROOT_DIR, "estado_monitor.json")
-DEFAULT_MODEL_PATH_ES = os.path.join(ROOT_DIR, "modelo_neural_es.joblib")
-DEFAULT_MODEL_PATH_EN = os.path.join(ROOT_DIR, "modelo_neural_en.joblib")
 ASCII_TITLE = r"""
  __  __  ___  _   _ ___ _____ ___  ____     ____ __  __    _    ___ _
 |  \/  |/ _ \| \ | |_ _|_   _/ _ \|  _ \   / ___|  \/  |  / \  |_ _| |
@@ -65,8 +64,7 @@ def construir_config() -> MonitorConfig:
         mode=os.getenv("MONITOR_ANALYSIS_MODE", "combinado").lower(),
         heur_weight=env_int("MONITOR_HEUR_WEIGHT", 60),
         neural_weight=env_int("MONITOR_NEURAL_WEIGHT", 40),
-        model_path_es=DEFAULT_MODEL_PATH_ES,
-        model_path_en=DEFAULT_MODEL_PATH_EN,
+        backend_url=backend_url_from_env(),
         mark_existing_as_seen=os.getenv("MONITOR_MARK_EXISTING_AS_SEEN", "1") != "0",
     )
 
@@ -112,8 +110,17 @@ def mostrar_banner(args: argparse.Namespace, config: MonitorConfig, interval: in
     print(_linea_clave_valor("Umbral phishing:", f"{config.threshold:.1f}%"))
     print(_linea_clave_valor("Peso heuristico:", f"{config.heur_weight}%"))
     print(_linea_clave_valor("Peso neuronal:", f"{config.neural_weight}%"))
-    print(_linea_clave_valor("Modelo ES:", f"{_ruta_legible(config.model_path_es)} ({_estado_archivo(config.model_path_es)})"))
-    print(_linea_clave_valor("Modelo EN:", f"{_ruta_legible(config.model_path_en)} ({_estado_archivo(config.model_path_en)})"))
+    print(_linea_clave_valor("Backend central:", config.backend_url))
+    try:
+        health = BackendClient(config.backend_url).health()
+        models = health.get("models", {})
+        versions = ", ".join(
+            f"{language}:{model.get('version') or 'fallback'}"
+            for language, model in models.items()
+        )
+        print(_linea_clave_valor("Versiones activas:", versions or "sin información"))
+    except Exception as exc:  # noqa: BLE001 - el ciclo mostrará el fallo recuperable
+        print(_linea_clave_valor("Estado backend:", f"no disponible ({_recortar(exc)})"))
     print()
     print("Alertas")
     print(_linea_clave_valor("Telegram bot:", _estado_configurado(bot_token)))

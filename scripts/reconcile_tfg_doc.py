@@ -1,6 +1,7 @@
-"""Alinea la memoria DOCX con la implementación actual de ``feature/web``.
+"""Migración histórica que alineó la memoria DOCX con la rama web original.
 
-El documento se conserva como fuente principal de entrega. Este script solo
+No debe ejecutarse sobre la entrega actual; usa ``sync_delivery_docs.py``.
+Este script solo
 reemplaza párrafos identificados por su comienzo y actualiza los extractos de
 código del anexo para que no sobrevivan afirmaciones de versiones anteriores.
 """
@@ -134,11 +135,11 @@ def reconcile_prose(doc) -> None:
         ),
         (
             "La revisión actual de la rama web ejecuta correctamente 44 pruebas",
-            "La revisión actual de la rama web ejecuta 44 pruebas automatizadas que protegen los componentes principales y sus integraciones locales.",
+            "La rama main ejecuta 72 pruebas automatizadas que protegen los componentes, el contrato cliente-servidor y sus integraciones.",
         ),
         (
             "La revisión actual de la rama web ejecuta 44 pruebas unitarias",
-            "La revisión actual de la rama web ejecuta 44 pruebas unitarias y de integración mediante unittest. Cubren el parseo de .eml, la construcción de resultados combinados, la carga de configuración, la decodificación de mensajes de Gmail, la monitorización, las reglas heurísticas, el clasificador neuronal, la persistencia de modelos, la API HTTP y las notificaciones por Telegram. Todas finalizaron correctamente; los únicos avisos observados corresponden a iteraciones reducidas del MLP en pruebas rápidas y no implican fallos funcionales.",
+            "La rama main ejecuta 72 pruebas unitarias y de integración mediante unittest. Cubren EML, combinación, configuración, Gmail, monitor, heurísticas, clasificador, persistencia, cliente y API HTTP, seguridad, extensión, evaluación y Telegram. Todas finalizaron correctamente; los avisos corresponden a iteraciones reducidas del MLP en pruebas rápidas.",
         ),
         (
             "En segundo lugar, se evaluó el clasificador neuronal",
@@ -154,7 +155,7 @@ def reconcile_prose(doc) -> None:
         ),
         (
             "Se realizó una prueba funcional del análisis",
-            "Se realizaron comprobaciones funcionales sobre mensajes sintéticos en español e inglés y sobre un correo legítimo de control. Las comprobaciones verificaron que el servicio devuelve los tres resultados, aplica el umbral común, selecciona el detector del idioma correspondiente y conserva las señales y explicaciones heurísticas. La suite de 44 pruebas añade casos específicos para la API, el límite de archivos EML, la caché por idioma y el manejo de entradas malformadas; no se presentan estas comprobaciones como una evaluación estadística de producción.",
+            "Se realizaron comprobaciones funcionales sobre mensajes sintéticos en español e inglés y sobre un correo legítimo de control. Las comprobaciones verificaron los tres modos, el umbral, la selección por idioma y las explicaciones. La suite de 72 pruebas añade contrato HTTP, límites, caché, artefactos inválidos y entradas malformadas; no se presenta como evaluación estadística de producción.",
         ),
         (
             "Los resultados confirman el diseño",
@@ -201,6 +202,13 @@ def reconcile_prose(doc) -> None:
 
 
 def main() -> None:
+    # Compatibilidad: este migrador histórico contenía textos de la antigua
+    # arquitectura híbrida. El sincronizador vigente es la única fuente.
+    from sync_delivery_docs import main as sync_delivery_docs
+
+    sync_delivery_docs()
+    return
+
     doc = Document(DOC_PATH)
     reconcile_prose(doc)
     rewrite_code_section(

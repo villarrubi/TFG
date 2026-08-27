@@ -1,4 +1,4 @@
-"""Infraestructura HTTP común para los clientes locales del detector."""
+"""Servidor HTTP común del backend central de phishing."""
 
 from __future__ import annotations
 
@@ -7,12 +7,21 @@ import logging
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
+from urllib.parse import urlsplit
 
-from .backend_service import AnalysisBackendService
+from .backend_service import API_VERSION, AnalysisBackendService
 
 LOGGER = logging.getLogger(__name__)
-MAX_REQUEST_BYTES = 1_048_576
+MAX_ANALYSIS_REQUEST_BYTES = 16 * 1024 * 1024
+MAX_TRAINING_REQUEST_BYTES = 256 * 1024 * 1024
 DEFAULT_ALLOWED_ORIGINS = {"https://mail.google.com"}
+ADMIN_PATHS = {
+    "/datasets/summary",
+    "/train",
+    "/evaluate",
+    "/compare",
+    "/models/delete",
+}
 
 
 class _LocalThreadingHTTPServer(ThreadingHTTPServer):
@@ -42,15 +51,27 @@ def crear_handler(
     *,
     allowed_origins: set[str] | None = None,
 ) -> type[BaseHTTPRequestHandler]:
-    """Crea un handler pequeño y reutilizable para backend y extensión."""
+    """Crea el handler versionado para todos los clientes."""
     allowed = DEFAULT_ALLOWED_ORIGINS if allowed_origins is None else allowed_origins
 
     class AnalysisRequestHandler(BaseHTTPRequestHandler):
-        server_version = "TFGPhishingAPI/2.0"
+        server_version = f"TFGPhishingAPI/{API_VERSION}"
+
+        def version_string(self) -> str:
+            """No expone la versión del intérprete en la cabecera Server."""
+            return self.server_version
 
         def do_GET(self) -> None:
-            if self.path == "/health":
+            path = urlsplit(self.path).path
+            if path == "/health":
                 self._send_json(200, service.build_health_payload())
+                return
+            if path == "/models":
+                models_payload = getattr(service, "models_payload", None)
+                if models_payload is None:
+                    self._send_json(404, {"error": "Ruta no disponible."})
+                else:
+                    self._send_json(200, models_payload())
                 return
             self._send_json(404, {"error": "Ruta no encontrada."})
 
@@ -62,24 +83,40 @@ def crear_handler(
             self.end_headers()
 
         def do_POST(self) -> None:
-            if self.path != "/analyze":
+            path = urlsplit(self.path).path
+            handlers = {
+                "/analyze": ("analyze_payload", MAX_ANALYSIS_REQUEST_BYTES),
+                "/datasets/summary": ("summarize_payload", MAX_TRAINING_REQUEST_BYTES),
+                "/train": ("train_payload", MAX_TRAINING_REQUEST_BYTES),
+                "/evaluate": ("evaluate_payload", MAX_TRAINING_REQUEST_BYTES),
+                "/compare": ("compare_payload", MAX_TRAINING_REQUEST_BYTES),
+                "/models/delete": ("delete_model_payload", MAX_ANALYSIS_REQUEST_BYTES),
+            }
+            route = handlers.get(path)
+            if route is None:
                 self._send_json(404, {"error": "Ruta no encontrada."})
                 return
-            if not self._check_origin():
+            if not self._check_origin() or not self._check_admin(path):
+                return
+
+            method_name, max_bytes = route
+            method = getattr(service, method_name, None)
+            if method is None:
+                self._send_json(404, {"error": "Ruta no disponible."})
                 return
             try:
-                payload = self._read_payload()
-                result = service.analyze_payload(payload)
+                payload = self._read_payload(max_bytes=max_bytes)
+                result = method(payload)
             except (APIRequestError, TypeError, ValueError) as exc:
                 self._send_json(getattr(exc, "status_code", 400), {"error": str(exc)})
                 return
             except Exception:
-                LOGGER.exception("Fallo interno procesando /analyze")
-                self._send_json(500, {"error": "No se pudo completar el análisis."})
+                LOGGER.exception("Fallo interno procesando %s", path)
+                self._send_json(500, {"error": "No se pudo completar la operación."})
                 return
             self._send_json(200, result)
 
-        def _read_payload(self) -> dict[str, Any]:
+        def _read_payload(self, *, max_bytes: int) -> dict[str, Any]:
             content_type = self.headers.get("Content-Type", "")
             if not content_type.lower().startswith("application/json"):
                 raise APIRequestError("Content-Type debe ser application/json.")
@@ -87,8 +124,10 @@ def crear_handler(
                 length = int(self.headers.get("Content-Length", "-1"))
             except ValueError as exc:
                 raise APIRequestError("Content-Length no es válido.") from exc
-            if length < 1 or length > MAX_REQUEST_BYTES:
-                raise APIRequestError("El cuerpo debe tener entre 1 byte y 1 MiB.")
+            if length < 1 or length > max_bytes:
+                raise APIRequestError(
+                    f"El cuerpo debe tener entre 1 byte y {max_bytes // (1024 * 1024)} MiB."
+                )
             try:
                 payload = json.loads(self.rfile.read(length).decode("utf-8"))
             except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -104,6 +143,21 @@ def crear_handler(
             self._send_json(403, {"error": "Origen no permitido."}, include_cors=False)
             return False
 
+        def _check_admin(self, path: str) -> bool:
+            if path not in ADMIN_PATHS:
+                return True
+            if self.headers.get("Origin"):
+                self._send_json(
+                    403,
+                    {"error": "Las operaciones administrativas no se aceptan desde páginas web."},
+                )
+                return False
+            authorizer = getattr(service, "is_admin_authorized", None)
+            if authorizer is None or authorizer(self.headers.get("Authorization", "")):
+                return True
+            self._send_json(401, {"error": "Autorización de administración requerida."})
+            return False
+
         def _send_json(
             self,
             status: int,
@@ -115,6 +169,7 @@ def crear_handler(
             self.send_response(status)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(data)))
+            self.send_header("Cache-Control", "no-store")
             if include_cors:
                 self._send_cors_headers()
             self.end_headers()
@@ -125,7 +180,7 @@ def crear_handler(
             if origin and _origen_permitido(origin, allowed):
                 self.send_header("Access-Control-Allow-Origin", origin)
                 self.send_header("Vary", "Origin")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 
         def log_message(self, format: str, *args: Any) -> None:

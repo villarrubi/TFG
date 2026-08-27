@@ -26,8 +26,22 @@ class TestGmailExtensionServer(unittest.TestCase):
         self.assertEqual(datos["anchors"][0]["href"], "https://example.com/login")
 
     def test_analyzer_heuristico_devuelve_resultado_limpiable(self):
+        class FakeBackendClient:
+            def analyze(self, email, **options):
+                self.email = email
+                self.options = options
+                return {
+                    "result": {
+                        "risk_score": 82.5,
+                        "is_phishing": True,
+                        "description": "Resultado del backend central.",
+                        "signals": {"urgency": True},
+                    }
+                }
+
         config = MonitorConfig(state_path="", mode=MODO_HEURISTICO, threshold=45)
-        analyzer = GmailWebAnalyzer(config)
+        client = FakeBackendClient()
+        analyzer = GmailWebAnalyzer(config, client=client)
 
         resultado = analyzer.analyze(
             {
@@ -42,6 +56,8 @@ class TestGmailExtensionServer(unittest.TestCase):
         self.assertIn("risk_score", respuesta)
         self.assertIn("label", respuesta)
         self.assertIn("signals", respuesta)
+        self.assertEqual(client.options["mode"], MODO_HEURISTICO)
+        self.assertEqual(client.email["subject"], "Cuenta suspendida")
 
 
 if __name__ == "__main__":

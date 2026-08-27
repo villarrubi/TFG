@@ -15,6 +15,14 @@ class _FakeService:
         return {"ok": True, "risk_score": 12.5, "is_phishing": False}
 
 
+class _ProtectedFakeService(_FakeService):
+    def is_admin_authorized(self, authorization):
+        return authorization == "Bearer secreto"
+
+    def summarize_payload(self, payload):
+        return {"ok": True, "datasets": len(payload.get("datasets", []))}
+
+
 class TestHTTPApi(unittest.TestCase):
     def setUp(self):
         self.server = crear_servidor_http("127.0.0.1", 0, _FakeService())
@@ -30,6 +38,7 @@ class TestHTTPApi(unittest.TestCase):
     def test_health_no_expone_rutas_y_analisis_usa_json(self):
         with urlopen(f"{self.base_url}/health") as response:
             health = json.loads(response.read())
+            self.assertEqual(response.headers["Server"], "TFGPhishingAPI/1.0")
         self.assertTrue(health["ok"])
         self.assertNotIn("model_path_es", health)
 
@@ -100,6 +109,54 @@ class TestHTTPApi(unittest.TestCase):
             )
             with self.assertRaises(HTTPError) as error:
                 urlopen(request)
+            self.assertEqual(error.exception.code, 403)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
+
+    def test_operaciones_de_administracion_exigen_token_si_esta_configurado(self):
+        server = crear_servidor_http("127.0.0.1", 0, _ProtectedFakeService())
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        url = f"http://127.0.0.1:{server.server_port}/datasets/summary"
+        try:
+            body = b'{"datasets":[]}'
+            request = Request(
+                url,
+                data=body,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with self.assertRaises(HTTPError) as error:
+                urlopen(request)
+            self.assertEqual(error.exception.code, 401)
+
+            authorized = Request(
+                url,
+                data=body,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer secreto",
+                },
+                method="POST",
+            )
+            with urlopen(authorized) as response:
+                result = json.loads(response.read())
+            self.assertTrue(result["ok"])
+
+            browser_request = Request(
+                url,
+                data=body,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer secreto",
+                    "Origin": "https://mail.google.com",
+                },
+                method="POST",
+            )
+            with self.assertRaises(HTTPError) as error:
+                urlopen(browser_request)
             self.assertEqual(error.exception.code, 403)
         finally:
             server.shutdown()

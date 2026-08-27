@@ -1,22 +1,13 @@
 """Interfaz Streamlit para analizar correos con heurísticas y modelo neuronal."""
 
 import os
-from types import SimpleNamespace
 
 import streamlit as st
 
-from sistema_phishing import (
-    AnalysisBackendConfig,
-    ModelStorage,
-    NeuralPhishingDetector,
-)
-from sistema_phishing.analizador_email import (
-    construir_texto_para_analisis,
-    parsear_eml_bytes,
-)
-from sistema_phishing.analysis_service import EmailAnalysisService
-from sistema_phishing.analysis_service import (
-    construir_resultado_combinado as _combinar_resultados,
+from sistema_phishing.backend_client import (
+    BackendClient,
+    BackendClientError,
+    BackendUnavailableError,
 )
 from sistema_phishing.gmail_client import (
     GmailIntegrationError,
@@ -25,16 +16,17 @@ from sistema_phishing.gmail_client import (
     obtener_perfil_gmail,
     obtener_ultimos_correos,
 )
-from sistema_phishing.idioma import detectar_idioma_correo
 from ui_components import aplicar_estilos_base, render_html
 
-# Los modelos se guardan junto al repositorio para que Streamlit pueda
-# encontrarlos aunque la app se ejecute desde otro directorio.
+# La interfaz solo necesita rutas de OAuth; los modelos pertenecen al backend.
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-MODEL_PATH_ES = os.path.join(ROOT_DIR, "modelo_neural_es.joblib")
-MODEL_PATH_EN = os.path.join(ROOT_DIR, "modelo_neural_en.joblib")
 GMAIL_CREDENTIALS_PATH = os.path.join(ROOT_DIR, "credentials.json")
 GMAIL_TOKEN_PATH = os.path.join(ROOT_DIR, "token.json")
+ANALYSIS_MODES = {
+    "Heurístico": "heuristico",
+    "Red neuronal": "neural",
+    "Combinado": "combinado",
+}
 
 # Chuleta de operadores de búsqueda de Gmail para el botón de ayuda (❓) junto
 # al campo de consulta. Se mantiene como constante para no ensuciar main().
@@ -369,62 +361,28 @@ def mostrar_resultado_neural(resultado):
     st.write(f"**Clasificación:** {'Phishing probable' if resultado['is_phishing'] else 'No parece phishing'}")
 
 
-def mostrar_combinado(resultado_heur, resultado_neural, heur_weight, neural_weight):
-    """Combina los dos análisis con los pesos elegidos en la interfaz."""
-    resultado = construir_resultado_combinado(
-        resultado_heur,
-        resultado_neural,
-        heur_weight,
-        neural_weight,
-    )
-    mostrar_resultado_basico(resultado, "Resultado combinado")
-    st.markdown("### Ponderación aplicada")
-    st.write(f"Peso heurístico: {heur_weight}%")
-    st.write(f"Peso neuronal: {neural_weight}%")
-
-
-def construir_resultado_combinado(resultado_heur, resultado_neural, heur_weight, neural_weight):
-    """Devuelve el resultado mixto sin pintarlo en pantalla."""
-    # Se mantiene el mismo umbral que la heurística para que la interpretación
-    # del porcentaje sea homogénea en los tres modos de análisis.
-    config = SimpleNamespace(threshold=45, heur_weight=heur_weight, neural_weight=neural_weight)
-    return _combinar_resultados(resultado_heur, resultado_neural, config)
-
-
-def cargar_detector(idioma: str) -> NeuralPhishingDetector:
-    """Compatibilidad para scripts antiguos; la UI usa el servicio central."""
-    config = AnalysisBackendConfig(
-        mode="neural",
-        model_path_es=MODEL_PATH_ES,
-        model_path_en=MODEL_PATH_EN,
-    )
-    return EmailAnalysisService(config)._detector_loader(config, idioma)
-
-
 def analizar_entrada(
     entrada,
-    texto_modelo: str,
-    remitente: str,
-    subject: str,
-    heur_weight: int,
-    neural_weight: int,
-    analysis_service: EmailAnalysisService | None = None,
+    texto_modelo: str = "",
+    remitente: str = "",
+    subject: str = "",
+    heur_weight: int = 60,
+    neural_weight: int = 40,
+    backend_client: BackendClient | None = None,
 ):
-    """Ejecuta análisis heurístico, neuronal y combinado sobre una entrada."""
-    idioma = detectar_idioma_correo(texto_modelo)
-    service = analysis_service or EmailAnalysisService(
-        AnalysisBackendConfig(
-            threshold=45,
-            mode="combinado",
-            heur_weight=heur_weight,
-            neural_weight=neural_weight,
-            model_path_es=MODEL_PATH_ES,
-            model_path_en=MODEL_PATH_EN,
-        )
+    """Envía la entrada al backend; la UI no ejecuta modelos ni heurísticas."""
+    del texto_modelo, remitente, subject
+    response = (backend_client or BackendClient()).analyze(
+        entrada,
+        mode="combinado",
+        threshold=45,
+        heur_weight=heur_weight,
+        neural_weight=neural_weight,
+        include_all=True,
     )
-    resultados = service.analyze_all(entrada)
+    resultados = response["results"]
     return (
-        idioma,
+        response["language"],
         resultados["heuristico"],
         resultados["neural"],
         resultados["combinado"],
@@ -440,34 +398,33 @@ def seleccionar_resultado_principal(tipo_analisis: str, resultado_heur, resultad
     return resultado_combinado
 
 
-def analizar_correos_gmail(correos_gmail, tipo_analisis: str, heur_weight: int, neural_weight: int):
-    """Analiza correos de Gmail y devuelve datos listos para la interfaz."""
+def analizar_correos_gmail(
+    correos_gmail,
+    tipo_analisis: str,
+    heur_weight: int,
+    neural_weight: int,
+    backend_client: BackendClient | None = None,
+):
+    """Envía los EML de Gmail al backend y prepara únicamente la presentación."""
     registros = []
-    service = EmailAnalysisService(
-        AnalysisBackendConfig(
-            threshold=45,
-            mode="combinado",
-            heur_weight=heur_weight,
-            neural_weight=neural_weight,
-            model_path_es=MODEL_PATH_ES,
-            model_path_en=MODEL_PATH_EN,
-        )
-    )
+    client = backend_client or BackendClient()
     barra = st.progress(0)
 
     for indice, correo_gmail in enumerate(correos_gmail, start=1):
         try:
-            datos_email = parsear_eml_bytes(correo_gmail.raw_bytes)
-            texto_modelo = construir_texto_para_analisis(datos_email)
-            idioma, resultado_heur, resultado_neural, resultado_combinado = analizar_entrada(
-                datos_email,
-                texto_modelo,
-                datos_email.get("from", ""),
-                datos_email.get("subject", ""),
-                heur_weight,
-                neural_weight,
-                service,
+            response = client.analyze(
+                correo_gmail.raw_bytes,
+                mode=ANALYSIS_MODES[tipo_analisis],
+                threshold=45,
+                heur_weight=heur_weight,
+                neural_weight=neural_weight,
+                include_all=True,
             )
+            resultados = response["results"]
+            datos_email = response["email"]
+            resultado_heur = resultados["heuristico"]
+            resultado_neural = resultados["neural"]
+            resultado_combinado = resultados["combinado"]
             resultado_principal = seleccionar_resultado_principal(
                 tipo_analisis,
                 resultado_heur,
@@ -479,7 +436,8 @@ def analizar_correos_gmail(correos_gmail, tipo_analisis: str, heur_weight: int, 
                 "gmail_id": correo_gmail.gmail_id,
                 "snippet": correo_gmail.snippet,
                 "datos_email": datos_email,
-                "idioma": idioma,
+                "idioma": response["language"],
+                "model": response.get("model", {}),
                 "resultado_heur": resultado_heur,
                 "resultado_neural": resultado_neural,
                 "resultado_combinado": resultado_combinado,
@@ -519,7 +477,7 @@ def mostrar_resultados_gmail(registros, tipo_analisis: str):
         with st.container(border=True):
             col_riesgo, col_texto, col_estado = st.columns([1, 4, 2])
             col_riesgo.metric("Riesgo", f"{resultado['risk_score']:.1f}%")
-            col_texto.markdown(f"**{_texto_corto(datos_email.get('subject', '(sin asunto)'), 110)}**")
+            col_texto.write(_texto_corto(datos_email.get("subject", "(sin asunto)"), 110))
             col_texto.caption(_texto_corto(datos_email.get("from", "(sin remitente)"), 120))
             col_estado.markdown(f"**{clasificacion}**")
             col_estado.caption(f"Modo: {tipo_analisis}")
@@ -547,7 +505,7 @@ def mostrar_resultados_gmail(registros, tipo_analisis: str):
     registro = registros_ok[seleccionado]
     datos_email = registro["datos_email"]
 
-    st.markdown(f"#### {_texto_corto(datos_email.get('subject', '(sin asunto)'), 120)}")
+    st.subheader(_texto_corto(datos_email.get("subject", "(sin asunto)"), 120))
     st.write({
         "Gmail ID": registro["gmail_id"],
         "From": datos_email.get("from", ""),
@@ -614,17 +572,51 @@ def main():
     """Construye la pantalla de detección y ejecuta el análisis seleccionado."""
     aplicar_estilos_deteccion()
     st.title("Detección de phishing")
-    st.caption("Analiza correos pegados, archivos .eml o mensajes importados desde Gmail.")
+    st.caption(
+        "Cliente web: envía correos al backend central y se limita a mostrar su respuesta."
+    )
 
-    es_disponible = ModelStorage(MODEL_PATH_ES).exists()
-    en_disponible = ModelStorage(MODEL_PATH_EN).exists()
+    client = BackendClient()
+    try:
+        client.health()
+        models_response = client.models()
+    except BackendUnavailableError as exc:
+        st.error(str(exc))
+        st.code("python src/backend_server.py", language="powershell")
+        st.stop()
+    except BackendClientError as exc:
+        st.error(f"El backend no está preparado: {exc}")
+        st.stop()
+
+    models = models_response.get("models", {})
+    es_disponible = bool(models.get("es", {}).get("valid"))
+    en_disponible = bool(models.get("en", {}).get("valid"))
+    st.success(f"Backend central conectado: `{client.base_url}`")
+
+    artefactos_invalidos = [
+        idioma.upper()
+        for idioma in ("es", "en")
+        if models.get(idioma, {}).get("available")
+        and not models.get(idioma, {}).get("valid")
+    ]
+    if artefactos_invalidos:
+        st.warning(
+            "El backend ha descartado artefactos no válidos para: "
+            f"{', '.join(artefactos_invalidos)}. Usará el respaldo sintético."
+        )
 
     if es_disponible and en_disponible:
-        st.success("Modelos en español e inglés cargados. El idioma se detectará automáticamente.")
+        st.success("Modelos activos en español e inglés. El idioma se detectará automáticamente.")
     elif es_disponible:
-        st.info("Solo hay modelo en español. Se usará para todos los correos.")
+        st.info(
+            "Solo hay un modelo activo en español. Para correos en inglés se "
+            "creará un modelo sintético inglés de respaldo; no se mezclan idiomas."
+        )
     elif en_disponible:
-        st.info("Solo hay modelo en inglés. Se usará para todos los correos.")
+        st.info(
+            "Solo hay un modelo activo en inglés. Para correos en español se "
+            "creará un modelo sintético español de respaldo; no se mezclan idiomas."
+        )
     else:
         st.warning("No hay modelos entrenados en disco. Se usa el modelo sintético por defecto.")
 
@@ -634,7 +626,7 @@ def main():
         index=0,
     )
     texto_para_analisis = ""
-    datos_email = None
+    entrada_backend = None
 
     if modo == "Pegar texto del correo":
         # En modo texto se trabaja con una representación plana: cabeceras y
@@ -643,21 +635,19 @@ def main():
     elif modo == "Subir archivo .eml":
         archivo = st.file_uploader("Sube un archivo .eml", type=["eml"])
         if archivo is not None:
-            # El parser devuelve una estructura rica: texto plano para el modelo
-            # y HTML/anclas/adjuntos para las heurísticas.
-            datos_email = parsear_eml_bytes(archivo.getvalue())
-            texto_para_analisis = construir_texto_para_analisis(datos_email)
+            entrada_backend = archivo.getvalue()
+            texto_para_analisis = archivo.name
             st.markdown("#### Correo cargado")
-            st.write({
-                "From": datos_email["from"],
-                "To": datos_email["to"],
-                "Subject": datos_email["subject"],
-            })
+            st.write({"Archivo": archivo.name, "Tamaño": f"{len(entrada_backend)} bytes"})
+            st.caption("El EML se parseará y analizará exclusivamente en el backend.")
     else:
         st.markdown("#### Conexión con Gmail")
         st.write("Usa permisos de solo lectura y analiza los mensajes sin modificarlos.")
         if not dependencias_disponibles():
-            st.warning("Faltan las dependencias de Google. Ejecuta `pip install -r requirements.txt`.")
+            st.warning(
+                "Faltan las dependencias de Google. Ejecuta "
+                "`python -m pip install -r requirements.txt -c constraints.txt`."
+            )
         st.caption(f"Credenciales esperadas: `{GMAIL_CREDENTIALS_PATH}`")
         cargar_email_gmail_desde_token()
         if st.session_state.get("gmail_email"):
@@ -716,6 +706,7 @@ def main():
                         tipo_analisis,
                         heur_weight,
                         neural_weight,
+                        client,
                     )
                     st.session_state["gmail_tipo_analisis"] = tipo_analisis
             except GmailIntegrationError as exc:
@@ -733,27 +724,19 @@ def main():
         if not texto_para_analisis.strip():
             st.warning("Introduce texto o sube un archivo .eml antes de analizar.")
         else:
-            if datos_email:
-                # Para .eml se conserva el diccionario parseado, porque contiene
-                # campos que no aparecen en un texto pegado manualmente.
-                entrada = datos_email
-                texto_modelo = construir_texto_para_analisis(datos_email)
-                remitente = datos_email.get("from", "")
-                subject = datos_email.get("subject", "")
-            else:
-                entrada = texto_para_analisis
-                texto_modelo = texto_para_analisis
-                remitente = ""
-                subject = ""
-
-            idioma, resultado_heuristico, resultado_neural, resultado_combinado = analizar_entrada(
-                entrada,
-                texto_modelo,
-                remitente,
-                subject,
-                heur_weight,
-                neural_weight,
-            )
+            entrada = entrada_backend if entrada_backend is not None else texto_para_analisis
+            try:
+                idioma, resultado_heuristico, resultado_neural, resultado_combinado = (
+                    analizar_entrada(
+                        entrada,
+                        heur_weight=heur_weight,
+                        neural_weight=neural_weight,
+                        backend_client=client,
+                    )
+                )
+            except BackendClientError as exc:
+                st.error(f"No se pudo analizar el correo: {exc}")
+                return
             st.caption(f"Idioma detectado: {'Español 🇪🇸' if idioma == 'es' else 'Inglés 🇬🇧'}")
 
             if tipo_analisis == "Heurístico":

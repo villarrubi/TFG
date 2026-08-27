@@ -1,8 +1,8 @@
-"""Coordina los modos heurístico, neuronal y combinado.
+"""Coordina en el backend los modos heurístico, neuronal y combinado.
 
-Las interfaces deciden de dónde procede el correo. Este módulo concentra la
-selección de estrategia, el umbral y la carga de modelos para que Streamlit, el
-monitor y la API local produzcan el mismo resultado ante la misma entrada.
+El servidor concentra la selección de estrategia, el umbral y la carga de
+modelos. Streamlit, el monitor y la extensión se limitan a consumir por HTTP el
+resultado que produce este módulo dentro del backend central.
 """
 
 from __future__ import annotations
@@ -103,16 +103,18 @@ def cargar_detector_neural(
     ruta_principal = config.model_path_en if idioma == "en" else config.model_path_es
     classifier = ModelStorage(ruta_principal).load()
     idioma_esperado = "english" if idioma == "en" else "spanish"
+    source = "artifact"
     # Nunca se reutiliza silenciosamente un modelo del idioma opuesto: puede
     # cargar, pero produce una decisión lingüísticamente incoherente.
     if classifier is not None and getattr(classifier, "language", None) != idioma_esperado:
         classifier = None
     if classifier is None:
+        source = "synthetic_fallback"
         classifier = NeuralPhishingClassifier(
             language=idioma_esperado
         )
         classifier.fit_default()
-    return NeuralPhishingDetector(classifier)
+    return NeuralPhishingDetector(classifier, source=source)
 
 
 class EmailAnalysisService:
@@ -176,6 +178,33 @@ class EmailAnalysisService:
             "neural": resultado_neural,
             "combinado": resultado_combinado,
         }
+
+    def analyze_heuristic(self, datos_email: dict) -> dict:
+        """Ejecuta únicamente las reglas, sin cargar el modelo neuronal."""
+        return self._heuristic_analyzer(datos_email)
+
+    def analyze_neural(self, datos_email: dict) -> dict:
+        """Ejecuta únicamente el detector neuronal cacheado por idioma."""
+        return self._analyze_neural(datos_email)
+
+    def invalidate_detector(self, idioma: str | None = None) -> None:
+        """Descarta modelos cacheados después de una actualización central.
+
+        El backend reemplaza los artefactos de forma atómica y llama a este
+        método para que la siguiente petición cargue la nueva versión. Los
+        clientes nunca necesitan reiniciarse ni conocer rutas de ``.joblib``.
+        """
+        with self._detector_lock:
+            if idioma is None:
+                self._detectores.clear()
+            else:
+                self._detectores.pop(idioma, None)
+
+    def detector_source(self, idioma: str) -> str | None:
+        """Indica si el detector cacheado procede de artefacto o fallback."""
+        with self._detector_lock:
+            detector = self._detectores.get(idioma)
+            return None if detector is None else getattr(detector, "source", None)
 
     def _analyze_neural(self, datos_email: dict) -> dict:
         """Selecciona y reutiliza el detector apropiado para cada idioma."""

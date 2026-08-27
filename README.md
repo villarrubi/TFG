@@ -1,6 +1,6 @@
 # TFG · Detección de phishing en correo electrónico
 
-Aplicación local para analizar correos mediante reglas heurísticas y modelos neuronales TF‑IDF + MLP. El mismo motor se reutiliza desde Streamlit, la extensión de Gmail, el monitor periódico y la API HTTP local.
+Sistema cliente-servidor para analizar correos mediante reglas heurísticas y modelos neuronales TF-IDF + MLP. Streamlit, la extensión de Gmail y el monitor son clientes de una única API HTTP; solo el backend analiza, entrena y guarda los modelos activos.
 
 ## Puesta en marcha
 
@@ -9,94 +9,158 @@ Requisitos: Python 3.11 o posterior.
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements-dev.txt
+python -m pip install -r requirements-dev.txt -c constraints.txt
+python -m playwright install chromium
+```
+
+El sistema se arranca en dos terminales. Primero, el servidor central:
+
+```powershell
+$env:PYTHONPATH = "src"
+python src/backend_server.py
+```
+
+Después, el cliente web:
+
+```powershell
 $env:PYTHONPATH = "src"
 streamlit run src/app.py
 ```
+
+La aplicación se abre en `http://127.0.0.1:8501` y consume por defecto el backend de `http://127.0.0.1:8766`. Si el backend no está levantado, la interfaz lo indica y no ejecuta un detector alternativo local.
 
 Validación automática:
 
 ```powershell
 $env:PYTHONPATH = "src"
 python -m unittest discover -s tests -p "test_*.py"
-python -m ruff check src tests scripts
+python -m ruff check src tests scripts browser_tests
 python scripts/benchmark_analysis.py
+python scripts/evaluate_models.py
+python -m unittest discover -s browser_tests -p "test_*.py"
 python scripts/generate_defense_guides.py
 ```
 
-La suite actual contiene 47 pruebas unitarias y de integración; las advertencias de convergencia del MLP pertenecen únicamente a pruebas rápidas con pocas iteraciones.
+La validación actual contiene 72 pruebas unitarias y de integración en Python y 2 recorridos con Chromium. Uno de ellos levanta el backend y Streamlit en procesos separados, introduce un correo desde el navegador y comprueba que la respuesta HTTP se presenta en la web. Las advertencias de convergencia del MLP pertenecen únicamente a pruebas rápidas con pocas iteraciones. GitHub Actions repite pruebas, Ruff, evaluación reproducible y navegación real en cada `push` y `pull_request`.
 
-El último comando regenera las tres guías enfocadas de defensa en formato DOCX. Las guías locales de defensa, incluida `Guia_defensa_TFG.docx` y su versión de texto, se mantienen fuera de Git por contener material de preparación; la guía extensa se sincroniza con el código antes de cada entrega.
+## Cómo está montado
 
-### Rendimiento medido
+Sí es una arquitectura cliente-servidor, aunque cliente y servidor puedan ejecutarse en el mismo equipo:
 
-| Camino | Antes | Después | Mejora |
-| --- | ---: | ---: | ---: |
-| Importación fría de heurísticas | 1098,5 ms | 37,0 ms | 96,6 % |
-| Arranque frío de la aplicación | 1326,6 ms | 315,1 ms | 76,2 % |
+```text
+Navegador
+   │
+   ▼
+Streamlit (presentación; no carga modelos)
+   │ HTTP/JSON
+   ▼
+Backend central :8766
+   ├── parser MIME/EML
+   ├── análisis heurístico
+   ├── modelo neuronal ES activo
+   ├── modelo neuronal EN activo
+   └── entrenamiento, evaluación y versionado
 
-Las rutas de inferencia se mantuvieron estables dentro de una variación de ±3 %; no se modificaron reglas, pesos ni modelos. La metodología completa está en [PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md) y el mantenimiento pendiente se prioriza en [CLEANUP_PLAN.md](CLEANUP_PLAN.md).
+Extensión Gmail ────────────────HTTP/JSON──────────────► Backend
+Monitor Gmail ─────────────────HTTP/JSON──────────────► Backend
+Cliente de entrenamiento ──────HTTP/JSON──────────────► Backend
+```
+
+En Streamlit hay dos procesos de interfaz porque ese framework necesita un proceso Python para mantener la sesión web: el navegador habla con Streamlit y Streamlit actúa como cliente HTTP del backend. La frontera de aplicación sigue siendo cliente-servidor: ninguna vista de Streamlit importa `ModelStorage`, ejecuta heurísticas ni predice localmente.
+
+Hay una única versión activa por idioma en el servidor, compartida por todos los clientes. Al entrenar y activar una versión nueva, el backend sustituye el artefacto de forma atómica, invalida su caché y las siguientes peticiones de web, extensión y monitor usan ese mismo modelo sin actualizar ni reiniciar los clientes.
+
+Gmail y Telegram son servicios externos: Gmail aporta mensajes y Telegram recibe alertas. No son el servidor del detector.
 
 ## Componentes
 
-| Entrada | Comando | Uso |
+| Componente | Comando | Responsabilidad |
 | --- | --- | --- |
-| Aplicación web | `streamlit run src/app.py` | Detección manual, Gmail, configuración, monitor y entrenamiento |
-| API local | `python src/backend_server.py` | `/health` y `/analyze` en `127.0.0.1:8766` |
-| Extensión Gmail | `python src/gmail_extension_server.py` | Servidor local en `127.0.0.1:8765` para `extension_gmail/` |
-| Monitor | `python src/monitor_gmail.py` | Polling de Gmail y alertas Telegram |
+| Backend central | `python src/backend_server.py` | Análisis, modelos, datasets, entrenamiento, evaluación y versiones |
+| Cliente web | `streamlit run src/app.py` | Recoger entradas y presentar respuestas del backend |
+| Extensión Gmail | Cargar `extension_gmail/` sin empaquetar | Enviar el correo visible directamente a `/analyze` y mostrar el resultado |
+| Monitor | `python src/monitor_gmail.py` | Obtener Gmail, pedir análisis al backend y alertar por Telegram |
+| Proxy antiguo opcional | `python src/gmail_extension_server.py` | Reenviar del puerto histórico 8765 al backend; no carga modelos |
 
-La API y la extensión comparten `sistema_phishing.http_api` y `sistema_phishing.analysis_service`; no mantienen reglas duplicadas. La extensión necesita además cargar la carpeta `extension_gmail/` como extensión sin empaquetar desde `chrome://extensions`.
+La extensión actual debe apuntar en **Opciones** a `http://127.0.0.1:8766`; no necesita el proxy histórico.
 
-## Modos de análisis
+## Contrato del backend
 
-- `heuristico`: cabeceras, SPF/DKIM/DMARC, remitente, URLs, dominios, HTML, adjuntos y lenguaje.
-- `neural`: clasificador TF‑IDF + `MLPClassifier`; selecciona modelo español o inglés por mensaje.
-- `combinado`: media ponderada de ambos resultados y umbral configurable.
+Rutas públicas de lectura e inferencia:
 
-Los modelos preparados se encuentran en `modelo_neural_es.joblib` y `modelo_neural_en.joblib`. Los ficheros `.joblib` son artefactos de confianza: no se deben cargar desde ubicaciones o descargas no verificadas porque `joblib` utiliza deserialización de Python.
+| Método | Ruta | Uso |
+| --- | --- | --- |
+| `GET` | `/health` | Estado, contrato y versiones activas |
+| `GET` | `/models` | Metadatos de modelos, nunca los artefactos |
+| `POST` | `/analyze` | Texto, campos de correo o EML en Base64 |
 
-## API local
+Rutas de administración:
+
+| Método | Ruta | Uso |
+| --- | --- | --- |
+| `POST` | `/datasets/summary` | Validar y resumir CSV en el servidor |
+| `POST` | `/train` | Entrenar y activar una versión central |
+| `POST` | `/evaluate` | Evaluar el modelo activo |
+| `POST` | `/compare` | Comparar hasta tres configuraciones sin activarlas |
+| `POST` | `/models/delete` | Eliminar un artefacto activo |
+
+Ejemplo:
 
 ```powershell
-python src/backend_server.py --mode combinado --threshold 45
 curl http://127.0.0.1:8766/health
 curl -X POST http://127.0.0.1:8766/analyze `
   -H "Content-Type: application/json" `
-  -d '{"subject":"Verificación de cuenta","from":"soporte@ejemplo.com","body":"Haga clic para confirmar su cuenta."}'
+  -d '{"email":{"subject":"Verificación de cuenta","from":"soporte@ejemplo.com","body":"Haga clic para confirmar su cuenta."},"options":{"mode":"combinado","threshold":45}}'
 ```
 
-El endpoint acepta JSON de hasta 1 MiB, exige `Content-Type: application/json` y restringe CORS a Gmail y extensiones de Chrome. Devuelve una respuesta 4xx para entradas inválidas y no expone trazas internas.
-El backend escucha en loopback por defecto; no se debe publicar en una interfaz externa sin añadir autenticación y controles de red.
+`/analyze` admite hasta 16 MiB y las operaciones con datasets hasta 256 MiB. Todas exigen JSON UTF-8, validan tamaños y tipos, devuelven errores sin trazas internas y usan `Cache-Control: no-store`. CORS se restringe a Gmail Web y extensiones de Chrome autorizadas.
+
+En loopback, las rutas administrativas pueden funcionar sin token. Si se configura `BACKEND_ADMIN_TOKEN`, el cliente lo envía como Bearer únicamente en entrenamiento, evaluación, comparación y borrado. `--allow-remote` exige un token de al menos 24 caracteres. Las rutas administrativas rechazan peticiones con cabecera `Origin`, incluso con token, para que no puedan invocarse desde una página o extensión; el cliente Streamlit las realiza de servidor a servidor.
+
+Los clientes solo admiten HTTP sobre loopback; una URL remota debe ser HTTPS. La extensión solicita de forma explícita el permiso del origen HTTPS configurado. El servidor incorporado no termina TLS ni constituye por sí solo un despliegue público seguro: para separarlo físicamente hacen falta un proxy inverso HTTPS, autenticación también para inferencia, rate limiting, gestión de secretos y monitorización.
+
+## Modos y modelos
+
+- `heuristico`: cabeceras, SPF/DKIM/DMARC, remitente, URLs, dominios, HTML, adjuntos y lenguaje.
+- `neural`: clasificador TF-IDF + `MLPClassifier`; selecciona el modelo español o inglés según el mensaje.
+- `combinado`: media ponderada de ambos resultados y umbral configurable.
+
+Los artefactos centrales son `modelo_neural_es.joblib` y `modelo_neural_en.joblib`. Si falta uno, el backend puede construir un fallback sintético del mismo idioma y lo declara como tal; los clientes no crean copias. Los ficheros `.joblib` son artefactos de confianza y no deben sustituirse por descargas no verificadas, porque su carga usa deserialización de Python.
+
+## Entrenamiento y evaluación centralizados
+
+La vista **Entrenamiento** es un cliente ligero. Sube uno o varios CSV al backend, que valida columnas, entrena desde cero, persiste el modelo de forma atómica y devuelve versión, fecha, tamaño y métricas. Las etiquetas aceptadas incluyen `1`/`phishing` y `0`/`legitimate`/`safe`. Los artefactos nuevos no serializan los textos brutos del dataset.
+
+La evaluación usa un CSV distinto y muestra accuracy, precisión, recall, F1, accuracy balanceada y matriz de confusión. La comparación entrena hasta tres configuraciones en memoria y no modifica el modelo activo.
+
+El script offline `scripts/evaluate_models.py` es una herramienta de desarrollo y CI: carga los artefactos directamente para que la evaluación sea reproducible aun sin levantar servicios. No forma parte de los clientes de ejecución. El reto controlado bilingüe contiene 40 casos; sus resultados actuales están en [EVALUATION_REPORT.md](EVALUATION_REPORT.md) y no deben presentarse como rendimiento en producción.
 
 ## Gmail y Telegram
 
-1. Activa Gmail API en Google Cloud y crea un cliente OAuth de escritorio.
-2. Guarda el fichero descargado como `credentials.json` en la raíz.
-3. Conecta Gmail desde la vista de configuración; el flujo crea `token.json` local.
-4. Para Telegram, configura `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en `.env.local`.
+1. Levanta el backend central.
+2. Activa Gmail API en Google Cloud y crea un cliente OAuth de escritorio.
+3. Guarda el fichero descargado como `credentials.json` en la raíz.
+4. Conecta Gmail desde Configuración; el flujo crea `token.json` local.
+5. Para Telegram, configura `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en `.env.local`.
 
-El monitor admite `python src/monitor_gmail.py --once` para una comprobación puntual. Guarda IDs procesados en `estado_monitor.json`, con escritura atómica; un correo corrupto no interrumpe el resto del lote.
-
-## Entrenamiento y evaluación
-
-Desde `src/train_app.py` se pueden subir uno o varios CSV, seleccionar idioma y columnas, entrenar y comparar hasta tres configuraciones. Las etiquetas aceptadas son `1`/`phishing` para phishing y `0`/`legitimate`/`safe` para correo legítimo. Cada entrenamiento parte del conjunto seleccionado y no acumula sesiones anteriores; los artefactos nuevos no serializan textos brutos del dataset.
-
-La evaluación separa el CSV de prueba y muestra accuracy, precisión, recall, F1, accuracy balanceada y matriz de confusión (VP, VN, FP y FN).
+El monitor admite `python src/monitor_gmail.py --once` para una comprobación puntual. Guarda IDs procesados en `estado_monitor.json` con escritura atómica; un correo corrupto o un fallo temporal del backend no interrumpe el resto del lote y queda pendiente de reintento.
 
 ## Configuración
 
-Las variables de entorno se pueden declarar en `.env.local` (hay ejemplos en `.env.example`). Entre las más relevantes:
+Las variables pueden declararse en `.env.local`; `.env.example` sirve de plantilla:
 
 ```text
+PHISHING_BACKEND_URL=http://127.0.0.1:8766
+BACKEND_HOST=127.0.0.1
+BACKEND_PORT=8766
+BACKEND_ADMIN_TOKEN=
 PHISHING_THRESHOLD=45
 MONITOR_ANALYSIS_MODE=combinado
-MONITOR_HEUR_WEIGHT=60
-MONITOR_NEURAL_WEIGHT=40
-GMAIL_EXTENSION_PORT=8765
 ```
 
-No se versionan credenciales, tokens, estado del monitor, `Propuestaformato.pdf` ni las guías locales de defensa. `TFG.pdf` y `TFG.docx` se conservan como entregables del proyecto.
+Para apuntar los clientes a otro equipo o a un despliegue posterior, publica primero el backend detrás de HTTPS y cambia `PHISHING_BACKEND_URL` a ese origen seguro. El modelo permanece únicamente en el servidor seleccionado.
+
+No se versionan credenciales, tokens, estado del monitor, `Propuestaformato.pdf` ni los artefactos temporales de revisión visual. La memoria y las cuatro guías finales de defensa sí se versionan como entregables reproducibles. `constraints.txt` fija el entorno completo validado sobre Python 3.12.
 
 ## Organización
 
@@ -105,18 +169,24 @@ src/
 ├── app.py, detect_app.py, config_app.py, monitor_app.py, train_app.py
 ├── backend_server.py, gmail_extension_server.py, monitor_gmail.py
 └── sistema_phishing/
+    ├── backend_client.py         # cliente HTTP común, sin lógica de dominio
+    ├── backend_service.py        # análisis, modelos y administración central
+    ├── http_api.py               # contrato y servidor HTTP
+    ├── analysis_service.py       # coordinación interna del backend
+    ├── model_config.py           # hiperparámetros sin importar scikit-learn en clientes
+    ├── file_utils.py             # escritura atómica de configuración y tokens
+    ├── network.py                # política de bind y loopback
     ├── analizador_email.py       # MIME/EML seguro y normalizado
-    ├── analysis_service.py       # caso de uso y selección de estrategia
-    ├── backend_service.py        # contrato de entrada/salida de la API
-    ├── gmail_monitor.py          # lote, estado y notificaciones
-    ├── http_api.py               # servidor HTTP compartido
+    ├── gmail_monitor.py          # lote, estado y cliente remoto
     ├── metrics.py                # métricas binarias reproducibles
-    ├── modelo_neural.py          # TF-IDF, MLP y persistencia
+    ├── modelo_neural.py          # TF-IDF, MLP y persistencia del servidor
     └── ...                       # señales, URLs, HTML y explicaciones
-extension_gmail/                  # Manifest V3 y panel de Gmail
-tests/                            # pruebas unitarias y de integración local
+extension_gmail/                  # cliente Manifest V3
+tests/                            # 72 pruebas unitarias/de integración
+browser_tests/                    # 2 recorridos reales con Chromium
+evaluation/                       # holdout controlado y resultados
 ```
 
-## Alcance y operación segura
+## Alcance
 
-El sistema es un detector local orientado a apoyo a la decisión. No sustituye una pasarela antispam ni garantiza detectar campañas nuevas sin reentrenamiento. Las comprobaciones de reputación online, Gmail Push/Pub/Sub y el empaquetado público de la extensión quedan fuera del despliegue actual y pueden abordarse como líneas futuras, manteniendo el núcleo local reproducible.
+El sistema es cliente-servidor en ejecución, pero su configuración predeterminada mantiene ambos lados en el mismo equipo y en loopback para facilitar la defensa y proteger el contenido del correo. Se puede separar físicamente cambiando la URL del backend; convertirlo en un servicio multiusuario de producción requiere la capa operativa y de seguridad indicada anteriormente. No sustituye una pasarela antispam ni garantiza detectar campañas nuevas sin reentrenamiento y validación externa.

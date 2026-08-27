@@ -1,7 +1,7 @@
-"""Revisión final de contenido, evidencia y maquetación de la memoria del TFG.
+"""Migración histórica de contenido y maquetación de la memoria del TFG.
 
-El script elimina material provisional, corrige afirmaciones contrastadas con
-las fuentes citadas y conserva la estructura y los estilos del DOCX original.
+No debe ejecutarse sobre la entrega actual; usa ``sync_delivery_docs.py``. Se
+conserva únicamente para documentar cómo se construyó la primera versión final.
 """
 
 from __future__ import annotations
@@ -758,12 +758,12 @@ def correct_project_sections(doc) -> None:
     replace_prefix(
         doc,
         "Esta separación facilita la evolución del prototipo.",
-        "Esta separación facilita la evolución del prototipo. Pueden añadirse reglas en los módulos de señales, sustituirse el clasificador neuronal o incorporarse nuevas fuentes de entrada sin alterar la navegación de la aplicación. La versión final ejecuta correctamente 47 pruebas automatizadas que protegen los componentes principales y sus integraciones locales.",
+        "Esta separación facilita la evolución del prototipo. Pueden añadirse reglas en los módulos de señales, sustituirse el clasificador neuronal o incorporarse nuevas fuentes de entrada sin alterar la navegación de la aplicación. La versión revisada ejecuta correctamente 72 pruebas Python y 2 recorridos reales con Chromium.",
     )
     replace_prefix(
         doc,
         "La revisión actual de la rama web ejecuta 44 pruebas unitarias",
-        "La versión final ejecuta 47 pruebas unitarias y de integración mediante unittest. Cubren el parseo de .eml, la construcción de resultados combinados, la carga de configuración, la decodificación de mensajes de Gmail, la monitorización, las reglas heurísticas, el clasificador neuronal, la persistencia de modelos, la API HTTP y las notificaciones por Telegram. Todas finalizaron correctamente; los únicos avisos observados corresponden a iteraciones reducidas del MLP en pruebas rápidas y no implican fallos funcionales.",
+        "La versión revisada ejecuta 72 pruebas Python y 2 recorridos reales con Chromium. Cubren componentes, integraciones locales, seguridad de bind, activos de la extensión, evaluación e interfaces. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.",
     )
     replace_prefix(
         doc,
@@ -775,19 +775,19 @@ def correct_project_sections(doc) -> None:
         text = paragraph.text
         paragraph.text = paragraph.text.replace(
             "la revisión actual de la rama web ejecuta 44 pruebas",
-            "la versión final ejecuta 47 pruebas",
+            "la versión revisada ejecuta 72 pruebas Python y 2 de navegador",
         )
         paragraph.text = paragraph.text.replace(
             "correctamente 44 pruebas",
-            "correctamente 47 pruebas",
+            "correctamente 72 pruebas Python y 2 de navegador",
         )
         paragraph.text = paragraph.text.replace(
             "La versión final ejecuta 44 pruebas",
-            "La versión final ejecuta 47 pruebas",
+            "La versión revisada ejecuta 72 pruebas Python y 2 de navegador",
         )
         paragraph.text = paragraph.text.replace(
             "La suite de 44 pruebas",
-            "La suite de 47 pruebas",
+            "La suite de 72 pruebas Python y 2 de navegador",
         )
         paragraph.text = paragraph.text.replace(
             "suite actual de 44 casos",
@@ -795,7 +795,7 @@ def correct_project_sections(doc) -> None:
         )
         paragraph.text = paragraph.text.replace(
             "suite de 44 pruebas unitarias",
-            "suite de 47 pruebas unitarias",
+            "suite de 72 pruebas Python y 2 de navegador",
         )
         if text.startswith(".venv\\Scripts\\Activate.ps1"):
             paragraph.text = ".\\" + text
@@ -835,6 +835,13 @@ def correct_typographical_errors(doc) -> None:
 
 
 def main() -> None:
+    # Wrapper de trazabilidad: evita que transformaciones históricas
+    # sobrescriban la arquitectura cliente-servidor documentada.
+    from sync_delivery_docs import main as sync_delivery_docs
+
+    sync_delivery_docs()
+    return
+
     doc = Document(DOC_PATH)
     remove_provisional_appendix(doc)
     clean_unverified_visuals(doc)

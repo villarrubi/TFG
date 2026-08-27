@@ -5,20 +5,15 @@ import os
 import tempfile
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Protocol
 
 from .analizador_email import parsear_eml_bytes
 from .analysis_service import (
     MODO_COMBINADO,
     MODO_HEURISTICO,
     MODO_NEURAL,
-    EmailAnalysisService,
 )
-from .analysis_service import (
-    cargar_detector_neural as _cargar_detector_neural,
-)
-from .analysis_service import (
-    construir_resultado_combinado as _construir_resultado_combinado,
-)
+from .backend_client import DEFAULT_BACKEND_URL, RemoteAnalysisService
 from .telegram_notifier import TelegramNotifier, construir_mensaje_alerta
 
 __all__ = [
@@ -29,9 +24,7 @@ __all__ = [
     "MonitorResult",
     "analizar_correos_nuevos",
     "analizar_email_monitor",
-    "cargar_detector_neural",
     "cargar_estado",
-    "construir_resultado_combinado",
     "guardar_estado",
 ]
 
@@ -45,8 +38,7 @@ class MonitorConfig:
     mode: str = MODO_COMBINADO
     heur_weight: int = 60
     neural_weight: int = 40
-    model_path_es: str = "modelo_neural_es.joblib"
-    model_path_en: str = "modelo_neural_en.joblib"
+    backend_url: str = DEFAULT_BACKEND_URL
     mark_existing_as_seen: bool = True
 
 
@@ -65,6 +57,12 @@ class MonitorResult:
 
 class MonitorStateError(RuntimeError):
     """Indica que el estado persistente del monitor no es válido."""
+
+
+class AnalysisClient(Protocol):
+    """Contrato mínimo del cliente remoto utilizado por el monitor."""
+
+    def analyze(self, datos_email: dict) -> dict: ...
 
 
 def cargar_estado(path: str) -> set[str]:
@@ -109,40 +107,31 @@ def guardar_estado(path: str, seen_ids: Iterable[str]) -> None:
             os.unlink(temp_path)
 
 
-def construir_resultado_combinado(resultado_heur: dict, resultado_neural: dict, config: MonitorConfig) -> dict:
-    """Combina heurística y red neuronal usando la misma lógica que la UI."""
-    return _construir_resultado_combinado(resultado_heur, resultado_neural, config)
-
-
-def cargar_detector_neural(config: MonitorConfig):
-    """Carga un detector neuronal desde disco o usa el modelo sintético."""
-    return _cargar_detector_neural(config)
-
-
 def analizar_email_monitor(
     datos_email: dict,
     config: MonitorConfig,
-    service: EmailAnalysisService | None = None,
+    service: AnalysisClient | None = None,
 ) -> dict:
-    """Analiza un correo con el modo seleccionado para el monitor."""
-    return (service or EmailAnalysisService(config)).analyze(datos_email)
+    """Envía un correo al backend central con la configuración del monitor."""
+    return (service or RemoteAnalysisService(config)).analyze(datos_email)
 
 
 def analizar_correos_nuevos(
     correos_gmail: Iterable,
     config: MonitorConfig,
     notifier: TelegramNotifier | None = None,
-    analysis_service: EmailAnalysisService | None = None,
+    analysis_service: AnalysisClient | None = None,
 ) -> list[MonitorResult]:
     """Analiza correos no vistos sin interrumpir el lote por un mensaje defectuoso."""
     correos_gmail = list(correos_gmail)
+    state_exists = os.path.exists(config.state_path)
     seen_ids = cargar_estado(config.state_path)
-    if not seen_ids and config.mark_existing_as_seen:
+    if not state_exists and config.mark_existing_as_seen:
         seen_ids.update(correo.gmail_id for correo in correos_gmail)
         guardar_estado(config.state_path, seen_ids)
         return []
 
-    service = analysis_service or EmailAnalysisService(config)
+    service = analysis_service or RemoteAnalysisService(config)
     resultados: list[MonitorResult] = []
     for correo in correos_gmail:
         if correo.gmail_id in seen_ids:

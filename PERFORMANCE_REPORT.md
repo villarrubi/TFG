@@ -21,8 +21,11 @@ Las diferencias de hasta ±3 % en los caminos de inferencia son variación de
 medición: no se modificaron reglas, pesos ni modelos. La mejora material está
 en el arranque, que era el cuello de botella observado.
 
-La suite pasó de 2,435 s a 2,398 s y mantiene sus 47 casos; este cambio pequeño
-también se considera ruido, no una optimización de entrenamiento.
+En aquella medición, la suite de 47 casos pasó de 2,435 s a 2,398 s; este cambio
+pequeño se considera ruido, no una optimización de entrenamiento. La validación
+actual ha crecido hasta 72 pruebas Python y 2 recorridos reales con Chromium.
+El recorrido principal levanta el cliente Streamlit y el backend en procesos
+distintos y valida una petición de análisis completa.
 
 ## Cuellos de botella localizados
 
@@ -45,6 +48,11 @@ también se considera ruido, no una optimización de entrenamiento.
 - Importación de cada vista Streamlit sólo cuando el usuario navega a ella.
 - Prueba de regresión que confirma que `import sistema_phishing` no carga
   `sklearn`.
+- Los formularios de configuración y entrenamiento importan `model_config.py`,
+  sin arrastrar scikit-learn ni joblib al proceso cliente.
+- El backend ejecuta solo la estrategia solicitada: el modo heurístico no carga
+  ni evalúa el modelo neuronal. El SHA-256 y la inspección de metadatos quedan
+  cacheados hasta que cambia o se sustituye el artefacto.
 - Benchmark reproducible versionado en `scripts/benchmark_analysis.py`.
 
 ## Reproducción
@@ -53,5 +61,5 @@ también se considera ruido, no una optimización de entrenamiento.
 python scripts/benchmark_analysis.py --iterations 200 --repeats 5
 $env:PYTHONPATH = "src"
 python -m unittest discover -s tests -p "test_*.py"
-python -m ruff check src tests scripts
+python -m ruff check src tests browser_tests scripts
 ```

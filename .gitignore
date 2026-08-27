@@ -19,14 +19,11 @@ config/token.json
 .idea/
 ~$*.docx
 
-# Documentación local de propuesta y defensa
+# Documentación local de propuesta y QA. Las guías finales sí se versionan.
 Propuestaformato.pdf
-Guia_defensa_TFG.docx
 Guia_defensa_TFG.txt
-Guia_01_Flujo_y_funcionamiento.docx
-Guia_02_Tecnologias_y_decisiones.docx
-Guia_03_Guion_defensa.docx
 _docx_qa/
+_docx_qa_*/
 debug.log
 .test_tmp/
 

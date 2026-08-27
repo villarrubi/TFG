@@ -1,4 +1,3 @@
-const SERVER_URL = "http://127.0.0.1:8765/analyze";
 const WIDGET_ID = "tfg-phishing-widget";
 const CARD_ID = "tfg-phishing-card";
 const STATUS_ID = "tfg-phishing-status";
@@ -14,6 +13,8 @@ const MINIMIZE_ID = "tfg-phishing-minimize";
 const DISMISS_ID = "tfg-phishing-dismiss";
 const RETRY_INTERVAL_STORAGE_KEY = "retryIntervalMs";
 const DEFAULT_RETRY_INTERVAL_MS = 60000;
+const MAX_FIELD_CHARS = 200000;
+const MAX_LIST_ITEMS = 100;
 
 let lastFingerprint = "";
 let dismissedFingerprint = "";
@@ -52,12 +53,12 @@ function getBody(root) {
     root.querySelector(".a3s.aiL") ||
     root.querySelector(".a3s") ||
     root.querySelector("[dir='ltr']");
-  return textOf(body);
+  return textOf(body).slice(0, MAX_FIELD_CHARS);
 }
 
 function getHtmlBody(root) {
   const body = root.querySelector(".a3s.aiL") || root.querySelector(".a3s");
-  return body ? body.innerHTML : "";
+  return body ? body.innerHTML.slice(0, MAX_FIELD_CHARS) : "";
 }
 
 function getAnchors(root) {
@@ -66,7 +67,8 @@ function getAnchors(root) {
       text: textOf(anchor),
       href: anchor.href
     }))
-    .filter((anchor) => anchor.href && !anchor.href.startsWith("mailto:"));
+    .filter((anchor) => anchor.href && !anchor.href.startsWith("mailto:"))
+    .slice(0, MAX_LIST_ITEMS);
 }
 
 function getUrlsFromText(text) {
@@ -83,7 +85,9 @@ function getEmailPayload() {
   const subject = getSubject();
   const sender = getSender(root);
   const anchors = getAnchors(root);
-  const urls = Array.from(new Set([...getUrlsFromText(body), ...anchors.map((anchor) => anchor.href)]));
+  const urls = Array.from(
+    new Set([...getUrlsFromText(body), ...anchors.map((anchor) => anchor.href)])
+  ).slice(0, MAX_LIST_ITEMS);
 
   if (!subject && !sender && body.length < 20) {
     return null;
@@ -368,7 +372,7 @@ async function analyzeVisibleEmail(options = {}) {
     scoreText: "--%",
     scoreValue: 0,
     verdict: "Revisando contenido y enlaces",
-    summary: "El detector local esta evaluando el correo abierto.",
+    summary: "El backend central esta evaluando el correo abierto.",
     meta: "Comprobando ahora"
   });
   clearSignalChips("Analizando");
@@ -380,13 +384,25 @@ async function analyzeVisibleEmail(options = {}) {
   }
 
   try {
-    const response = await fetch(SERVER_URL, {
+    const serverBaseUrl = await PhishingServerConfig.getServerBaseUrl();
+    const response = await fetch(`${serverBaseUrl}/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+      let message = `El backend respondió HTTP ${response.status}.`;
+      try {
+        const errorPayload = await response.json();
+        if (errorPayload && errorPayload.error) {
+          message = String(errorPayload.error);
+        }
+      } catch (parseError) {
+        // El código HTTP sigue siendo suficiente si el cuerpo no es JSON.
+      }
+      const requestError = new Error(message);
+      requestError.retryable = response.status >= 500 || response.status === 429;
+      throw requestError;
     }
     const result = await response.json();
     lastFingerprint = currentFingerprint;
@@ -404,27 +420,34 @@ async function analyzeVisibleEmail(options = {}) {
     });
     renderDetails(result);
   } catch (error) {
+    const retryable = error.retryable !== false;
     setPanel("offline", {
-      status: "Sin conexion",
+      status: retryable ? "Sin conexion" : "Solicitud rechazada",
       scoreText: "--%",
       scoreValue: 0,
-      verdict: "Detector local apagado",
-      summary: "Arranca el servidor Python para activar el analisis.",
+      verdict: retryable ? "Backend central no disponible" : "No se pudo analizar el correo",
+      summary: retryable
+        ? "Arranca el backend Python para activar el analisis."
+        : error.message,
       meta: `Ultimo intento: ${new Date().toLocaleTimeString()}`
     });
-    clearSignalChips("Sin conexion");
+    clearSignalChips(retryable ? "Sin conexion" : "Entrada rechazada");
     const offlineDetails = document.getElementById(DETAILS_ID);
     const toggle = document.getElementById(TOGGLE_ID);
     if (offlineDetails) {
       offlineDetails.dataset.empty = "false";
-      offlineDetails.innerHTML = "<p>Arranca el servidor local con python src/gmail_extension_server.py.</p><p>La extension volvera a comprobar la conexion automaticamente.</p>";
+      offlineDetails.innerHTML = retryable
+        ? "<p>Arranca el backend central con python src/backend_server.py.</p><p>La extension volvera a comprobar la conexion automaticamente.</p>"
+        : "<p>Revisa el tamano y los campos visibles del correo antes de reintentar.</p>";
     }
     if (toggle) {
       toggle.disabled = false;
       toggle.textContent = "Ver detalles";
     }
     lastFingerprint = "";
-    scheduleOfflineRetry();
+    if (retryable) {
+      scheduleOfflineRetry();
+    }
   }
 }
 

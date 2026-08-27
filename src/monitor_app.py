@@ -5,6 +5,7 @@ import os
 
 import streamlit as st
 
+from sistema_phishing.backend_client import BackendClient, backend_url_from_env
 from sistema_phishing.env_loader import cargar_env_local, leer_env_file
 from sistema_phishing.gmail_client import (
     GmailIntegrationError,
@@ -25,8 +26,6 @@ cargar_env_local(ROOT_DIR)
 GMAIL_CREDENTIALS_PATH = os.path.join(ROOT_DIR, "credentials.json")
 GMAIL_TOKEN_PATH = os.path.join(ROOT_DIR, "token.json")
 MONITOR_STATE_PATH = os.path.join(ROOT_DIR, "estado_monitor.json")
-MODEL_PATH_ES = os.path.join(ROOT_DIR, "modelo_neural_es.joblib")
-MODEL_PATH_EN = os.path.join(ROOT_DIR, "modelo_neural_en.joblib")
 ENV_LOCAL_PATH = os.path.join(ROOT_DIR, ".env.local")
 
 
@@ -92,8 +91,7 @@ def _config_desde_ui(modo: str, threshold: float, heur_weight: int) -> MonitorCo
         mode=modo,
         heur_weight=heur_weight,
         neural_weight=100 - heur_weight,
-        model_path_es=MODEL_PATH_ES,
-        model_path_en=MODEL_PATH_EN,
+        backend_url=backend_url_from_env(),
         mark_existing_as_seen=False,
     )
 
@@ -103,10 +101,14 @@ def _mostrar_estado_general(valores: dict) -> None:
     gmail_ok = os.path.exists(GMAIL_TOKEN_PATH)
     telegram_ok = _telegram_configurado()
     interval = _valor_entero(valores, "MONITOR_INTERVAL_SECONDS", 120)
+    try:
+        backend_ok = bool(BackendClient().health().get("ok"))
+    except Exception:  # noqa: BLE001 - el estado se muestra sin romper la vista
+        backend_ok = False
 
     render_html(
         f"""
-        <div class="ui-grid ui-grid-3">
+        <div class="ui-grid ui-grid-4">
             <div class="ui-card">
                 <div class="ui-label">Gmail</div>
                 <div class="ui-value">{estado_badge(gmail_ok, "Conectado", "Sin token")}</div>
@@ -121,6 +123,11 @@ def _mostrar_estado_general(valores: dict) -> None:
                 <div class="ui-label">Proceso 24/7</div>
                 <div class="ui-value">Cada {interval}s</div>
                 <div class="ui-note">Se ejecuta aparte con <code>python src/monitor_gmail.py</code>.</div>
+            </div>
+            <div class="ui-card">
+                <div class="ui-label">Backend central</div>
+                <div class="ui-value">{estado_badge(backend_ok, "Conectado", "Sin conexión")}</div>
+                <div class="ui-note">El monitor no carga modelos: consume la API.</div>
             </div>
         </div>
         """
@@ -184,7 +191,10 @@ def main():
     _mostrar_estado_general(valores)
 
     if not dependencias_disponibles():
-        st.warning("Faltan dependencias de Google. Ejecuta `pip install -r requirements.txt`.")
+        st.warning(
+            "Faltan dependencias de Google. Ejecuta "
+            "`python -m pip install -r requirements.txt -c constraints.txt`."
+        )
 
     st.markdown("### Configuración activa")
     _mostrar_configuracion_activa(valores)

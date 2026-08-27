@@ -4,6 +4,8 @@ import base64
 import os
 from dataclasses import dataclass
 
+from .file_utils import atomic_write_text
+
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 
@@ -61,8 +63,7 @@ def construir_servicio_gmail(credentials_path: str, token_path: str):
         else:
             flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
             creds = flow.run_local_server(port=0)
-        with open(token_path, "w", encoding="utf-8") as token_file:
-            token_file.write(creds.to_json())
+        atomic_write_text(token_path, creds.to_json(), mode=0o600)
 
     return build("gmail", "v1", credentials=creds)
 

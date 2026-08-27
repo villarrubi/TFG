@@ -71,19 +71,28 @@ class TelegramNotifier:
 
         post = self.post or requests.post
         url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
-        response = post(
-            url,
-            json={
-                "chat_id": self.chat_id,
-                "text": texto,
-                "parse_mode": "HTML",
-                "disable_web_page_preview": True,
-            },
-            timeout=self.timeout,
-        )
+        try:
+            response = post(
+                url,
+                json={
+                    "chat_id": self.chat_id,
+                    "text": texto,
+                    "parse_mode": "HTML",
+                    "disable_web_page_preview": True,
+                },
+                timeout=self.timeout,
+            )
+        except requests.RequestException as exc:
+            # Requests incluye la URL en algunos errores y esa URL contiene el
+            # token del bot. Se devuelve un mensaje neutro para no filtrarlo en
+            # Streamlit ni en los logs del monitor.
+            raise TelegramNotificationError(
+                "No se pudo contactar con la API de Telegram."
+            ) from exc
         if response.status_code >= 400:
             raise TelegramNotificationError(
-                f"Telegram devolvió HTTP {response.status_code}: {response.text}"
+                f"Telegram devolvió HTTP {response.status_code}: "
+                f"{_recortar(response.text, 200)}"
             )
 
 

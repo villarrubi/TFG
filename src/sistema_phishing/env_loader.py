@@ -2,6 +2,8 @@
 
 import os
 
+from .file_utils import atomic_write_text
+
 
 def env_int(name: str, default: int) -> int:
     """Lee un entero del entorno y usa el valor seguro si es inválido."""
@@ -58,11 +60,17 @@ def leer_env_file(path: str) -> dict[str, str]:
 
 def guardar_env_file(path: str, valores: dict[str, str]) -> None:
     """Guarda variables KEY=VALUE y actualiza el entorno actual."""
-    with open(path, "w", encoding="utf-8") as env_file:
-        for key in sorted(valores):
-            value = valores[key]
-            env_file.write(f"{key}={value}\n")
-            os.environ[key] = value
+    lines = []
+    for key in sorted(valores):
+        value = str(valores[key])
+        if not key or "=" in key or "\n" in key or "\r" in key:
+            raise ValueError("El nombre de una variable de entorno no es válido.")
+        if "\n" in value or "\r" in value:
+            raise ValueError(f"El valor de {key} no puede contener saltos de línea.")
+        lines.append(f"{key}={value}")
+    atomic_write_text(path, "\n".join(lines) + ("\n" if lines else ""), mode=0o600)
+    for key, value in valores.items():
+        os.environ[key] = str(value)
 
 
 def actualizar_env_local(root_dir: str, nuevos_valores: dict[str, str]) -> None:

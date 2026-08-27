@@ -8,6 +8,7 @@ from sistema_phishing.env_loader import (
     cargar_env_file,
     env_float,
     env_int,
+    guardar_env_file,
     leer_env_file,
 )
 
@@ -58,3 +59,10 @@ class TestEnvLoader(unittest.TestCase):
                 os.environ.pop("C", None)
                 if old_value is not None:
                     os.environ["B"] = old_value
+
+    def test_guardar_env_rechaza_saltos_de_linea(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, ".env.local")
+            with self.assertRaisesRegex(ValueError, "saltos de línea"):
+                guardar_env_file(path, {"TOKEN": "valor\nOTRA=inyectada"})
+            self.assertFalse(os.path.exists(path))

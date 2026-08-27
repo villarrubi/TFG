@@ -1,8 +1,8 @@
-"""Servidor local para la extension de Gmail Web.
+"""Proxy opcional entre la extensión Gmail y el backend central.
 
-La extension del navegador no ejecuta el modelo Python directamente. En su
-lugar envia el correo visible en Gmail a este pequeno endpoint local y recibe
-la clasificacion en JSON.
+La extensión puede llamar directamente al backend en el puerto 8766. Este
+proceso conserva el puerto histórico 8765, pero ya no carga ningún modelo:
+solo reenvía las solicitudes al servidor central.
 """
 
 from __future__ import annotations
@@ -15,17 +15,16 @@ from http.server import ThreadingHTTPServer
 from sistema_phishing.analysis_service import (
     MODO_COMBINADO,
     VALID_MODES,
-    EmailAnalysisService,
 )
+from sistema_phishing.backend_client import BackendClient, backend_url_from_env
 from sistema_phishing.backend_service import MAX_LIST_ITEMS, MAX_TEXT_CHARS
 from sistema_phishing.env_loader import cargar_env_local, env_float, env_int
 from sistema_phishing.gmail_monitor import MonitorConfig
 from sistema_phishing.http_api import crear_handler as crear_handler_http
 from sistema_phishing.http_api import crear_servidor_http
+from sistema_phishing.network import validar_host_local
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-DEFAULT_MODEL_PATH_ES = os.path.join(ROOT_DIR, "modelo_neural_es.joblib")
-DEFAULT_MODEL_PATH_EN = os.path.join(ROOT_DIR, "modelo_neural_en.joblib")
 ALLOWED_ORIGINS = {"https://mail.google.com"}
 APP_NAME = "TFG Phishing Guard - Gmail Web"
 ASCII_TITLE = r"""
@@ -69,22 +68,19 @@ def mostrar_banner(args: argparse.Namespace) -> None:
     print(ASCII_TITLE.strip("\n"))
     print(APP_NAME)
     print("=" * 72)
-    print("Servidor local activo para la extension de Gmail.")
+    print("Proxy local activo para la extension de Gmail.")
     print()
     print("Conexion")
     print(_linea_clave_valor("URL local:", endpoint))
     print(_linea_clave_valor("Health check:", f"{endpoint}/health"))
     print(_linea_clave_valor("Endpoint analisis:", f"{endpoint}/analyze"))
+    print(_linea_clave_valor("Backend destino:", args.backend_url))
     print()
     print("Analisis")
     print(_linea_clave_valor("Modo:", args.mode))
     print(_linea_clave_valor("Umbral phishing:", f"{args.threshold:.1f}%"))
     print(_linea_clave_valor("Peso heuristico:", f"{args.heur_weight}%"))
     print(_linea_clave_valor("Peso neuronal:", f"{args.neural_weight}%"))
-    print()
-    print("Modelos")
-    print(_linea_clave_valor("Modelo ES:", f"{_ruta_legible(args.model_es)} ({_estado_archivo(args.model_es)})"))
-    print(_linea_clave_valor("Modelo EN:", f"{_ruta_legible(args.model_en)} ({_estado_archivo(args.model_en)})"))
     print()
     print("Uso rapido")
     print("  1. Recarga la extension en chrome://extensions.")
@@ -171,18 +167,24 @@ def construir_datos_email(payload: dict[str, object]) -> dict[str, object]:
 
 
 class GmailWebAnalyzer:
-    """Analizador reutilizable para no recargar el modelo neuronal en cada peticion."""
+    """Cliente reutilizable que nunca carga modelos en el proceso proxy."""
 
-    def __init__(self, config: MonitorConfig):
+    def __init__(self, config: MonitorConfig, client: BackendClient | None = None):
         self.config = config
-        self.service = EmailAnalysisService(config)
+        self.client = client or BackendClient(config.backend_url)
         self.request_count = 0
 
     def analyze(self, payload: dict[str, object]) -> dict[str, object]:
         datos_email = construir_datos_email(payload)
-        resultado = self.service.analyze(datos_email)
+        response = self.client.analyze(
+            datos_email,
+            mode=self.config.mode,
+            threshold=self.config.threshold,
+            heur_weight=self.config.heur_weight,
+            neural_weight=self.config.neural_weight,
+        )
         self.request_count += 1
-        return resultado
+        return dict(response["result"])
 
 
 def limpiar_resultado(resultado: dict[str, object], threshold: float) -> dict[str, object]:
@@ -212,12 +214,10 @@ class _ExtensionBackendAdapter:
         self.config = analyzer.config
 
     def build_health_payload(self) -> dict[str, object]:
-        return {
-            "ok": True,
-            "mode": self.config.mode,
-            "threshold": self.config.threshold,
-            "requests": self.analyzer.request_count,
-        }
+        health = dict(self.analyzer.client.health())
+        health["proxy"] = True
+        health["requests"] = self.analyzer.request_count
+        return health
 
     def analyze_payload(self, payload: dict[str, object]) -> dict[str, object]:
         resultado = self.analyzer.analyze(payload)
@@ -234,8 +234,8 @@ class _ExtensionBackendAdapter:
 def parse_args() -> argparse.Namespace:
     cargar_env_local(ROOT_DIR)
     parser = argparse.ArgumentParser(
-        description="Servidor local que conecta la extension de Gmail Web con el detector Python.",
-        epilog="Ejemplo: python src/gmail_extension_server.py --mode heuristico",
+        description="Proxy opcional entre la extensión antigua y el backend central.",
+        epilog="Ejemplo: python src/gmail_extension_server.py --backend-url http://127.0.0.1:8766",
     )
     parser.add_argument(
         "--host",
@@ -247,6 +247,16 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=env_int("GMAIL_EXTENSION_PORT", 8765),
         help="Puerto local usado por la extension.",
+    )
+    parser.add_argument(
+        "--backend-url",
+        default=backend_url_from_env(),
+        help="URL del backend central al que se reenvían los correos.",
+    )
+    parser.add_argument(
+        "--allow-remote",
+        action="store_true",
+        help="Permite escuchar fuera de loopback bajo responsabilidad del operador.",
     )
     parser.add_argument(
         "--threshold",
@@ -272,28 +282,21 @@ def parse_args() -> argparse.Namespace:
         default=env_int("GMAIL_EXTENSION_NEURAL_WEIGHT", 40),
         help="Peso neuronal en modo combinado.",
     )
-    parser.add_argument(
-        "--model-es",
-        default=os.getenv("GMAIL_EXTENSION_MODEL_ES", DEFAULT_MODEL_PATH_ES),
-        help="Ruta del modelo neuronal en espanol.",
-    )
-    parser.add_argument(
-        "--model-en",
-        default=os.getenv("GMAIL_EXTENSION_MODEL_EN", DEFAULT_MODEL_PATH_EN),
-        help="Ruta del modelo neuronal en ingles.",
-    )
     return parser.parse_args()
 
 
 def crear_servidor(args: argparse.Namespace) -> tuple[ThreadingHTTPServer, GmailWebAnalyzer]:
+    args.host = validar_host_local(
+        args.host,
+        allow_remote=getattr(args, "allow_remote", False),
+    )
     config = MonitorConfig(
         state_path="",
         threshold=args.threshold,
         mode=args.mode,
         heur_weight=args.heur_weight,
         neural_weight=args.neural_weight,
-        model_path_es=args.model_es,
-        model_path_en=args.model_en,
+        backend_url=args.backend_url,
     )
     analyzer = GmailWebAnalyzer(config)
     server = crear_servidor_http(

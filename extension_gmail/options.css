@@ -109,6 +109,11 @@ input {
   font-size: 16px;
 }
 
+.server-url-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .hint {
   margin: 14px 0 22px;
   color: #475569;
@@ -163,4 +168,8 @@ button:hover {
   color: #067647;
   font-size: 14px;
   font-weight: 700;
+}
+
+.save-status.error {
+  color: #b42318;
 }

@@ -1,9 +1,16 @@
 """Pantalla de configuración centralizada del sistema."""
 
+import html
 import os
 
 import streamlit as st
 
+from sistema_phishing.backend_client import (
+    DEFAULT_BACKEND_URL,
+    BackendClient,
+    BackendClientError,
+    normalize_backend_url,
+)
 from sistema_phishing.env_loader import (
     actualizar_env_local,
     cargar_env_local,
@@ -14,7 +21,7 @@ from sistema_phishing.gmail_client import (
     construir_servicio_gmail,
     obtener_perfil_gmail,
 )
-from sistema_phishing.modelo_neural import (
+from sistema_phishing.model_config import (
     DEFAULT_HIPERPARAMETROS,
     cargar_hiperparametros_desde_env,
 )
@@ -74,6 +81,7 @@ def _mostrar_estado_general(valores: dict) -> None:
         and valores.get("TELEGRAM_CHAT_ID", os.getenv("TELEGRAM_CHAT_ID", ""))
     )
     interval = _valor_entero(valores, "MONITOR_INTERVAL_SECONDS", 120)
+    monitor_mode = html.escape(valores.get("MONITOR_ANALYSIS_MODE", "combinado"))
 
     render_html(
         f"""
@@ -91,7 +99,7 @@ def _mostrar_estado_general(valores: dict) -> None:
             <div class="ui-card">
                 <div class="ui-label">Monitor</div>
                 <div class="ui-value">Cada {interval}s</div>
-                <div class="ui-note">Modo: {valores.get("MONITOR_ANALYSIS_MODE", "combinado")}</div>
+                <div class="ui-note">Modo: {monitor_mode}</div>
             </div>
         </div>
         """
@@ -245,93 +253,70 @@ def _mostrar_config_monitor(valores: dict) -> None:
         st.success("Configuración del monitor guardada.")
 
 
-def _mostrar_config_gmail_extension(valores: dict) -> None:
-    """Muestra y guarda la configuración de la extensión Gmail Web."""
-    st.markdown("### Extensión Gmail Web")
+def _mostrar_config_backend(valores: dict) -> None:
+    """Configura el único backend que comparten todos los clientes."""
+    st.markdown("### Backend central")
     st.caption(
-        "Estos valores configuran el servidor local usado por la extensión de Gmail Web. "
-        "Los cambios afectan al servidor si se reinicia después de guardar."
+        "Streamlit, el monitor y la extensión consumen esta misma API. Los modelos "
+        "solo existen en el servidor y una actualización se aplica a todos."
+    )
+    current_url = valores.get(
+        "PHISHING_BACKEND_URL",
+        os.getenv("PHISHING_BACKEND_URL", DEFAULT_BACKEND_URL),
+    )
+    backend_url = st.text_input(
+        "URL del backend",
+        value=current_url,
+        help="En local: http://127.0.0.1:8766. En despliegue puede ser HTTPS.",
+    )
+    token_actual = valores.get(
+        "BACKEND_ADMIN_TOKEN",
+        os.getenv("BACKEND_ADMIN_TOKEN", ""),
+    )
+    admin_token = st.text_input(
+        "Nuevo token de administración",
+        type="password",
+        placeholder="Vacío conserva el actual",
+        help="Protege entrenamiento y borrado; no se envía en /analyze.",
     )
 
-    host = st.text_input(
-        "Host del servidor de extensión",
-        value=valores.get("GMAIL_EXTENSION_HOST", "127.0.0.1"),
-        help="Host local donde escucha el servidor para la extensión de Gmail.",
-        key="gmail_ext_host",
-    )
-    port = st.number_input(
-        "Puerto del servidor de extensión",
-        min_value=1,
-        max_value=65535,
-        value=_valor_entero(valores, "GMAIL_EXTENSION_PORT", 8765),
-        help="Puerto local usado por la extensión de Gmail Web.",
-        key="gmail_ext_port",
-    )
-    mode_options = ["combinado", "heuristico", "neural"]
-    mode = st.selectbox(
-        "Modo de análisis",
-        mode_options,
-        index=mode_options.index(valores.get("GMAIL_EXTENSION_MODE", "combinado"))
-        if valores.get("GMAIL_EXTENSION_MODE", "combinado") in mode_options
-        else 0,
-        key="gmail_ext_mode",
-    )
-    threshold = st.slider(
-        "Umbral de phishing (%)",
-        0,
-        100,
-        int(_valor_float(valores, "GMAIL_EXTENSION_THRESHOLD", 45.0)),
-        key="gmail_ext_threshold",
-    )
-    heur_weight = st.slider(
-        "Peso heurístico (%)",
-        0,
-        100,
-        _valor_entero(valores, "GMAIL_EXTENSION_HEUR_WEIGHT", 60),
-        disabled=mode != "combinado",
-        key="gmail_ext_heur_weight",
-    )
-    if mode == "combinado":
-        neural_weight = 100 - int(heur_weight)
-        st.markdown(f"**Peso neuronal (%)**: {neural_weight} _(derivado automáticamente)_")
-    else:
-        neural_weight = _valor_entero(valores, "GMAIL_EXTENSION_NEURAL_WEIGHT", 40)
-    model_es = st.text_input(
-        "Ruta del modelo español",
-        value=valores.get("GMAIL_EXTENSION_MODEL_ES", os.path.join(ROOT_DIR, "modelo_neural_es.joblib")),
-        key="gmail_ext_model_es",
-    )
-    model_en = st.text_input(
-        "Ruta del modelo inglés",
-        value=valores.get("GMAIL_EXTENSION_MODEL_EN", os.path.join(ROOT_DIR, "modelo_neural_en.joblib")),
-        key="gmail_ext_model_en",
-    )
+    col_save, col_test = st.columns(2)
+    if col_save.button("Guardar backend", use_container_width=True):
+        try:
+            normalized = normalize_backend_url(backend_url)
+        except ValueError as exc:
+            st.error(str(exc))
+        else:
+            updates = {"PHISHING_BACKEND_URL": normalized}
+            if admin_token.strip():
+                updates["BACKEND_ADMIN_TOKEN"] = admin_token.strip()
+            actualizar_env_local(ROOT_DIR, updates)
+            st.success(
+                "Backend guardado. Configura la misma URL en Opciones de la extensión."
+            )
 
-    if st.button("Guardar configuración de Gmail Web", use_container_width=True):
-        actualizar_env_local(
-            ROOT_DIR,
-            {
-                "GMAIL_EXTENSION_HOST": host.strip(),
-                "GMAIL_EXTENSION_PORT": str(int(port)),
-                "GMAIL_EXTENSION_MODE": mode,
-                "GMAIL_EXTENSION_THRESHOLD": str(int(threshold)),
-                "GMAIL_EXTENSION_HEUR_WEIGHT": str(int(heur_weight)),
-                "GMAIL_EXTENSION_NEURAL_WEIGHT": str(int(neural_weight)),
-                "GMAIL_EXTENSION_MODEL_ES": model_es.strip(),
-                "GMAIL_EXTENSION_MODEL_EN": model_en.strip(),
-            },
-        )
-        st.success("Configuración de Gmail Web guardada.")
+    if col_test.button("Probar backend", use_container_width=True):
+        try:
+            client = BackendClient(
+                backend_url,
+                admin_token=admin_token.strip() or token_actual,
+            )
+            health = client.health()
+            versions = ", ".join(
+                f"{language.upper()}: {model.get('version') or 'fallback'}"
+                for language, model in health.get("models", {}).items()
+            )
+            st.success(f"Backend conectado. {versions}")
+        except (ValueError, BackendClientError) as exc:
+            st.error(str(exc))
 
 
 def _mostrar_config_neural(valores: dict) -> None:
     """Muestra y guarda los hiperparámetros de las redes neuronales (ES/EN).
 
-    Estos valores se guardan en .env.local y se leen automáticamente la
-    próxima vez que se entrene un modelo desde la pestaña "Entrenar" (o desde
-    cualquier otro sitio que entrene sin indicar hiperparámetros propios).
-    No afectan a modelos ya entrenados: hay que volver a entrenar para que
-    el cambio se note, incluido el modelo que usa el monitor de Gmail.
+    Estos valores se guardan en .env.local. El cliente de entrenamiento los
+    envía explícitamente al backend en la siguiente petición de entrenamiento.
+    No afectan a modelos ya entrenados: hay que volver a entrenar.
     """
     st.markdown("### Red neuronal (avanzado)")
     st.caption(
@@ -417,8 +402,8 @@ def _mostrar_config_neural(valores: dict) -> None:
                     },
                 )
                 st.success(
-                    "Hiperparámetros guardados. Ve a la app de entrenamiento y pulsa "
-                    "'Entrenar modelo desde CSV' para crear un modelo nuevo con estos valores."
+                    "Hiperparámetros guardados. Ve a Entrenamiento y pulsa "
+                    "'Entrenar y activar' para crear la versión central con estos valores."
                 )
 
     if st.button("Restaurar valores por defecto", use_container_width=True):
@@ -457,6 +442,6 @@ def main() -> None:
     st.markdown("---")
     _mostrar_config_monitor(valores)
     st.markdown("---")
-    _mostrar_config_gmail_extension(valores)
+    _mostrar_config_backend(valores)
     st.markdown("---")
     _mostrar_config_neural(valores)

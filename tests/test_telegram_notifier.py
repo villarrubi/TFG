@@ -1,6 +1,9 @@
 import unittest
 
+import requests
+
 from sistema_phishing.telegram_notifier import (
+    TelegramNotificationError,
     TelegramNotifier,
     construir_mensaje_alerta,
 )
@@ -41,6 +44,17 @@ class TestTelegramNotifier(unittest.TestCase):
         self.assertIn("80.0%", mensaje)
         self.assertIn("a@example.com", mensaje)
         self.assertIn("Primeros enlaces", mensaje)
+
+    def test_error_de_red_no_filtra_el_token(self):
+        def failing_post(url, json, timeout):
+            raise requests.ConnectionError(f"fallo al conectar con {url}")
+
+        notifier = TelegramNotifier("TOKEN_SECRETO", "CHAT", post=failing_post)
+        with self.assertRaises(TelegramNotificationError) as error:
+            notifier.enviar_mensaje("hola")
+
+        self.assertNotIn("TOKEN_SECRETO", str(error.exception))
+        self.assertIn("Telegram", str(error.exception))
 
     def test_construir_mensaje_alerta_escapa_remitente_html(self):
         mensaje = construir_mensaje_alerta(

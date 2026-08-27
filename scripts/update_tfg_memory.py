@@ -1,4 +1,4 @@
-"""Actualiza la memoria DOCX con las mejoras verificadas en la implementación."""
+"""Migración histórica; delega la entrega actual en ``sync_delivery_docs.py``."""
 
 from pathlib import Path
 
@@ -104,18 +104,25 @@ def add_para(doc, text):
 
 
 def main():
+    # Wrapper conservado para comandos antiguos. Toda edición documental pasa
+    # por el sincronizador cliente-servidor actual.
+    from sync_delivery_docs import main as sync_delivery_docs
+
+    sync_delivery_docs()
+    return
+
     path = ROOT / "TFG.docx"
     doc = Document(path)
     replacements = {
         "33 pruebas unitarias y de integración": "41 pruebas unitarias y de integración",
         "33 pruebas unitarias y de integración mediante unittest": "41 pruebas unitarias y de integración mediante unittest",
         "33 pruebas automatizadas": "41 pruebas automatizadas",
-        "41 pruebas unitarias y de integración": "44 pruebas unitarias y de integración",
-        "41 pruebas unitarias y de integración mediante unittest": "44 pruebas unitarias y de integración mediante unittest",
-        "41 pruebas automatizadas": "44 pruebas automatizadas",
-        "contiene 41 pruebas.": "contiene 44 pruebas.",
-        "la interfaz Streamlit invoca directamente el motor heurístico y el clasificador neuronal dentro del mismo entorno de ejecución": "la interfaz Streamlit invoca directamente el motor heurístico y el clasificador neuronal dentro del mismo entorno de ejecución, mientras que el mismo núcleo puede exponerse opcionalmente mediante una API HTTP local y una extensión de Gmail",
-        "La solución adopta una arquitectura modular autocontenida dentro de una única aplicación Python. Streamlit proporciona la capa de presentación y organiza las vistas de inicio, configuración, detección, monitorización y entrenamiento. Estas vistas invocan directamente los servicios del paquete sistema_phishing en el mismo proceso, por lo que el análisis no depende de un servicio HTTP separado ni requiere enviar el contenido del correo a un servidor central.": "La solución adopta una arquitectura modular con un núcleo local compartido. Streamlit proporciona la capa de presentación y organiza las vistas de inicio, configuración, detección, monitorización y entrenamiento; estas vistas pueden invocar directamente los servicios del paquete sistema_phishing. De forma opcional, el mismo caso de uso se expone mediante un servidor HTTP local y una extensión de Gmail, sin enviar el contenido a un servicio externo.",
+        "41 pruebas unitarias y de integración": "72 pruebas unitarias y de integración",
+        "41 pruebas unitarias y de integración mediante unittest": "72 pruebas unitarias y de integración mediante unittest",
+        "41 pruebas automatizadas": "72 pruebas automatizadas",
+        "contiene 41 pruebas.": "contiene 72 pruebas.",
+        "la interfaz Streamlit invoca directamente el motor heurístico y el clasificador neuronal dentro del mismo entorno de ejecución": "la interfaz Streamlit actúa como cliente de un backend HTTP obligatorio que centraliza análisis, entrenamiento y modelos",
+        "La solución adopta una arquitectura modular autocontenida dentro de una única aplicación Python. Streamlit proporciona la capa de presentación y organiza las vistas de inicio, configuración, detección, monitorización y entrenamiento. Estas vistas invocan directamente los servicios del paquete sistema_phishing en el mismo proceso, por lo que el análisis no depende de un servicio HTTP separado ni requiere enviar el contenido del correo a un servidor central.": "La solución adopta una arquitectura cliente-servidor. Streamlit proporciona la capa de presentación y consume un backend HTTP obligatorio; extensión y monitor usan el mismo contrato y ninguna interfaz carga modelos.",
     }
     for paragraph in doc.paragraphs:
         for old, new in replacements.items():
@@ -143,7 +150,7 @@ def main():
         ("Evaluación", "La aplicación presenta accuracy, precisión, recall, F1, accuracy balanceada y matriz VP/VN/FP/FN sobre un CSV de prueba separado."),
     ])
     add_heading(doc, "Evidencia reproducible", 2)
-    add_para(doc, "La suite se ejecuta con python -m unittest discover -s tests -p \"test_*.py\" y contiene 44 pruebas. También se ejecuta python -m ruff check src tests, que finaliza sin errores estáticos. Las advertencias de convergencia observadas pertenecen únicamente a pruebas deliberadamente configuradas con 20 iteraciones para comprobar el flujo rápido.")
+    add_para(doc, "La suite se ejecuta con python -m unittest discover -s tests -p \"test_*.py\" y contiene 72 pruebas. También se ejecuta python -m ruff check src tests scripts browser_tests, que finaliza sin errores estáticos. Las advertencias de convergencia observadas pertenecen únicamente a pruebas deliberadamente configuradas con 20 iteraciones para comprobar el flujo rápido.")
     add_heading(doc, "Requisitos funcionales explícitos", 2)
     add_table(doc, ["ID", "Requisito y evidencia"], [
         ("RF-01", "Analizar texto pegado, EML y mensajes Gmail sin ejecutar adjuntos."),
@@ -151,7 +158,7 @@ def main():
         ("RF-03", "Clasificar con modo heurístico, neuronal o combinado y aplicar un umbral configurable."),
         ("RF-04", "Entrenar modelos español/inglés con CSV y evaluar con un conjunto de prueba independiente."),
         ("RF-05", "Monitorizar Gmail y notificar por Telegram sin bloquear el lote ante un correo defectuoso."),
-        ("RF-06", "Ofrecer extensión Gmail y API local opcionales sobre el mismo servicio de análisis."),
+        ("RF-06", "Ofrecer web, extensión Gmail y monitor como clientes del backend central obligatorio."),
     ])
     add_heading(doc, "Alineación con el alcance", 2)
     add_para(doc, "La versión final mantiene el análisis estático y local. No consulta reputación online, no valida certificados TLS del destino, no navega a las URLs y no presenta la extensión como producto publicado: se carga en modo desarrollador y consulta un servidor local. Estas decisiones se documentan como límites de seguridad y como líneas futuras, no como funcionalidades ya implementadas.")

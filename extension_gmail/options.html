@@ -15,22 +15,32 @@
 
           <div class="status-panel">
             <div>
-              <div class="label">Servidor local</div>
+              <div class="label">Backend central</div>
               <div id="server-status" class="status-pill offline">Sin comprobar</div>
             </div>
             <button id="check-button" type="button" class="secondary">Comprobar conexión</button>
           </div>
+
+          <label for="server-base-url">URL del backend central</label>
+          <input
+            id="server-base-url"
+            class="server-url-input"
+            type="url"
+            spellcheck="false"
+            placeholder="http://127.0.0.1:8766"
+          >
+          <p class="hint">En local usa 127.0.0.1 o localhost. Un servidor remoto debe usar HTTPS y Chrome solicitará permiso para ese origen.</p>
 
           <label for="retry-seconds">Reintentar conexión cada</label>
           <div class="input-row">
             <input id="retry-seconds" type="number" min="5" step="5">
             <span>segundos</span>
           </div>
-          <p class="hint">Si el servidor local está apagado, Gmail volverá a comprobarlo automáticamente con este intervalo.</p>
+          <p class="hint">Si el servidor está apagado, Gmail volverá a comprobarlo automáticamente con este intervalo.</p>
 
           <div class="command-box">
             <div class="label">Comando recomendado</div>
-            <code>python src/gmail_extension_server.py</code>
+            <code>python src/backend_server.py</code>
           </div>
 
           <button id="save-button" type="button">Guardar opciones</button>
@@ -38,6 +48,7 @@
         </div>
       </section>
     </main>
+    <script src="server_config.js"></script>
     <script src="options.js"></script>
   </body>
 </html>

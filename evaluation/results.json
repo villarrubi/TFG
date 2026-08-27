@@ -1,0 +1,990 @@
+{
+  "schema_version": 1,
+  "dataset": {
+    "path": "controlled_holdout_v1.csv",
+    "sha256": "61d86417de980c747c277d9a9fb9ae97829a8a7762d5ed20eaa20bcd51ef47d9",
+    "rows": 40,
+    "composition": "ES clase 0: 10, ES clase 1: 10, EN clase 0: 10, EN clase 1: 10",
+    "representative": false,
+    "training_use": false
+  },
+  "models": {
+    "es": {
+      "path": "modelo_neural_es.joblib",
+      "sha256": "432905694ee1db6ba1ef7c33dfb8e2540ee94efbbbc09c952837fd786482dbad"
+    },
+    "en": {
+      "path": "modelo_neural_en.joblib",
+      "sha256": "f414b707d7aa35c6fff11851a047f0ef4df997139f9a949eff50c4c451d7bde4"
+    }
+  },
+  "threshold": 45.0,
+  "results": {
+    "heuristico": {
+      "overall": {
+        "n": 40,
+        "tp": 0,
+        "tn": 20,
+        "fp": 0,
+        "fn": 20,
+        "accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "balanced_accuracy": 0.5
+      },
+      "by_language": {
+        "es": {
+          "n": 20,
+          "tp": 0,
+          "tn": 10,
+          "fp": 0,
+          "fn": 10,
+          "accuracy": 0.5,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "balanced_accuracy": 0.5
+        },
+        "en": {
+          "n": 20,
+          "tp": 0,
+          "tn": 10,
+          "fp": 0,
+          "fn": 10,
+          "accuracy": 0.5,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "cases": [
+        {
+          "id": "es-p-01",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 22.0
+        },
+        {
+          "id": "es-p-02",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 16.0
+        },
+        {
+          "id": "es-p-03",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 21.0
+        },
+        {
+          "id": "es-p-04",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-p-05",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 16.0
+        },
+        {
+          "id": "es-p-06",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 10.0
+        },
+        {
+          "id": "es-p-07",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 6.0
+        },
+        {
+          "id": "es-p-08",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 12.0
+        },
+        {
+          "id": "es-p-09",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 6.0
+        },
+        {
+          "id": "es-p-10",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 6.0
+        },
+        {
+          "id": "es-l-01",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 4.0
+        },
+        {
+          "id": "es-l-02",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-l-03",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 12.0
+        },
+        {
+          "id": "es-l-04",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-l-05",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-l-06",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-l-07",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 10.0
+        },
+        {
+          "id": "es-l-08",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 6.0
+        },
+        {
+          "id": "es-l-09",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-l-10",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-p-01",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 22.0
+        },
+        {
+          "id": "en-p-02",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-p-03",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-p-04",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-p-05",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-p-06",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-p-07",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-p-08",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-p-09",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-p-10",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-01",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-02",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-03",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 6.0
+        },
+        {
+          "id": "en-l-04",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-05",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-06",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-07",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-08",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-09",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-10",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        }
+      ]
+    },
+    "neural": {
+      "overall": {
+        "n": 40,
+        "tp": 16,
+        "tn": 19,
+        "fp": 1,
+        "fn": 4,
+        "accuracy": 0.875,
+        "precision": 0.9412,
+        "recall": 0.8,
+        "f1": 0.8649,
+        "balanced_accuracy": 0.875
+      },
+      "by_language": {
+        "es": {
+          "n": 20,
+          "tp": 7,
+          "tn": 10,
+          "fp": 0,
+          "fn": 3,
+          "accuracy": 0.85,
+          "precision": 1.0,
+          "recall": 0.7,
+          "f1": 0.8235,
+          "balanced_accuracy": 0.85
+        },
+        "en": {
+          "n": 20,
+          "tp": 9,
+          "tn": 9,
+          "fp": 1,
+          "fn": 1,
+          "accuracy": 0.9,
+          "precision": 0.9,
+          "recall": 0.9,
+          "f1": 0.9,
+          "balanced_accuracy": 0.9
+        }
+      },
+      "cases": [
+        {
+          "id": "es-p-01",
+          "language": "es",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 87.4
+        },
+        {
+          "id": "es-p-02",
+          "language": "es",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 67.4
+        },
+        {
+          "id": "es-p-03",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-p-04",
+          "language": "es",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 93.7
+        },
+        {
+          "id": "es-p-05",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.5
+        },
+        {
+          "id": "es-p-06",
+          "language": "es",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 83.8
+        },
+        {
+          "id": "es-p-07",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 28.6
+        },
+        {
+          "id": "es-p-08",
+          "language": "es",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 90.4
+        },
+        {
+          "id": "es-p-09",
+          "language": "es",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 94.4
+        },
+        {
+          "id": "es-p-10",
+          "language": "es",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 98.3
+        },
+        {
+          "id": "es-l-01",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 4.0
+        },
+        {
+          "id": "es-l-02",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-l-03",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 1.0
+        },
+        {
+          "id": "es-l-04",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 36.2
+        },
+        {
+          "id": "es-l-05",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-l-06",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.1
+        },
+        {
+          "id": "es-l-07",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 1.2
+        },
+        {
+          "id": "es-l-08",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-l-09",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.1
+        },
+        {
+          "id": "es-l-10",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 37.2
+        },
+        {
+          "id": "en-p-01",
+          "language": "en",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 100.0
+        },
+        {
+          "id": "en-p-02",
+          "language": "en",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 100.0
+        },
+        {
+          "id": "en-p-03",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.4
+        },
+        {
+          "id": "en-p-04",
+          "language": "en",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 98.1
+        },
+        {
+          "id": "en-p-05",
+          "language": "en",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 56.3
+        },
+        {
+          "id": "en-p-06",
+          "language": "en",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 99.1
+        },
+        {
+          "id": "en-p-07",
+          "language": "en",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 100.0
+        },
+        {
+          "id": "en-p-08",
+          "language": "en",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 98.5
+        },
+        {
+          "id": "en-p-09",
+          "language": "en",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 57.5
+        },
+        {
+          "id": "en-p-10",
+          "language": "en",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 97.1
+        },
+        {
+          "id": "en-l-01",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-02",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-03",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-04",
+          "language": "en",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 100.0
+        },
+        {
+          "id": "en-l-05",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-06",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-07",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 5.2
+        },
+        {
+          "id": "en-l-08",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.6
+        },
+        {
+          "id": "en-l-09",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 31.7
+        },
+        {
+          "id": "en-l-10",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.2
+        }
+      ]
+    },
+    "combinado": {
+      "overall": {
+        "n": 40,
+        "tp": 2,
+        "tn": 20,
+        "fp": 0,
+        "fn": 18,
+        "accuracy": 0.55,
+        "precision": 1.0,
+        "recall": 0.1,
+        "f1": 0.1818,
+        "balanced_accuracy": 0.55
+      },
+      "by_language": {
+        "es": {
+          "n": 20,
+          "tp": 1,
+          "tn": 10,
+          "fp": 0,
+          "fn": 9,
+          "accuracy": 0.55,
+          "precision": 1.0,
+          "recall": 0.1,
+          "f1": 0.1818,
+          "balanced_accuracy": 0.55
+        },
+        "en": {
+          "n": 20,
+          "tp": 1,
+          "tn": 10,
+          "fp": 0,
+          "fn": 9,
+          "accuracy": 0.55,
+          "precision": 1.0,
+          "recall": 0.1,
+          "f1": 0.1818,
+          "balanced_accuracy": 0.55
+        }
+      },
+      "cases": [
+        {
+          "id": "es-p-01",
+          "language": "es",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 48.2
+        },
+        {
+          "id": "es-p-02",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 36.6
+        },
+        {
+          "id": "es-p-03",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 12.6
+        },
+        {
+          "id": "es-p-04",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 37.5
+        },
+        {
+          "id": "es-p-05",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 9.8
+        },
+        {
+          "id": "es-p-06",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 39.5
+        },
+        {
+          "id": "es-p-07",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 15.0
+        },
+        {
+          "id": "es-p-08",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 43.4
+        },
+        {
+          "id": "es-p-09",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 41.4
+        },
+        {
+          "id": "es-p-10",
+          "language": "es",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 42.9
+        },
+        {
+          "id": "es-l-01",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 4.0
+        },
+        {
+          "id": "es-l-02",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-l-03",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 7.6
+        },
+        {
+          "id": "es-l-04",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 14.5
+        },
+        {
+          "id": "es-l-05",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-l-06",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-l-07",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 6.5
+        },
+        {
+          "id": "es-l-08",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 3.6
+        },
+        {
+          "id": "es-l-09",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "es-l-10",
+          "language": "es",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 14.9
+        },
+        {
+          "id": "en-p-01",
+          "language": "en",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 53.2
+        },
+        {
+          "id": "en-p-02",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 40.0
+        },
+        {
+          "id": "en-p-03",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.2
+        },
+        {
+          "id": "en-p-04",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 39.2
+        },
+        {
+          "id": "en-p-05",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 22.5
+        },
+        {
+          "id": "en-p-06",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 39.6
+        },
+        {
+          "id": "en-p-07",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 40.0
+        },
+        {
+          "id": "en-p-08",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 39.4
+        },
+        {
+          "id": "en-p-09",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 23.0
+        },
+        {
+          "id": "en-p-10",
+          "language": "en",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 38.8
+        },
+        {
+          "id": "en-l-01",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-02",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-03",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 3.6
+        },
+        {
+          "id": "en-l-04",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 40.0
+        },
+        {
+          "id": "en-l-05",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-06",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "en-l-07",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 2.1
+        },
+        {
+          "id": "en-l-08",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.2
+        },
+        {
+          "id": "en-l-09",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 12.7
+        },
+        {
+          "id": "en-l-10",
+          "language": "en",
+          "label": 0,
+          "prediction": 0,
+          "risk_score": 0.1
+        }
+      ]
+    }
+  }
+}
