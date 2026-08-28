@@ -54,6 +54,13 @@ def validar_configuracion(config: AnalysisConfig) -> None:
         raise AnalysisConfigurationError(
             "El modo combinado necesita al menos un peso mayor que cero."
         )
+    high_confidence_threshold = float(
+        getattr(config, "high_confidence_threshold", 70.0)
+    )
+    if not 0 <= high_confidence_threshold <= 100:
+        raise AnalysisConfigurationError(
+            "El umbral de alta confianza debe estar entre 0 y 100."
+        )
 
 
 def _aplicar_umbral(resultado: dict, threshold: float) -> dict:
@@ -68,17 +75,37 @@ def construir_resultado_combinado(
     resultado_neural: dict,
     config: AnalysisConfig,
 ) -> dict:
-    """Combina las dos puntuaciones mediante los pesos configurados."""
+    """Combina puntuaciones sin diluir una evidencia individual concluyente.
+
+    La media ponderada gobierna los casos ordinarios. Si cualquiera de los dos
+    detectores alcanza el nivel de alta confianza calibrado, se conserva su
+    puntuación máxima. Así, unas cabeceras claramente falsificadas no quedan
+    ocultas porque el modelo de texto tenga poca evidencia, ni al contrario.
+    """
     validar_configuracion(config)
     peso_total = config.heur_weight + config.neural_weight
-    combined_score = (
+    weighted_score = (
         resultado_heur["risk_score"] * config.heur_weight
         + resultado_neural["risk_score"] * config.neural_weight
     ) / peso_total
+    high_confidence_threshold = float(
+        getattr(config, "high_confidence_threshold", 70.0)
+    )
+    maximum_score = max(
+        float(resultado_heur["risk_score"]),
+        float(resultado_neural["risk_score"]),
+    )
+    combined_score = (
+        max(weighted_score, maximum_score)
+        if maximum_score >= high_confidence_threshold
+        else weighted_score
+    )
     return {
         "is_phishing": combined_score >= config.threshold,
         "risk_score": round(combined_score, 1),
-        "description": "Resultado mixto ponderado entre heurística y red neuronal.",
+        "description": (
+            "Resultado mixto ponderado con conservación de evidencia de alta confianza."
+        ),
         "urls": resultado_heur.get("urls", []),
         "anchors": resultado_heur.get("anchors", []),
         "headers": resultado_heur.get("headers", {}),

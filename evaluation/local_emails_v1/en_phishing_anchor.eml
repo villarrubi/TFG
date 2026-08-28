@@ -1,0 +1,15 @@
+From: National Parcel Service <notices@parcel-service.test>
+To: person@company.test
+Reply-To: collections@parcel-payment.test
+Return-Path: <bounce@parcel-payment.test>
+Subject: Parcel held: pay the 2.19 fee
+Date: Wed, 26 Aug 2026 07:39:00 +0200
+Message-ID: <parcel-994@parcel-payment.test>
+Received: from relay.parcel-payment.test (relay.parcel-payment.test [192.0.2.82]) by mx.company.test
+Received-SPF: softfail (mx.company.test: transitional policy)
+Authentication-Results: mx.company.test; spf=softfail; dkim=none; dmarc=fail
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body><p>Your parcel will be returned today. Update your card and pay the fee.</p>
+<p><a href="http://parcel-payment.test/login?redirect=https://parcel-service.test/tracking">https://parcel-service.test/tracking</a></p></body></html>

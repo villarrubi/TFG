@@ -1,6 +1,6 @@
 # Estado de puesta a punto y deuda restante
 
-Revisión actualizada el 27 de agosto de 2026 sobre `main`. Este documento sustituye
+Revisión actualizada el 28 de agosto de 2026 sobre `main`. Este documento sustituye
 el plan histórico de `feature/web`, que ya no describía el estado real de las
 ramas ni de la entrega.
 
@@ -19,9 +19,10 @@ ramas ni de la entrega.
   host. El proceso del puerto 8765 queda solo como proxy de compatibilidad.
 - La interfaz describe correctamente el fallback neuronal: si falta un idioma
   se crea un modelo sintético de ese mismo idioma, no se reutiliza el opuesto.
-- Se incorpora un holdout controlado bilingüe, un evaluador determinista,
-  hashes de trazabilidad, resultados por caso e informe de limitaciones.
-- La suite crece a 72 pruebas Python y 2 recorridos Chromium. Uno levanta web y
+- Se separan calibración y evaluación: 40 casos controlados calibran la fusión y
+  16 EML locales reservados verifican escenarios con cabeceras y MIME completos.
+  Ambos conservan hashes, resultados por caso e informe de limitaciones.
+- La suite crece a 81 pruebas Python y 2 recorridos Chromium. Uno levanta web y
   backend separados y comprueba el intercambio HTTP real. GitHub Actions
   ejecuta pruebas, Ruff, evaluación reproducible y navegación real.
 - `constraints.txt` fija las versiones directas y transitivas validadas.
@@ -37,6 +38,12 @@ ramas ni de la entrega.
   administrativas desde navegador y HTTP remoto sin TLS.
 - La inicialización del estado del monitor distingue entre «sin fichero previo»
   y «fichero previo vacío», evitando saltarse el primer correo que aparezca.
+- El modo combinado queda calibrado en 20/80, umbral 45 y alta confianza 70. La
+  fusión conserva una evidencia individual concluyente y la selección de idioma
+  fija la semilla para producir el mismo resultado entre procesos.
+- Una prueba integral recorre EML de Gmail, serialización JSON, HTTP, backend,
+  estado del monitor y Telegram. Corrige cabeceras enriquecidas/surrogateescape
+  que antes impedían al monitor enviar determinados correos al servidor.
 - Las filas de las tablas de las guías no se dividen entre páginas y todos los
   DOCX/PDF finales se renderizan e inspeccionan antes de entrega.
 - Antes del mantenimiento se guardaron una copia completa de `.git` y un
@@ -49,23 +56,20 @@ ramas ni de la entrega.
    estima producción. Hace falta un corpus real, reciente, licenciado y
    deduplicado frente a `train.csv`, `dataset_renombrado.csv`, CEAS, Enron,
    Ling, Nazario, Nigerian Fraud, Phishing Email y SpamAssassin.
-2. **Calibración.** En el reto controlado, el modo combinado pierde recall por
-   el peso 60/40 y el umbral 45 cuando faltan cabeceras completas. Los valores
-   deben ajustarse en un conjunto de validación distinto y confirmarse en un
-   test externo; no se deben optimizar contra el holdout publicado.
-3. **OAuth real.** Gmail y Telegram disponen de dobles automatizados y checklist
+2. **OAuth real.** Gmail y Telegram disponen de dobles automatizados, recorrido
+   integral local y checklist
    E2E, pero la prueba con credenciales requiere una cuenta de laboratorio y no
    puede ejecutarse en CI pública.
-4. **Despliegue público.** `--allow-remote` exige un token administrativo de al
+3. **Despliegue público.** `--allow-remote` exige un token administrativo de al
    menos 24 caracteres y los clientes exigen HTTPS fuera de loopback, pero eso
    solo expresa intención. Antes de exponer inferencia hacen
    falta autenticación de usuarios, TLS, rate limiting, gestión de secretos,
    aislamiento multiusuario, almacenamiento compartido si hay réplicas y
    registro operativo.
-5. **Interfaz Gmail.** Los selectores del DOM dependen de Gmail Web y pueden
+4. **Interfaz Gmail.** Los selectores del DOM dependen de Gmail Web y pueden
    cambiar. Conviene repetir el recorrido manual en cada versión importante de
    Chrome/Gmail y versionar capturas anonimizadas del resultado.
-6. **Scripts documentales históricos.** Los scripts de migración se conservan
+5. **Scripts documentales históricos.** Los scripts de migración se conservan
    por trazabilidad. Si la memoria vuelve a evolucionar, conviene consolidarlos
    en un único generador idempotente.
 

@@ -123,9 +123,9 @@ def _replace_controlled_results_table(doc: DocumentObject) -> None:
             continue
         rows = [
             ["Modo", "N", "Accuracy", "Precisión", "Recall", "F1"],
-            ["Heurístico", "40", "50,0 %", "0,0 %", "0,0 %", "0,0 %"],
-            ["Neuronal", "40", "87,5 %", "94,1 %", "80,0 %", "86,5 %"],
-            ["Combinado 60/40", "40", "55,0 %", "100,0 %", "10,0 %", "18,2 %"],
+            ["Heurístico", "16", "87,5 %", "100,0 %", "75,0 %", "85,7 %"],
+            ["Neuronal", "16", "87,5 %", "100,0 %", "75,0 %", "85,7 %"],
+            ["Combinado 20/80", "16", "87,5 %", "100,0 %", "75,0 %", "85,7 %"],
         ]
         while len(table.rows) > len(rows):
             table._tbl.remove(table.rows[-1]._tr)
@@ -146,15 +146,15 @@ def sync_memory() -> None:
         ),
         (
             "La validación del sistema",
-            "La validación del sistema se realiza en cuatro niveles complementarios: 72 pruebas Python de componentes e integración, 2 recorridos reales con Chromium, un benchmark reproducible de arranque/inferencia y un holdout controlado bilingüe de 40 casos. Uno de los recorridos levanta cliente web y backend en procesos separados y verifica el intercambio HTTP. El holdout está separado del entrenamiento, pero su carácter sintético impide extrapolarlo a producción.",
+            "La validación del sistema se realiza en cinco niveles complementarios: 81 pruebas Python de componentes e integración, 2 recorridos reales con Chromium, un benchmark reproducible, una calibración controlada bilingüe de 40 casos y una evaluación final sobre 16 archivos EML locales reservados. Un recorrido levanta cliente web y backend separados; otro prueba Gmail, HTTP y Telegram de extremo a extremo con dobles externos. Los corpus son sintéticos y no permiten extrapolar a producción.",
         ),
         (
             "La metodología seguida ha combinado",
             "La metodología seguida ha combinado una revisión bibliográfica de fuentes académicas y de industria con un desarrollo iterativo del prototipo. El sistema se ha implementado en Python con una arquitectura cliente-servidor: el navegador usa Streamlit como presentación, mientras Streamlit, la extensión y el monitor envían las entradas por HTTP al backend central. Solo el servidor normaliza, analiza, entrena y mantiene las versiones activas de los modelos. La validación se ha realizado mediante pruebas automatizadas, recorridos funcionales cliente-servidor y evaluación controlada del clasificador en español e inglés.",
         ),
         (
-            "Phishing has become",
-            "Phishing remains one of the most persistent and damaging cybersecurity threats. This Bachelor's Thesis designs, implements and evaluates a client-server system for phishing email detection. The browser uses Streamlit as the presentation layer, while Streamlit, the Gmail extension and the monitor send text, EML or structured fields through HTTP to a mandatory central backend. Only the server parses messages, combines explainable heuristics with Spanish and English TF-IDF + MLP models, trains them and keeps one active version per language, so an update is shared by every client. The prototype is validated with automated tests, real browser-to-backend journeys and a controlled bilingual holdout, while its limitations for production deployment are stated explicitly.",
+            "Phishing remains one of the most persistent",
+            "Phishing remains one of the most persistent and damaging cybersecurity threats. This Bachelor's Thesis designs, implements and evaluates a client-server system for phishing email detection. The browser uses Streamlit as the presentation layer, while Streamlit, the Gmail extension and the monitor send text, EML or structured fields through HTTP to a mandatory central backend. Only the server parses messages, combines explainable heuristics with Spanish and English TF-IDF + MLP models, trains them and keeps one active version per language, so an update is shared by every client. The prototype is validated with automated tests, real browser-to-backend journeys, separate calibration and a reserved local EML scenario corpus, while its limits for production are stated explicitly.",
         ),
         (
             "Una vez consolidado el marco teórico",
@@ -186,51 +186,51 @@ def sync_memory() -> None:
         ),
         (
             "Esta separación facilita la evolución del prototipo.",
-            "Esta separación facilita la evolución del prototipo. Pueden añadirse reglas o sustituirse el clasificador en el servidor sin redistribuir los clientes. La versión revisada ejecuta correctamente 72 pruebas Python y 2 recorridos reales con Chromium; GitHub Actions repite pruebas, Ruff, evaluación reproducible y navegación de interfaz.",
+            "Esta separación facilita la evolución del prototipo. Pueden añadirse reglas o sustituirse el clasificador en el servidor sin redistribuir los clientes. La versión revisada ejecuta correctamente 81 pruebas Python y 2 recorridos reales con Chromium; GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible y navegación de interfaz.",
         ),
         (
             "La versión revisada ejecuta",
-            "La versión revisada ejecuta 72 pruebas unitarias y de integración mediante unittest. Cubren EML, combinación, cliente HTTP, entrenamiento central, Gmail, monitor, heurísticas, clasificador, persistencia, API, autenticación administrativa, extensión, evaluación y Telegram. Además, 2 pruebas con Chromium recorren la extensión y un análisis real entre Streamlit y backend. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.",
+            "La versión revisada ejecuta 81 pruebas unitarias y de integración mediante unittest. Cubren EML, combinación calibrada, selección determinista de idioma, cliente HTTP, entrenamiento central, Gmail, monitor, heurísticas, clasificador, persistencia, API, autenticación administrativa, extensión, evaluación y Telegram. Una prueba integral recorre Gmail EML, JSON, HTTP, backend, estado y alerta Telegram. Además, 2 pruebas con Chromium recorren la extensión y un análisis real entre Streamlit y backend. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.",
         ),
         (
-            "La evaluación cuantitativa de un modelo entrenado",
-            "La evaluación separada incorpora un desafío controlado bilingüe de 40 mensajes, equilibrado por idioma y clase, creado después de congelar los modelos y excluido del entrenamiento. Con umbral 45, el modo neuronal obtuvo 87,5 % de accuracy, 94,1 % de precisión, 80,0 % de recall y 86,5 % de F1; el combinado 55,0 %, 100,0 %, 10,0 % y 18,2 %; y el heurístico 50,0 %, 0,0 %, 0,0 % y 0,0 %. El evaluador registra SHA-256 de datos/modelos y conserva cada error. Al ser textos sintéticos sin cabeceras reales, estas cifras son regresión funcional y no estiman producción.",
+            "La metodología cuantitativa separa",
+            "La metodología cuantitativa separa ajuste y comprobación. Cuarenta casos controlados y cinco particiones estratificadas calibran el modo combinado en 20 % heurístico, 80 % neuronal, umbral 45 y conservación de evidencia a partir de 70. Después se evalúan 16 EML locales reservados con cabeceras, HTML y adjuntos. Los tres modos obtuvieron 87,5 % de accuracy, 100,0 % de precisión, 75,0 % de recall y 85,7 % de F1. Se registran hashes y errores por caso. Los escenarios son sintéticos y no estiman producción.",
         ),
         (
             "El sistema heurístico es deliberadamente conservador",
-            "El sistema heurístico es deliberadamente conservador. En el desafío controlado no superó el umbral en los 20 mensajes maliciosos, porque los casos sintéticos carecen de Received y resultados SPF/DKIM/DMARC y sus dominios .example son inocuos. El combinado heredó esta limitación: con peso neuronal 40 %, una predicción neuronal alta no basta por sí sola para superar 45. Este hallazgo exige calibrar pesos y umbral en un conjunto de validación distinto y confirmar después en un corpus externo; no se ajusta el sistema contra el holdout publicado.",
+            "La mezcla ponderada original podía diluir una evidencia fuerte. La calibración separada asignó 20 % a heurística y 80 % al modelo, mantuvo el umbral 45 y añadió un nivel de alta confianza 70: si cualquiera lo alcanza, su puntuación máxima se conserva. En los EML reservados esto evita perder cabeceras claramente falsificadas cuando el texto aporta poca evidencia. Los dos falsos negativos restantes son fraudes BEC sin enlace, una limitación honesta para trabajo futuro.",
         ),
         (
             "Se realizaron",
-            "Se realizaron 72 pruebas Python y 2 recorridos Chromium. Las comprobaciones verifican los tres modos, el cliente HTTP, entrenamiento y versión central, caché por idioma, señales, API, límites, token administrativo, extensión y Streamlit. El reto de 40 casos añade una medición separada, pero no se presenta como evaluación estadística de producción.",
+            "Se realizaron 81 pruebas Python y 2 recorridos Chromium. Las comprobaciones verifican los tres modos, calibración, idioma determinista, EML serializable, Gmail a backend y Telegram, cliente HTTP, entrenamiento y versión central, caché, señales, API, límites, token administrativo, extensión y Streamlit. Los 16 EML reservados añaden medición separada, pero no se presentan como evaluación estadística de producción.",
         ),
         (
-            "Los resultados confirman el diseño como una base funcional",
-            "Los resultados confirman el diseño como base funcional y revelan una limitación importante: el clasificador neuronal reconoce la mayoría del reto controlado, pero la combinación 60/40 y el umbral 45 reducen demasiado el recall cuando faltan cabeceras completas. La evidencia se conserva sin recalibrar sobre el propio holdout. La principal tarea experimental pendiente es validar y calibrar con corpus reales, recientes, licenciados y deduplicados frente a todas las fuentes de entrenamiento.",
+            "Los resultados confirman el diseño como base funcional",
+            "Los resultados confirman el diseño como base funcional y muestran que la fusión calibrada ya no degrada las señales técnicas de alta confianza: en los 16 EML reservados iguala el 87,5 % de accuracy y el 75,0 % de recall del modo heurístico, sin falsos positivos. La limitación principal son dos casos BEC sin enlace y la ausencia de un corpus real estadísticamente representativo, reciente, licenciado y deduplicado frente al entrenamiento.",
         ),
         (
             "El sexto objetivo, evaluar el comportamiento",
-            "El sexto objetivo, evaluar el comportamiento del sistema, se aborda con 72 pruebas Python, 2 recorridos Chromium —incluido web a backend—, benchmark reproducible y un holdout controlado bilingüe de 40 casos con hashes, matriz de confusión y resultados por mensaje. La estimación sobre correo real sigue delimitada como trabajo pendiente.",
+            "El sexto objetivo, evaluar el comportamiento del sistema, se aborda con 81 pruebas Python, 2 recorridos Chromium —incluido web a backend—, benchmark reproducible, calibración separada de 40 casos y 16 EML reservados con hashes, matriz de confusión y resultados por mensaje. La estimación sobre correo real sigue delimitada como trabajo pendiente.",
         ),
         (
             "Entre los logros principales destacan",
-            "Entre los logros principales destacan la arquitectura cliente-servidor, una versión activa por idioma compartida por todos los clientes, activación atómica de modelos, Gmail/Telegram, 72 pruebas Python, 2 pruebas de navegador, CI y evaluación trazable. La carga diferida reduce el arranque de heurísticas un 96,6 % y el de la aplicación un 76,2 %. El holdout hace visible la necesidad de calibrar el modo combinado.",
+            "Entre los logros principales destacan la arquitectura cliente-servidor, una versión activa por idioma compartida por todos los clientes, activación atómica, Gmail/Telegram, 81 pruebas Python, 2 pruebas de navegador, CI, calibración separada y evaluación trazable. La carga diferida reduce históricamente el arranque de heurísticas un 96,6 % y el de la aplicación un 76,2 %. La fusión 20/80 conserva evidencia de alta confianza.",
         ),
         (
-            "Como trabajo futuro se plantea ampliar la evaluación",
-            "Como trabajo futuro prioritario se plantea evaluar datasets reales y recientes en español e inglés, con licencia, procedencia temporal y deduplicación frente a las fuentes de entrenamiento. Pesos y umbral deben calibrarse en validación y confirmarse en un test externo separado. También se estudiarán ataques adversariales, transformers/LLM, reputación de dominios, análisis dinámico y etiquetado seguro. Un despliegue multiusuario requerirá autenticación, TLS, rate limiting, secretos e aislamiento de sesiones.",
+            "Como trabajo futuro prioritario se plantea",
+            "Como trabajo futuro prioritario se plantea confirmar la calibración sobre datasets reales y recientes en español e inglés, con licencia, procedencia temporal y deduplicación frente al entrenamiento, y mejorar la detección de BEC sin enlaces. También se estudiarán ataques adversariales, transformers/LLM, reputación de dominios, análisis dinámico y etiquetado seguro. Un despliegue multiusuario requerirá autenticación, TLS, rate limiting, secretos e aislamiento de sesiones.",
         ),
         (
             "Este anexo resume",
             "Este anexo resume la ejecución cliente-servidor local. Primero se inicia el backend obligatorio en 127.0.0.1:8766 y después Streamlit en 127.0.0.1:8501. La extensión apunta directamente al backend desde Opciones y el monitor usa PHISHING_BACKEND_URL. El puerto 8765 queda como proxy antiguo opcional. Fuera de loopback los clientes exigen HTTPS y --allow-remote exige un token administrativo de al menos 24 caracteres; todavía hacen falta autenticación de inferencia, rate limiting y controles operativos.",
         ),
         (
-            "Verificado: 60 pruebas Python",
-            "Verificado: 72 pruebas Python y 2 recorridos reales con Chromium, incluido cliente web a backend.",
+            "Verificado: 72 pruebas Python",
+            "Verificado: 81 pruebas Python y 2 recorridos reales con Chromium, incluido cliente web a backend.",
         ),
         (
-            "Verificado: Evaluación con un CSV de prueba independiente",
-            "Verificado: holdout controlado bilingüe de 40 casos, hashes, métricas y errores por caso; pendiente corpus externo representativo.",
+            "Verificado: holdout controlado bilingüe",
+            "Verificado: calibración controlada de 40 casos y evaluación final de 16 EML locales reservados, con hashes, métricas y errores por caso; pendiente corpus real representativo.",
         ),
     ]
     replacements.extend(
@@ -305,9 +305,10 @@ def sync_memory() -> None:
         "pip install -r requirements.txt",
         "python -m pip install -r requirements-dev.txt -c constraints.txt",
     )
-    replace_fragment(doc, "54 pruebas Python", "72 pruebas Python")
-    replace_fragment(doc, "59 pruebas Python", "72 pruebas Python")
-    replace_fragment(doc, "60 pruebas Python", "72 pruebas Python")
+    replace_fragment(doc, "54 pruebas Python", "81 pruebas Python")
+    replace_fragment(doc, "59 pruebas Python", "81 pruebas Python")
+    replace_fragment(doc, "60 pruebas Python", "81 pruebas Python")
+    replace_fragment(doc, "72 pruebas Python", "81 pruebas Python")
     replace_fragment(
         doc,
         "API: Interfaz de operaciones que permite a un cliente local enviar datos",
@@ -401,10 +402,15 @@ def sync_memory() -> None:
             "En la defensa se ejecuta sobre loopback, aunque puede separarse por configuración."
         )
         doc.add_paragraph(
-            "La evidencia reproducible comprende 72 pruebas Python, 2 recorridos con Chromium, "
-            "integración continua, benchmark y un holdout controlado bilingüe de 40 casos. Este "
-            "último detecta regresiones, pero no sustituye una evaluación externa representativa."
+            "La evidencia reproducible comprende 81 pruebas Python, 2 recorridos con Chromium, "
+            "integración continua, benchmark, calibración separada de 40 casos y evaluación de "
+            "16 EML reservados. Los corpus sintéticos no sustituyen una evaluación externa representativa."
         )
+    replace_prefix(
+        doc,
+        "La evidencia reproducible comprende",
+        "La evidencia reproducible comprende 81 pruebas Python, 2 recorridos con Chromium, integración continua, benchmark, calibración separada de 40 casos y evaluación de 16 EML reservados. Los corpus sintéticos no sustituyen una evaluación externa representativa.",
+    )
     _keep_table_rows_together(doc)
     if missing:
         raise ValueError(f"No se encontraron párrafos de la memoria: {missing}")
@@ -421,8 +427,8 @@ def sync_full_guide() -> None:
             "Idea clave: el sistema es cliente-servidor. El navegador usa Streamlit como presentación; Streamlit, la extensión y el monitor son clientes HTTP de backend_server.py. Solo el backend analiza, entrena y mantiene una versión activa por idioma. En local los procesos comparten equipo y loopback, pero no responsabilidades ni memoria.",
         ),
         (
-            "Estos resultados corresponden a cuatro mensajes",
-            "Estos resultados proceden del holdout controlado bilingüe de 40 mensajes, creado tras congelar los modelos y excluido del entrenamiento. El informe conserva hashes y predicciones por caso. Sirve para regresión funcional, no para estimar producción.",
+            "Estos resultados proceden del holdout controlado",
+            "Estos resultados proceden de 16 EML locales reservados después de calibrar con otros 40 casos. El informe conserva hashes, escenarios y predicciones por caso. Sirve como evidencia funcional, no para estimar producción.",
         ),
         (
             "Streamlit conserva en session_state",
@@ -430,26 +436,26 @@ def sync_full_guide() -> None:
         ),
         (
             "La validación actual",
-            "La validación actual ejecuta 72 pruebas Python y 2 recorridos reales con Chromium. Todas pasan. El recorrido principal levanta backend y Streamlit por separado y verifica un análisis HTTP completo. Las pruebas neuronales rápidas pueden generar ConvergenceWarning esperado; no es un fallo funcional.",
+            "La validación actual ejecuta 81 pruebas Python y 2 recorridos reales con Chromium. Todas pasan. Incluye web-backend y el recorrido local Gmail EML-JSON-HTTP-backend-Telegram. Las pruebas neuronales rápidas pueden generar ConvergenceWarning esperado; no es un fallo funcional.",
         ),
         (
             "La formulación rigurosa es:",
-            "La formulación rigurosa es: 'La rama main ejecuta 72 pruebas Python, 2 recorridos Chromium —incluido cliente web a backend—, CI y un benchmark reproducible'. El holdout de 40 casos está separado del entrenamiento, pero es sintético y no demuestra eficacia universal.",
+            "La formulación rigurosa es: 'La rama main ejecuta 81 pruebas Python, 2 recorridos Chromium —incluido cliente web a backend—, CI, calibración y evaluación reproducibles'. Los 16 EML reservados son sintéticos y no demuestran eficacia universal.",
         ),
         (
-            "La evaluación independiente debe ejecutarse sobre un CSV",
-            "El repositorio proporciona un holdout controlado de 40 mensajes (10 por idioma y clase). El evaluador genera accuracy, precisión, recall, F1, accuracy balanceada, VP/VN/FP/FN, hashes y detalle por caso. El modelo neuronal obtuvo 87,5 % de accuracy y 80,0 % de recall; el combinado, 55,0 % y 10,0 %; la heurística, 50,0 % y 0,0 %.",
+            "El repositorio separa 40 casos de calibración",
+            "El repositorio separa 40 casos de calibración y 16 EML finales (4 por idioma y clase). El evaluador genera accuracy, precisión, recall, F1, accuracy balanceada, VP/VN/FP/FN, hashes y detalle por caso. En los EML, los tres modos obtuvieron 87,5 % de accuracy, 100,0 % de precisión, 75,0 % de recall y 85,7 % de F1.",
         ),
         (
             "normalizar_etiqueta",
-            "normalizar_etiqueta acepta formas habituales de phishing y correo legítimo, con error para valores desconocidos. La rama main ejecuta 72 pruebas Python, 2 pruebas de navegador, CI, evaluación reproducible y benchmark.",
+            "normalizar_etiqueta acepta formas habituales de phishing y correo legítimo, con error para valores desconocidos. La rama main ejecuta 81 pruebas Python, 2 pruebas de navegador, CI, calibración, evaluación reproducible y benchmark.",
         ),
     ]
     replacements.extend(
         [
             (
                 "Versión revisada:",
-                "Versión revisada: 27 de agosto de 2026",
+                "Versión revisada: 28 de agosto de 2026",
             ),
             (
                 "Aplicación web local modular",
@@ -581,7 +587,7 @@ def sync_full_guide() -> None:
             ),
             (
                 "Cierre final:",
-                "Cierre final: He construido un sistema cliente-servidor que normaliza correos de texto, EML o Gmail, evalúa señales explicables y aplica modelos TF-IDF + MLP centrales. Streamlit, extensión y monitor comparten las mismas versiones; el backend puede actualizarse sin distribuir modelos. Sus límites son datos, calibración y controles de producción.",
+                "Cierre final: He construido un sistema cliente-servidor que normaliza correos de texto, EML o Gmail, evalúa señales explicables y aplica modelos TF-IDF + MLP centrales. Streamlit, extensión y monitor comparten las mismas versiones; el backend puede actualizarse sin distribuir modelos. Sus límites son la representatividad de los datos, el BEC sin enlace y los controles de producción.",
             ),
             (
                 "1.\tEjecuta streamlit run",
@@ -596,8 +602,8 @@ def sync_full_guide() -> None:
                 "•\tSi backend o Streamlit fallan, muestra /health, una respuesta JSON o el recorrido E2E automatizado guardado.",
             ),
             (
-                "Autenticación, gestión de secretos",
-                "TLS, autenticación de inferencia y administración, gestión de secretos, rate limiting, logging seguro, almacenamiento de modelos compartido para réplicas, calibración y evaluación con datos recientes.",
+                "TLS, autenticación de inferencia y administración",
+                "TLS, autenticación de inferencia y administración, gestión de secretos, rate limiting, logging seguro, almacenamiento de modelos compartido para réplicas y confirmación externa con datos reales recientes.",
             ),
         ]
     )
@@ -607,11 +613,48 @@ def sync_full_guide() -> None:
             paragraph.text == replacement for paragraph in _all_paragraphs(doc)
         ):
             missing.append(prefix)
-    replace_fragment(doc, "47 pruebas", "72 pruebas Python y 2 de navegador")
-    replace_fragment(doc, "54 pruebas Python", "72 pruebas Python")
-    replace_fragment(doc, "59 pruebas Python", "72 pruebas Python")
-    replace_fragment(doc, "60 pruebas Python", "72 pruebas Python")
-    replace_fragment(doc, "26 de agosto de 2026", "27 de agosto de 2026")
+    replace_fragment(doc, "47 pruebas", "81 pruebas Python y 2 de navegador")
+    replace_fragment(doc, "54 pruebas Python", "81 pruebas Python")
+    replace_fragment(doc, "59 pruebas Python", "81 pruebas Python")
+    replace_fragment(doc, "60 pruebas Python", "81 pruebas Python")
+    replace_fragment(doc, "72 pruebas Python", "81 pruebas Python")
+    replace_fragment(
+        doc,
+        "¿Por qué pesos 60/40?",
+        "¿Por qué pesos 20/80 y alta confianza 70?",
+    )
+    replace_fragment(
+        doc,
+        "por defecto 60 % heurística y 40 % red neuronal",
+        "por defecto 20 % heurística y 80 % neuronal, con alta confianza 70",
+    )
+    replace_fragment(
+        doc,
+        "configuración habitual: 60 % heurística + 40 % neuronal",
+        "configuración calibrada: 20 % heurística + 80 % neuronal; alta confianza: 70",
+    )
+    replace_fragment(
+        doc,
+        "El umbral 45 es una decisión operativa del prototipo. No procede de una calibración estadística exhaustiva y debe presentarse como parámetro ajustable. Para producción habría que optimizarlo con una curva precision-recall y con costes explícitos de falsos positivos y falsos negativos.",
+        "El umbral 45 fue seleccionado por la rejilla estratificada de 40 casos junto a la fusión 20/80. Sigue siendo un parámetro ajustable: para producción habría que confirmarlo sobre datos reales representativos, con una curva precision-recall y costes explícitos de falsos positivos y falsos negativos.",
+    )
+    replace_fragment(
+        doc,
+        "El ajuste sobre entrenamiento es casi perfecto, pero el holdout controlado no es representativo y no permite generalizar a producción.",
+        "El ajuste sobre entrenamiento es casi perfecto, pero los EML sintéticos reservados no son una muestra representativa y no permiten generalizar a producción.",
+    )
+    replace_prefix(
+        doc,
+        "Es un umbral operativo del prototipo",
+        "El valor 45 se mantuvo porque la rejilla estratificada lo seleccionó junto a la fusión 20/80. Debe confirmarse con un corpus real representativo y con el coste concreto de falsos positivos y negativos.",
+    )
+    replace_prefix(
+        doc,
+        "Se prioriza ligeramente la trazabilidad heurística",
+        "La rejilla de calibración sobre 40 casos seleccionó 20 % heurístico y 80 % neuronal, reservando al menos 20 % a cada detector. El nivel 70 conserva una evidencia individual concluyente. Los 16 EML posteriores se evaluaron sin reajustar esos valores.",
+    )
+    replace_fragment(doc, "26 de agosto de 2026", "28 de agosto de 2026")
+    replace_fragment(doc, "27 de agosto de 2026", "28 de agosto de 2026")
     replace_fragment(doc, "propuesta híbrida", "arquitectura cliente-servidor")
     replace_fragment(
         doc,
@@ -657,14 +700,14 @@ def sync_full_guide() -> None:
     replace_prefix(
         doc,
         "Interpretación correcta:",
-        "Interpretación correcta: el holdout contiene 40 casos controlados y no representativos. "
-        "El principal hallazgo es el bajo recall del modo combinado; sus pesos y umbral deben "
-        "calibrarse con validación separada y confirmarse después en un corpus externo.",
+        "Interpretación correcta: 40 casos controlados calibran y 16 EML distintos evalúan. "
+        "El combinado obtiene 87,5 % de accuracy y 75,0 % de recall en esos escenarios, pero "
+        "la muestra es sintética y debe confirmarse después en un corpus real externo.",
     )
     replace_fragment(
         doc,
         "la evaluación independiente es pequeña y no permite generalizar",
-        "el holdout controlado no es representativo y no permite generalizar a producción",
+        "los corpus sintéticos de calibración y EML no son representativos y no permiten generalizar a producción",
     )
     replace_fragment(
         doc,

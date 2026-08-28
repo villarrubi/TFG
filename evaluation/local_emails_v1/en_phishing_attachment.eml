@@ -1,0 +1,25 @@
+From: Billing <invoices@vendor-documents.test>
+To: accounts@company.test
+Reply-To: payments@urgent-documents.test
+Return-Path: <payments@urgent-documents.test>
+Subject: Overdue invoice - urgent action
+Date: Wed, 26 Aug 2026 10:28:00 +0200
+Message-ID: <urgent-invoice@urgent-documents.test>
+Received: from unknown (unknown [192.0.2.93]) by mx.company.test
+Received-SPF: fail (mx.company.test: vendor-documents.test does not authorize 192.0.2.93)
+Authentication-Results: mx.company.test; spf=fail; dkim=none; dmarc=fail
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="local-boundary-en"
+
+--local-boundary-en
+Content-Type: text/plain; charset=utf-8
+
+The invoice is overdue. Open the attachment and enable its content to avoid an
+immediate penalty. Reply with proof of payment today.
+--local-boundary-en
+Content-Type: application/zip; name="august_invoice.zip"
+Content-Disposition: attachment; filename="august_invoice.zip"
+Content-Transfer-Encoding: base64
+
+UEsDBAoAAAAAAAEAIQAAAAAAAAAAAAAAAAAJAAAAZmljdGljaW8=
+--local-boundary-en--

@@ -8,14 +8,24 @@ SCRIPTS = os.path.join(ROOT, "scripts")
 if SCRIPTS not in sys.path:
     sys.path.insert(0, SCRIPTS)
 
-from evaluate_models import build_payload, load_rows, metrics_payload
+from evaluate_models import (
+    build_payload,
+    corpus_sha256,
+    evaluate,
+    load_eml_cases,
+    load_rows,
+    metrics_payload,
+)
 
-DATASET = os.path.join(ROOT, "evaluation", "controlled_holdout_v1.csv")
+CALIBRATION_DATASET = os.path.join(
+    ROOT, "evaluation", "calibration_controlled_v1.csv"
+)
+EML_MANIFEST = os.path.join(ROOT, "evaluation", "local_emails_v1", "manifest.json")
 
 
 class TestEvaluationScript(unittest.TestCase):
     def test_holdout_es_bilingue_equilibrado_y_sin_ids_repetidos(self):
-        rows = load_rows(Path(DATASET))
+        rows = load_rows(Path(CALIBRATION_DATASET))
         counts = {}
         for row in rows:
             counts[(row["language"], row["label"])] = counts.get(
@@ -34,6 +44,30 @@ class TestEvaluationScript(unittest.TestCase):
         self.assertEqual(len(build_payload(row)["urls"]), 2)
         metrics = metrics_payload([1, 0], [0, 1])
         self.assertEqual((metrics["fp"], metrics["fn"]), (1, 1))
+
+    def test_corpus_eml_es_bilingue_equilibrado_y_parseable(self):
+        manifest = Path(EML_MANIFEST)
+        cases, metadata = load_eml_cases(manifest)
+        counts = {}
+        for case in cases:
+            key = (case["language"], case["label"])
+            counts[key] = counts.get(key, 0) + 1
+            self.assertTrue(case["payload"]["subject"])
+            self.assertTrue(case["payload"]["from"])
+
+        self.assertEqual(len(cases), 16)
+        self.assertEqual(set(counts.values()), {4})
+        self.assertTrue(metadata["representative_scenarios"])
+        self.assertFalse(metadata["statistically_representative"])
+        self.assertEqual(len(corpus_sha256(manifest, cases)), 64)
+
+    def test_evaluacion_eml_es_reproducible(self):
+        cases, _ = load_eml_cases(Path(EML_MANIFEST))
+
+        first = evaluate(cases, 45, 20, 80)
+        second = evaluate(cases, 45, 20, 80)
+
+        self.assertEqual(first, second)
 
 
 if __name__ == "__main__":

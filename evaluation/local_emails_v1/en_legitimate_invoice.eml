@@ -1,0 +1,14 @@
+From: Regular Vendor <billing@vendor.test>
+To: accounts@company.test
+Return-Path: <billing@vendor.test>
+Subject: Monthly invoice available
+Date: Wed, 26 Aug 2026 08:50:00 +0200
+Message-ID: <invoice-2026-08@vendor.test>
+Received: from mail.vendor.test (mail.vendor.test [192.0.2.25]) by mx.company.test
+Received-SPF: pass (mx.company.test: vendor.test authorizes 192.0.2.25)
+Authentication-Results: mx.company.test; spf=pass; dkim=pass header.d=vendor.test; dmarc=pass
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body><p>Your monthly invoice is available. Payment will use the agreed direct debit.</p>
+<p><a href="https://vendor.test/customers/invoices">View the history in the usual customer portal</a>.</p></body></html>

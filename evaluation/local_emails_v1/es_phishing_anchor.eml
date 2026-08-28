@@ -1,0 +1,16 @@
+From: Mensajería Nacional <avisos@mensajeria.test>
+To: persona@empresa.test
+Reply-To: cobros@entrega-pago.test
+Return-Path: <rebotes@entrega-pago.test>
+Subject: Paquete retenido: abona 2,19 EUR
+Date: Wed, 26 Aug 2026 07:32:00 +0200
+Message-ID: <paquete-221@entrega-pago.test>
+Received: from relay.entrega-pago.test (relay.entrega-pago.test [192.0.2.52]) by mx.empresa.test
+Received-SPF: softfail (mx.empresa.test: transición de política)
+Authentication-Results: mx.empresa.test; spf=softfail; dkim=none; dmarc=fail
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+<html><body><p>Tu paquete será devuelto hoy. Actualiza la tarjeta y paga la tasa.</p>
+<p><a href="http://entrega-pago.test/login?redirect=https://mensajeria.test/seguimiento">https://mensajeria.test/seguimiento</a></p></body></html>

@@ -1,0 +1,14 @@
+From: Alice Morgan <alice@company.test>
+To: team@company.test
+Return-Path: <alice@company.test>
+Subject: Notes and next team meeting
+Date: Tue, 25 Aug 2026 11:20:00 +0200
+Message-ID: <meeting-20260825@company.test>
+Received: from mail.company.test (mail.company.test [192.0.2.20]) by mx.company.test
+Received-SPF: pass (mx.company.test: company.test authorizes 192.0.2.20)
+Authentication-Results: mx.company.test; spf=pass; dkim=pass header.d=company.test; dmarc=pass
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Hello team. The reviewed notes are attached to the project workspace. Our next
+meeting is Tuesday at ten in the North room. No action is needed beforehand.

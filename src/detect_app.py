@@ -366,8 +366,8 @@ def analizar_entrada(
     texto_modelo: str = "",
     remitente: str = "",
     subject: str = "",
-    heur_weight: int = 60,
-    neural_weight: int = 40,
+    heur_weight: int = 20,
+    neural_weight: int = 80,
     backend_client: BackendClient | None = None,
 ):
     """Envía la entrada al backend; la UI no ejecuta modelos ni heurísticas."""
@@ -678,12 +678,12 @@ def main():
                 st.markdown(GMAIL_QUERY_HELP_MD)
 
     tipo_analisis = st.radio("Tipo de análisis", ["Heurístico", "Red neuronal", "Combinado"], index=2)
-    heur_weight = 60
-    neural_weight = 40
+    heur_weight = 20
+    neural_weight = 80
     if tipo_analisis == "Combinado":
         # El peso neuronal se calcula como complemento para evitar que la suma
         # de ponderaciones pueda superar o quedarse por debajo del 100%.
-        heur_weight = st.slider("Peso heurístico (%)", 0, 100, 60)
+        heur_weight = st.slider("Peso heurístico (%)", 0, 100, 20)
         neural_weight = 100 - heur_weight
 
     if modo == "Analizar correos de Gmail":

@@ -311,7 +311,7 @@ def flujo():
         "El adaptador extrae From, Subject, cuerpo, anclas y URL.",
         "Las reglas detectan urgencia, dominio externo, anchor distinto y posible incoherencia de cabeceras.",
         "El modelo neuronal calcula una probabilidad sobre el texto completo.",
-        "El modo combinado pondera ambos resultados y aplica el umbral; la explicación muestra qué señales activaron el riesgo.",
+        "El modo combinado aplica la fusión calibrada 20/80 y el umbral 45; si una evidencia alcanza 70 no se diluye, y la explicación muestra qué señales activaron el riesgo.",
         "La UI pinta la tarjeta, la extensión la inserta en Gmail y el monitor podría notificar por Telegram.",
     ], 1):
         _para(doc, f"{index}. {text}")
@@ -321,8 +321,8 @@ def flujo():
     _bullet(doc, "El MLP necesita datos representativos y evaluación separada; una accuracy de entrenamiento no demuestra generalización.")
     _para(
         doc,
-        "Validación: 72 pruebas Python y 2 recorridos reales de navegador; uno "
-        "levanta Streamlit y backend por separado. Comprueban comportamiento y "
+        "Validación: 81 pruebas Python y 2 recorridos reales de navegador; uno "
+        "levanta Streamlit y backend por separado y otra prueba local recorre Gmail, HTTP y Telegram. Comprueban comportamiento y "
         "arquitectura, no eficacia estadística en producción.",
     )
     doc.save(ROOT / "Guia_01_Flujo_y_funcionamiento.docx")
@@ -368,9 +368,9 @@ def tecnologias():
     ]:
         _bullet(doc, text)
     _heading(doc, "6. Reproducibilidad y evaluación", 1)
-    _para(doc, "Los hiperparámetros se concentran en HiperparametrosModelo. El cliente los envía con los CSV y el backend entrena desde cero, registra procedencia, guarda atómicamente e invalida la versión cacheada. El desafío bilingüe de 40 casos se creó tras congelar modelos; es regresión controlada, no producción.")
+    _para(doc, "Los hiperparámetros se concentran en HiperparametrosModelo. El cliente los envía con los CSV y el backend entrena desde cero, registra procedencia, guarda atómicamente e invalida la versión cacheada. Cuarenta casos controlados calibran la fusión y 16 EML distintos, con cabeceras y MIME completos, quedan reservados para la evaluación final; ambos conjuntos son sintéticos y no estiman producción.")
     _para(doc, "El benchmark reproducible separa arranque e inferencia. La carga diferida redujo la importación fría de heurísticas de 1098,5 ms a 37,0 ms y el arranque de la aplicación de 1326,6 ms a 315,1 ms, mientras que la inferencia se mantuvo estable dentro de una variación de ±3 %.")
-    _para(doc, "La validación automatizada reúne 72 pruebas Python y 2 pruebas con Chromium. GitHub Actions instala versiones fijadas, ejecuta Ruff, regenera la evaluación y comprueba el intercambio real web-backend. OAuth real usa una lista E2E separada porque sus credenciales no pueden entrar en CI.")
+    _para(doc, "La validación automatizada reúne 81 pruebas Python y 2 pruebas con Chromium. Incluye idioma determinista y el recorrido local Gmail EML -> JSON -> HTTP -> backend -> Telegram. GitHub Actions instala versiones fijadas, ejecuta Ruff, verifica calibración, regenera la evaluación y comprueba web-backend. OAuth real usa una lista E2E separada porque sus credenciales no pueden entrar en CI.")
     _heading(doc, "7. Diferencias con la propuesta inicial", 1)
     _table(doc, ["Propuesta", "Implementación actual", "Cómo explicarlo"], [
         ("TensorFlow", "scikit-learn MLP", "Se eligió una red suficiente para el corpus y más reproducible/ligera en el entorno académico"),
@@ -399,7 +399,7 @@ def guion():
         ("5:00–9:00", "Arquitectura y flujo", "Entradas -> normalización -> señales/modelo -> decisión -> explicación"),
         ("9:00–12:00", "Tecnologías", "Por qué Python, Streamlit, scikit-learn, Gmail API y backend central"),
         ("12:00–15:00", "Demostración", "Un correo sospechoso, señales activas y resultado combinado"),
-        ("15:00–17:00", "Pruebas y resultados", "72 pruebas Python, 2 de navegador, benchmark y desafío controlado de 40 casos"),
+        ("15:00–17:00", "Pruebas y resultados", "81 pruebas Python, 2 de navegador, calibración de 40 casos y 16 EML reservados"),
         ("17:00–19:00", "Limitaciones y futuro", "Qué no hace hoy y qué ampliaría con evidencia"),
         ("19:00–20:00", "Cierre", "Aportación, mantenibilidad y conclusión"),
     ], [1500, 2500, 5360])
@@ -412,25 +412,25 @@ def guion():
         "Pegar o cargar un EML de ejemplo controlado, evitando enseñar credenciales o datos personales.",
         "Señalar la puntuación, las señales activas, la URL sospechosa y la explicación generada.",
         "Cambiar a modo heurístico para demostrar que el resultado puede auditarse sin modelo.",
-        "Mostrar EVALUATION_REPORT.md: 40 casos no usados para entrenar, hashes, matriz de errores y la advertencia de que no es una muestra representativa.",
+        "Mostrar EVALUATION_REPORT.md: calibración separada, 16 EML finales, hashes, matriz de errores y la advertencia de que no es una muestra representativa.",
         "Si el tiempo lo permite, enseñar la extensión llamando a la misma URL del backend.",
     ]:
         _number(doc, text)
     _callout(doc, "Plan B", "Lleva capturas, /health y una respuesta JSON guardada. Si Gmail u OAuth fallan, usa texto o EML; si el backend no arranca, explica los dos procesos y presenta el recorrido E2E automatizado ya validado.")
     _heading(doc, "5. Cómo explicar los resultados", 1)
-    _para(doc, "En el desafío controlado de 40 mensajes, el modo neuronal obtuvo 87,5 % de accuracy y 80,0 % de recall; el combinado 55,0 % y 10,0 %, y la heurística 50,0 % y 0,0 %. El resultado detecta una limitación real del umbral y los pesos actuales ante mensajes sin cabeceras completas. No calibres con el propio holdout ni lo presentes como producción: úsalo para justificar un corpus externo y una calibración separada.")
+    _para(doc, "La calibración usa 40 casos distintos de los 16 EML finales. La fusión resultante es 20 % heurística, 80 % neuronal, umbral 45 y alta confianza 70. En los EML, los tres modos obtuvieron 87,5 % de accuracy, 100,0 % de precisión, 75,0 % de recall y 85,7 % de F1. No lo presentes como producción: son escenarios sintéticos y quedan dos falsos negativos BEC sin enlace.")
     _para(doc, "En rendimiento, presenta solo mejoras medidas: la importación fría de heurísticas bajó un 96,6 % y el arranque de la aplicación un 76,2 %. Las rutas de inferencia variaron menos de un 3 %, por lo que no se atribuye una mejora que no esté respaldada por la medición.")
     _heading(doc, "6. Preguntas previsibles y respuestas", 1)
     _table(doc, ["Pregunta", "Respuesta breve y defendible"], [
         ("¿Por qué no usar deep learning más grande?", "El corpus y el alcance no lo justificaban. TF-IDF + MLP ofrece rapidez, reproducibilidad y una línea base explicable; la arquitectura permite sustituir el modelo."),
         ("¿Qué ocurre con un correo en inglés?", "El idioma se detecta por mensaje y se cachea un modelo específico por idioma; no se fija el idioma para toda la sesión."),
         ("¿Es cliente-servidor?", "Sí. Streamlit, extensión y monitor son clientes HTTP; backend_server analiza y mantiene una versión activa por idioma. En local ambos lados están en el mismo equipo, pero siguen siendo procesos y responsabilidades separadas."),
-        ("¿Cómo evitas falsos positivos?", "Se combinan señales, pesos y umbral configurables; se muestran FP/FN y el usuario conserva la explicación para revisar el caso."),
+        ("¿Cómo evitas falsos positivos?", "La fusión 20/80 se calibró separadamente; conserva evidencias sobre 70, muestra FP/FN y mantiene la explicación para revisar cada caso."),
         ("¿Consulta una blacklist externa?", "No en la versión actual. Hay comprobaciones locales de dominios, URLs, punycode y acortadores; una reputación online sería una ampliación con dependencia y privacidad adicionales."),
         ("¿Es seguro cargar joblib?", "Solo se cargan artefactos propios y verificados, porque joblib usa deserialización Python. No se deben aceptar modelos arbitrarios."),
         ("¿Qué pasa si Gmail está caído?", "La detección por texto o EML sigue funcionando contra el backend; Gmail es solo una fuente externa y muestra un error controlado."),
         ("¿Por qué no guardas todos los correos de entrenamiento?", "Para reducir exposición de datos y hacer el artefacto más limpio. Se conservan procedencia y estadísticas, no el texto bruto."),
-        ("¿Qué falta para producción?", "TLS, autenticación de inferencia, rate limiting, registro de modelos compartido si hay réplicas, monitorización, corpus representativo, calibración y pruebas externas."),
+        ("¿Qué falta para producción?", "TLS, autenticación de inferencia, rate limiting, registro compartido si hay réplicas, monitorización y confirmación sobre un corpus real representativo."),
     ], [3300, 6060])
     _heading(doc, "7. Cierre", 1)
     _para(

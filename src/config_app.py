@@ -209,7 +209,7 @@ def _mostrar_config_monitor(valores: dict) -> None:
         "Peso heurístico (%)",
         0,
         100,
-        _valor_entero(valores, "MONITOR_HEUR_WEIGHT", 60),
+        _valor_entero(valores, "MONITOR_HEUR_WEIGHT", 20),
         disabled=mode != "combinado",
         key="monitor_heur_weight",
     )
@@ -217,7 +217,7 @@ def _mostrar_config_monitor(valores: dict) -> None:
         neural_weight = 100 - int(heur_weight)
         st.markdown(f"**Peso neuronal (%)**: {neural_weight} _(derivado automáticamente)_")
     else:
-        neural_weight = _valor_entero(valores, "MONITOR_NEURAL_WEIGHT", 40)
+        neural_weight = _valor_entero(valores, "MONITOR_NEURAL_WEIGHT", 80)
     query = st.text_input(
         "Consulta de Gmail del monitor",
         value=valores.get("GMAIL_MONITOR_QUERY", "in:inbox newer_than:1d"),

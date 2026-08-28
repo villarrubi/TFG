@@ -1,0 +1,16 @@
+From: Secure Bank <alerts@secure-bank.test>
+To: person@company.test
+Reply-To: support@account-validation.test
+Return-Path: <bounce@account-validation.test>
+Subject: Immediate action required to prevent suspension
+Date: Tue, 25 Aug 2026 08:18:00 +0200
+Message-ID: <99211@account-validation.test>
+Received: from unknown (unknown [192.0.2.71]) by mx.company.test
+Received-SPF: fail (mx.company.test: account-validation.test does not authorize 192.0.2.71)
+Authentication-Results: mx.company.test; spf=fail; dkim=none; dmarc=fail
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear customer, we detected an unusual sign-in. Confirm your username,
+password, and verification code immediately at http://192.0.2.71/security or
+your account will be suspended today.

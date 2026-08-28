@@ -1,0 +1,16 @@
+From: Equipo de Seguridad <concienciacion@empresa.test>
+To: plantilla@empresa.test
+Return-Path: <concienciacion@empresa.test>
+Subject: Formación: cómo reconocer un intento de phishing
+Date: Wed, 26 Aug 2026 13:00:00 +0200
+Message-ID: <formacion-phishing@empresa.test>
+Received: from mail.empresa.test (mail.empresa.test [192.0.2.10]) by mx.empresa.test
+Received-SPF: pass (mx.empresa.test: empresa.test autoriza 192.0.2.10)
+Authentication-Results: mx.empresa.test; spf=pass; dkim=pass header.d=empresa.test; dmarc=pass
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+En la formación del viernes veremos ejemplos de mensajes que solicitan una
+contraseña, una tarjeta o una transferencia urgente. No respondas a esos
+ejemplos ni abras sus enlaces. La sesión figura en el calendario corporativo.

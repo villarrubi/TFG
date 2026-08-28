@@ -1,8 +1,9 @@
 # Informe de rendimiento
 
-Medición realizada el 24 de agosto de 2026 en Windows, Python 3.12.7. Cada
-microbenchmark usa cinco repeticiones y muestra la mediana por operación. Los
-imports se ejecutan en procesos nuevos para medir el arranque real.
+Medición comparativa realizada el 24 de agosto de 2026 en Windows, Python
+3.12.7. Cada microbenchmark usa cinco repeticiones y muestra la mediana por
+operación. Los imports se ejecutan en procesos nuevos para medir el arranque
+real. La línea base se ha vuelto a ejecutar el 28 de agosto tras la calibración.
 
 ## Resultado antes y después
 
@@ -17,13 +18,37 @@ imports se ejecutan en procesos nuevos para medir el arranque real.
 | Análisis combinado, caliente | 3,4187 | 3,3611 | −1,7 % |
 | Análisis combinado, frío | 15,8342 | 16,3028 | +3,0 % |
 
-Las diferencias de hasta ±3 % en los caminos de inferencia son variación de
-medición: no se modificaron reglas, pesos ni modelos. La mejora material está
-en el arranque, que era el cuello de botella observado.
+Las diferencias de hasta ±3 % en aquella medición fueron variación de ejecución.
+La mejora material histórica está en el arranque, que era el cuello de botella
+observado.
+
+## Revalidación tras la calibración
+
+El 28 de agosto de 2026 se repitió el comando documentado, con 200 operaciones y
+cinco repeticiones. La configuración ya usa fusión 20/80, umbral 45 y alta
+confianza 70.
+
+| Benchmark | Mediana actual (ms) | Mejor actual (ms) |
+| --- | ---: | ---: |
+| Import frío de heurísticas | 40,1517 | 39,2340 |
+| Import frío de la app | 343,3145 | 336,6951 |
+| Análisis heurístico | 0,1215 | 0,1204 |
+| Detección de idioma | 2,9550 | 2,9134 |
+| Carga del modelo ES | 12,9035 | 12,8527 |
+| Predicción neuronal | 0,3668 | 0,3577 |
+| Análisis combinado, caliente | 3,5748 | 3,5475 |
+| Análisis combinado, frío | 16,6803 | 16,3212 |
+
+La repetición confirma que no reaparece el coste de importación inicial: las
+heurísticas cargan en unos 40 ms y la aplicación en unos 343 ms. Las diferencias
+frente a la medición del día 24 no son un experimento antes/después controlado y
+no se presentan como regresiones; pueden depender de carga del equipo, cachés y
+planificación del sistema operativo. En valor absoluto, el análisis combinado
+caliente continúa por debajo de 4 ms en este equipo.
 
 En aquella medición, la suite de 47 casos pasó de 2,435 s a 2,398 s; este cambio
 pequeño se considera ruido, no una optimización de entrenamiento. La validación
-actual ha crecido hasta 72 pruebas Python y 2 recorridos reales con Chromium.
+actual ha crecido hasta 81 pruebas Python y 2 recorridos reales con Chromium.
 El recorrido principal levanta el cliente Streamlit y el backend en procesos
 distintos y valida una petición de análisis completa.
 

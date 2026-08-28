@@ -9,6 +9,12 @@ de esta lógica y se podían desincronizar con el tiempo.
 
 try:
     from langdetect import detect as _detect
+    from langdetect.detector_factory import DetectorFactory
+
+    # langdetect usa muestreo interno y, sin semilla, puede cambiar de idioma
+    # para textos breves entre procesos. La selección del modelo debe ser
+    # reproducible en evaluación, backend y monitor.
+    DetectorFactory.seed = 0
     LANGDETECT_DISPONIBLE = True
 except ImportError:
     # La detección de idioma mejora la selección de modelo, pero el sistema

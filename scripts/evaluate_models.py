@@ -9,12 +9,14 @@ import json
 from collections import Counter
 from pathlib import Path
 
+from sistema_phishing.analizador_email import parsear_eml_bytes
 from sistema_phishing.analysis_service import EmailAnalysisService
 from sistema_phishing.backend_service import AnalysisBackendConfig
 from sistema_phishing.metrics import calcular_metricas_clasificacion
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DATASET = ROOT / "evaluation" / "controlled_holdout_v1.csv"
+DEFAULT_DATASET = ROOT / "evaluation" / "local_emails_v1" / "manifest.json"
+DEFAULT_CALIBRATION = ROOT / "evaluation" / "calibration_results.json"
 DEFAULT_JSON = ROOT / "evaluation" / "results.json"
 DEFAULT_REPORT = ROOT / "EVALUATION_REPORT.md"
 MODES = ("heuristico", "neural", "combinado")
@@ -47,6 +49,93 @@ def load_rows(path: Path) -> list[dict[str, str]]:
     return rows
 
 
+def load_eml_cases(path: Path) -> tuple[list[dict[str, object]], dict[str, object]]:
+    """Carga un manifiesto seguro y parsea sus archivos EML locales."""
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("cases"), list):
+        raise TypeError("El manifiesto EML debe contener una lista 'cases'.")
+    raw_cases = manifest["cases"]
+    if not raw_cases:
+        raise ValueError("El corpus EML está vacío.")
+
+    identifiers: set[str] = set()
+    cases = []
+    for raw in raw_cases:
+        if not isinstance(raw, dict):
+            raise TypeError("Cada caso EML debe ser un objeto JSON.")
+        identifier = str(raw.get("id", "")).strip()
+        language = str(raw.get("language", "")).strip()
+        try:
+            label = int(raw.get("label"))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Etiqueta no válida en {identifier or '(sin id)' }.") from exc
+        filename = str(raw.get("file", "")).strip()
+        if (
+            not identifier
+            or identifier in identifiers
+            or language not in LANGUAGES
+            or label not in {0, 1}
+            or Path(filename).name != filename
+            or not filename.lower().endswith(".eml")
+        ):
+            raise ValueError(f"Caso EML no válido: {identifier or '(sin id)' }.")
+        identifiers.add(identifier)
+        eml_path = path.parent / filename
+        if not eml_path.is_file():
+            raise ValueError(f"No existe el EML declarado: {filename}.")
+        cases.append(
+            {
+                "id": identifier,
+                "language": language,
+                "label": label,
+                "scenario": str(raw.get("scenario", "")),
+                "file": filename,
+                "payload": parsear_eml_bytes(eml_path.read_bytes()),
+            }
+        )
+    metadata = {key: value for key, value in manifest.items() if key != "cases"}
+    return cases, metadata
+
+
+def load_cases(path: Path) -> tuple[list[dict[str, object]], dict[str, object]]:
+    """Admite el corpus EML reservado y CSV compatibles para experimentación."""
+    if path.suffix.lower() == ".json":
+        return load_eml_cases(path)
+    rows = load_rows(path)
+    return (
+        [
+            {
+                "id": row["id"],
+                "language": row["language"],
+                "label": int(row["label"]),
+                "scenario": row.get("provenance", ""),
+                "payload": build_payload(row),
+            }
+            for row in rows
+        ],
+        {
+            "name": path.stem,
+            "representative_scenarios": False,
+            "statistically_representative": False,
+            "training_use": False,
+            "calibration_use": False,
+        },
+    )
+
+
+def corpus_sha256(path: Path, cases: list[dict[str, object]]) -> str:
+    """Identifica el manifiesto y todos sus EML, no solo el índice JSON."""
+    if path.suffix.lower() != ".json":
+        return sha256(path)
+    digest = hashlib.sha256()
+    digest.update(path.read_bytes())
+    for case in sorted(cases, key=lambda item: str(item["file"])):
+        filename = str(case["file"])
+        digest.update(filename.encode("utf-8"))
+        digest.update((path.parent / filename).read_bytes())
+    return digest.hexdigest()
+
+
 def build_payload(row: dict[str, str]) -> dict[str, object]:
     urls = [value.strip() for value in row["urls"].split("|") if value.strip()]
     return {
@@ -75,15 +164,27 @@ def metrics_payload(real: list[int], predicted: list[int]) -> dict[str, object]:
     }
 
 
-def evaluate(rows: list[dict[str, str]], threshold: float) -> dict[str, object]:
+def evaluate(
+    rows: list[dict[str, object]],
+    threshold: float,
+    heur_weight: int,
+    neural_weight: int,
+    high_confidence_threshold: float = 70.0,
+) -> dict[str, object]:
     by_mode: dict[str, object] = {}
     for mode in MODES:
-        config = AnalysisBackendConfig(mode=mode, threshold=threshold)
+        config = AnalysisBackendConfig(
+            mode=mode,
+            threshold=threshold,
+            heur_weight=heur_weight,
+            neural_weight=neural_weight,
+            high_confidence_threshold=high_confidence_threshold,
+        )
         service = EmailAnalysisService(config)
         predictions = []
         cases = []
         for row in rows:
-            result = service.analyze(build_payload(row))
+            result = service.analyze(dict(row["payload"]))
             prediction = int(bool(result["is_phishing"]))
             predictions.append(prediction)
             cases.append(
@@ -93,6 +194,7 @@ def evaluate(rows: list[dict[str, str]], threshold: float) -> dict[str, object]:
                     "label": int(row["label"]),
                     "prediction": prediction,
                     "risk_score": float(result["risk_score"]),
+                    "scenario": str(row.get("scenario", "")),
                 }
             )
         real = [int(row["label"]) for row in rows]
@@ -121,11 +223,13 @@ def render_report(payload: dict[str, object]) -> str:
         "",
         "## Alcance y límites",
         "",
-        "Esta ejecución usa un conjunto de desafío controlado creado después de congelar los modelos y excluido del entrenamiento. Los resultados sirven como regresión funcional comparable entre modos. **No estiman el rendimiento en producción**, porque los mensajes son sintéticos y la muestra no representa la distribución real del correo.",
+        "Esta ejecución usa un corpus local de archivos EML reservado después de calibrar los parámetros. Incluye cabeceras, autenticación, texto, HTML y adjuntos en escenarios bilingües. **No estima el rendimiento en producción**, porque los mensajes están anonimizados y son sintéticos: representan situaciones operativas, no la distribución estadística del correo real.",
         "",
-        f"- Dataset: `evaluation/controlled_holdout_v1.csv` ({payload['dataset']['rows']} casos; SHA-256 `{payload['dataset']['sha256']}`).",
+        f"- Dataset: `{payload['dataset']['path']}` ({payload['dataset']['rows']} EML; SHA-256 de manifiesto + mensajes `{payload['dataset']['sha256']}`).",
         f"- Composición: {payload['dataset']['composition']}.",
-        f"- Umbral común: {payload['threshold']:.1f} %; combinado 60 % heurístico + 40 % neuronal.",
+        f"- Calibración separada: `{payload['calibration']['path']}` ({payload['calibration']['rows']} casos; SHA-256 `{payload['calibration']['dataset_sha256']}`).",
+        f"- Umbral común: {payload['threshold']:.1f} %; combinado {payload['weights']['heuristic']} % heurístico + {payload['weights']['neural']} % neuronal.",
+        f"- Evidencia de alta confianza: si cualquier detector alcanza {payload['high_confidence_threshold']:.1f} %, su puntuación no se diluye en la media.",
         f"- Modelo ES SHA-256: `{payload['models']['es']['sha256']}`.",
         f"- Modelo EN SHA-256: `{payload['models']['en']['sha256']}`.",
         "",
@@ -163,16 +267,17 @@ def render_report(payload: dict[str, object]) -> str:
             "",
             "## Interpretación responsable",
             "",
-            "La comparación revela cómo responden los artefactos actuales ante un reto bilingüe no usado para ajustarlos. Cualquier cifra de entrenamiento almacenada en los modelos se mantiene separada de esta tabla. Para defender capacidad de generalización sigue siendo necesario evaluar un corpus externo real, licenciado y deduplicado frente a todas las fuentes de entrenamiento.",
+            "La comparación revela cómo responden los artefactos actuales ante EML completos no usados para entrenar ni calibrar. El corpus permite probar de forma local escenarios de robo de credenciales, BEC sin enlace, enlaces discordantes, adjuntos, avisos legítimos y textos de concienciación. La muestra sigue siendo pequeña y sintética; una estimación estadística externa requeriría correo real licenciado, anonimizado y deduplicado frente al entrenamiento.",
             "",
             "## Reproducción",
             "",
             "```powershell",
             "$env:PYTHONPATH = \"src\"",
+            "python scripts/calibrate_combined.py --check",
             "python scripts/evaluate_models.py",
             "```",
             "",
-            "El JSON detallado conserva la predicción y puntuación de cada caso para analizar errores sin alterar el conjunto.",
+            "El JSON detallado conserva la predicción, puntuación y escenario de cada EML para analizar errores sin alterar el corpus ni los modelos.",
             "",
         ]
     )
@@ -185,11 +290,19 @@ def main() -> None:
     parser.add_argument("--json-output", type=Path, default=DEFAULT_JSON)
     parser.add_argument("--report-output", type=Path, default=DEFAULT_REPORT)
     parser.add_argument("--threshold", type=float, default=45.0)
+    parser.add_argument("--heur-weight", type=int, default=20)
+    parser.add_argument("--neural-weight", type=int, default=80)
+    parser.add_argument("--calibration", type=Path, default=DEFAULT_CALIBRATION)
     args = parser.parse_args()
 
     dataset = args.dataset.resolve()
-    rows = load_rows(dataset)
-    composition = Counter((row["language"], row["label"]) for row in rows)
+    rows, dataset_metadata = load_cases(dataset)
+    composition = Counter((row["language"], str(row["label"])) for row in rows)
+    if args.heur_weight < 0 or args.neural_weight < 0:
+        raise ValueError("Los pesos no pueden ser negativos.")
+    if args.heur_weight + args.neural_weight == 0:
+        raise ValueError("El modo combinado necesita al menos un peso positivo.")
+    calibration = json.loads(args.calibration.read_text(encoding="utf-8"))
     models = {
         language: {
             "path": path.name,
@@ -200,23 +313,49 @@ def main() -> None:
             "en": ROOT / "modelo_neural_en.joblib",
         }.items()
     }
+    high_confidence_threshold = float(
+        calibration["recommendation"]["high_confidence_threshold"]
+    )
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset": {
-            "path": dataset.name,
-            "sha256": sha256(dataset),
+            "path": dataset.relative_to(ROOT).as_posix(),
+            "sha256": corpus_sha256(dataset, rows),
             "rows": len(rows),
             "composition": ", ".join(
                 f"{language.upper()} clase {label}: {composition[(language, label)]}"
                 for language in LANGUAGES
                 for label in ("0", "1")
             ),
-            "representative": False,
+            "representative_scenarios": bool(
+                dataset_metadata.get("representative_scenarios", False)
+            ),
+            "statistically_representative": bool(
+                dataset_metadata.get("statistically_representative", False)
+            ),
             "training_use": False,
+            "calibration_use": False,
+        },
+        "calibration": {
+            "path": args.calibration.relative_to(ROOT).as_posix(),
+            "dataset_sha256": calibration["dataset"]["sha256"],
+            "rows": calibration["dataset"]["rows"],
+            "recommendation": calibration["recommendation"],
         },
         "models": models,
         "threshold": args.threshold,
-        "results": evaluate(rows, args.threshold),
+        "weights": {
+            "heuristic": args.heur_weight,
+            "neural": args.neural_weight,
+        },
+        "high_confidence_threshold": high_confidence_threshold,
+        "results": evaluate(
+            rows,
+            args.threshold,
+            args.heur_weight,
+            args.neural_weight,
+            high_confidence_threshold,
+        ),
     }
     args.json_output.parent.mkdir(parents=True, exist_ok=True)
     args.json_output.write_text(

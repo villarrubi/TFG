@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 from sistema_phishing.analysis_service import (
     MODO_HEURISTICO,
     MODO_NEURAL,
+    AnalysisConfigurationError,
     EmailAnalysisService,
     construir_resultado_combinado,
 )
@@ -99,7 +100,28 @@ class TestAnalysisService(unittest.TestCase):
         self.assertEqual(set(resultados), {"heuristico", "neural", "combinado"})
         self.assertEqual(loader.call_count, 1)
         self.assertEqual(detector.analyze.call_count, 1)
-        self.assertEqual(resultados["combinado"]["risk_score"], 56.0)
+        self.assertEqual(resultados["combinado"]["risk_score"], 80.0)
+
+    def test_combinado_no_diluye_una_senal_de_alta_confianza(self):
+        config = MonitorConfig(
+            state_path="", threshold=45, heur_weight=20, neural_weight=80
+        )
+
+        resultado = construir_resultado_combinado(
+            {"risk_score": 84, "urls": [], "anchors": [], "headers": {}},
+            {"risk_score": 5},
+            config,
+        )
+
+        self.assertEqual(resultado["risk_score"], 84.0)
+        self.assertTrue(resultado["is_phishing"])
+
+    def test_rechaza_umbral_de_alta_confianza_invalido(self):
+        config = MonitorConfig(state_path="")
+        config.high_confidence_threshold = 101
+
+        with self.assertRaises(AnalysisConfigurationError):
+            EmailAnalysisService(config)
 
 
 if __name__ == "__main__":

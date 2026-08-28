@@ -1,0 +1,17 @@
+From: Banco Seguro <avisos@banco-seguro.test>
+To: persona@empresa.test
+Reply-To: soporte@cuenta-validacion.test
+Return-Path: <rebotes@cuenta-validacion.test>
+Subject: Acción inmediata para evitar el bloqueo
+Date: Tue, 25 Aug 2026 08:14:00 +0200
+Message-ID: <93822@cuenta-validacion.test>
+Received: from unknown (unknown [192.0.2.31]) by mx.empresa.test
+Received-SPF: fail (mx.empresa.test: cuenta-validacion.test no autoriza 192.0.2.31)
+Authentication-Results: mx.empresa.test; spf=fail; dkim=none; dmarc=fail
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+Estimado cliente: detectamos un acceso irregular. Confirma inmediatamente tu
+usuario, contraseña y código de verificación en http://192.0.2.31/seguridad o
+la cuenta quedará bloqueada hoy.

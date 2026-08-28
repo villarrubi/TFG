@@ -87,8 +87,8 @@ class BackendClient:
         *,
         mode: str = "combinado",
         threshold: float = 45.0,
-        heur_weight: int = 60,
-        neural_weight: int = 40,
+        heur_weight: int = 20,
+        neural_weight: int = 80,
         include_all: bool = False,
     ) -> dict[str, Any]:
         payload: dict[str, Any]

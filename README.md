@@ -36,12 +36,13 @@ $env:PYTHONPATH = "src"
 python -m unittest discover -s tests -p "test_*.py"
 python -m ruff check src tests scripts browser_tests
 python scripts/benchmark_analysis.py
+python scripts/calibrate_combined.py --check
 python scripts/evaluate_models.py
 python -m unittest discover -s browser_tests -p "test_*.py"
 python scripts/generate_defense_guides.py
 ```
 
-La validación actual contiene 72 pruebas unitarias y de integración en Python y 2 recorridos con Chromium. Uno de ellos levanta el backend y Streamlit en procesos separados, introduce un correo desde el navegador y comprueba que la respuesta HTTP se presenta en la web. Las advertencias de convergencia del MLP pertenecen únicamente a pruebas rápidas con pocas iteraciones. GitHub Actions repite pruebas, Ruff, evaluación reproducible y navegación real en cada `push` y `pull_request`.
+La validación actual contiene 81 pruebas unitarias y de integración en Python y 2 recorridos con Chromium. Uno de ellos levanta el backend y Streamlit en procesos separados, introduce un correo desde el navegador y comprueba que la respuesta HTTP se presenta en la web. Otra prueba recorre Gmail EML → cliente HTTP → backend → alerta Telegram sin usar secretos externos. Las advertencias de convergencia del MLP pertenecen únicamente a pruebas rápidas con pocas iteraciones. GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible y navegación real en cada `push` y `pull_request`.
 
 ## Cómo está montado
 
@@ -123,7 +124,7 @@ Los clientes solo admiten HTTP sobre loopback; una URL remota debe ser HTTPS. La
 
 - `heuristico`: cabeceras, SPF/DKIM/DMARC, remitente, URLs, dominios, HTML, adjuntos y lenguaje.
 - `neural`: clasificador TF-IDF + `MLPClassifier`; selecciona el modelo español o inglés según el mensaje.
-- `combinado`: media ponderada de ambos resultados y umbral configurable.
+- `combinado`: media calibrada 20 % heurística + 80 % neuronal; si cualquiera alcanza 70 % de alta confianza se conserva esa evidencia para que el otro detector no la diluya. El umbral de decisión sigue siendo 45 % por defecto.
 
 Los artefactos centrales son `modelo_neural_es.joblib` y `modelo_neural_en.joblib`. Si falta uno, el backend puede construir un fallback sintético del mismo idioma y lo declara como tal; los clientes no crean copias. Los ficheros `.joblib` son artefactos de confianza y no deben sustituirse por descargas no verificadas, porque su carga usa deserialización de Python.
 
@@ -133,7 +134,7 @@ La vista **Entrenamiento** es un cliente ligero. Sube uno o varios CSV al backen
 
 La evaluación usa un CSV distinto y muestra accuracy, precisión, recall, F1, accuracy balanceada y matriz de confusión. La comparación entrena hasta tres configuraciones en memoria y no modifica el modelo activo.
 
-El script offline `scripts/evaluate_models.py` es una herramienta de desarrollo y CI: carga los artefactos directamente para que la evaluación sea reproducible aun sin levantar servicios. No forma parte de los clientes de ejecución. El reto controlado bilingüe contiene 40 casos; sus resultados actuales están en [EVALUATION_REPORT.md](EVALUATION_REPORT.md) y no deben presentarse como rendimiento en producción.
+El script offline `scripts/calibrate_combined.py` selecciona pesos, umbral y nivel de alta confianza sobre 40 casos controlados mediante cinco particiones estratificadas. Ese conjunto no se reutiliza para la comprobación final. `scripts/evaluate_models.py` evalúa después 16 archivos EML locales reservados, equilibrados por idioma y clase, con escenarios de credenciales, BEC, enlaces, adjuntos y mensajes legítimos. Los resultados están en [EVALUATION_REPORT.md](EVALUATION_REPORT.md). Ambos corpus son sintéticos: representan escenarios, no la distribución estadística de producción.
 
 ## Gmail y Telegram
 
@@ -144,6 +145,8 @@ El script offline `scripts/evaluate_models.py` es una herramienta de desarrollo 
 5. Para Telegram, configura `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en `.env.local`.
 
 El monitor admite `python src/monitor_gmail.py --once` para una comprobación puntual. Guarda IDs procesados en `estado_monitor.json` con escritura atómica; un correo corrupto o un fallo temporal del backend no interrumpe el resto del lote y queda pendiente de reintento.
+
+La integración local automatizada valida el contrato simulado de Gmail, la serialización del EML completo, el análisis por HTTP, la persistencia del estado y una única alerta Telegram para el mensaje malicioso. La conexión real no se ejecuta sin `credentials.json`, `token.json`, `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID`; consulta [docs/INTEGRATION_VALIDATION.md](docs/INTEGRATION_VALIDATION.md) y el checklist OAuth antes de la defensa.
 
 ## Configuración
 
@@ -156,6 +159,9 @@ BACKEND_PORT=8766
 BACKEND_ADMIN_TOKEN=
 PHISHING_THRESHOLD=45
 MONITOR_ANALYSIS_MODE=combinado
+MONITOR_HEUR_WEIGHT=20
+MONITOR_NEURAL_WEIGHT=80
+BACKEND_HIGH_CONFIDENCE_THRESHOLD=70
 ```
 
 Para apuntar los clientes a otro equipo o a un despliegue posterior, publica primero el backend detrás de HTTPS y cambia `PHISHING_BACKEND_URL` a ese origen seguro. El modelo permanece únicamente en el servidor seleccionado.
@@ -182,9 +188,9 @@ src/
     ├── modelo_neural.py          # TF-IDF, MLP y persistencia del servidor
     └── ...                       # señales, URLs, HTML y explicaciones
 extension_gmail/                  # cliente Manifest V3
-tests/                            # 72 pruebas unitarias/de integración
+tests/                            # 81 pruebas unitarias/de integración
 browser_tests/                    # 2 recorridos reales con Chromium
-evaluation/                       # holdout controlado y resultados
+evaluation/                       # calibración separada, EML reservados y resultados
 ```
 
 ## Alcance

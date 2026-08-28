@@ -1,3 +1,4 @@
+import json
 import unittest
 from tempfile import NamedTemporaryFile
 
@@ -29,6 +30,23 @@ class TestAnalizadorEmail(unittest.TestCase):
         self.assertEqual(datos["from"], "Prueba <prueba@example.com>")
         self.assertIn("Este es un mensaje de prueba", datos["body"])
         self.assertTrue(any(anchor["href"] == "https://ejemplo.com" for anchor in datos["anchors"]))
+        self.assertIsInstance(datos["subject"], str)
+        self.assertIsInstance(datos["from"], str)
+        json.dumps(datos, ensure_ascii=False).encode("utf-8")
+
+    def test_parsear_eml_normaliza_cabecera_smtputf8_para_json(self):
+        raw = (
+            "From: avisos@example.test\n"
+            "Subject: Acción requerida\n"
+            "Content-Type: text/plain; charset=utf-8\n"
+            "Content-Transfer-Encoding: 8bit\n\n"
+            "Contraseña y código."
+        ).encode()
+
+        datos = parsear_eml_bytes(raw)
+
+        self.assertEqual(datos["subject"], "Acción requerida")
+        json.dumps(datos, ensure_ascii=False).encode("utf-8")
 
     def test_parsear_eml_archivo_aplica_limite_de_tamano(self):
         with NamedTemporaryFile(suffix=".eml") as archivo:

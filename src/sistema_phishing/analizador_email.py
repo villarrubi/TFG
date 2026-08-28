@@ -15,6 +15,20 @@ class EmailParseError(ValueError):
     """Indica que un mensaje no puede analizarse de forma segura."""
 
 
+def _texto_unicode_seguro(valor: object) -> str:
+    """Normaliza cabeceras SMTPUTF8 o defectuosas a texto JSON válido."""
+    texto = str(valor)
+    try:
+        texto.encode("utf-8")
+    except UnicodeEncodeError:
+        # email.parser conserva bytes UTF-8 no conformes como surrogateescape.
+        # Se recuperan cuando es posible y cualquier secuencia rota se sustituye.
+        texto = texto.encode("utf-8", "surrogateescape").decode(
+            "utf-8", "replace"
+        )
+    return texto
+
+
 def _limpiar_html(html: str) -> str:
     """Extrae texto visible de HTML eliminando etiquetas y normalizando espacios."""
     class HTMLTextExtractor(HTMLParser):
@@ -155,7 +169,7 @@ def _agrupar_cabeceras(msg: Message) -> dict[str, str]:
     """Conserva cabeceras repetidas sin perder saltos Received o Authentication."""
     cabeceras: dict[str, list[str]] = {}
     for nombre, valor in msg.raw_items():
-        limpio = " ".join(str(valor).splitlines()).strip()
+        limpio = " ".join(_texto_unicode_seguro(valor).splitlines()).strip()
         cabeceras.setdefault(nombre, []).append(limpio)
     return {nombre: "\n".join(valores) for nombre, valores in cabeceras.items()}
 
@@ -186,9 +200,12 @@ def _extraer_campos(msg: Message) -> dict[str, object]:
     urls = extraer_urls(full_text)
 
     return {
-        "subject": msg.get("subject", ""),
-        "from": msg.get("from", ""),
-        "to": msg.get("to", ""),
+        # policy.default devuelve objetos de cabecera enriquecidos. Convertirlos
+        # aquí garantiza que el resultado completo sea JSON-serializable cuando
+        # el monitor lo envía al backend cliente-servidor.
+        "subject": _texto_unicode_seguro(msg.get("subject", "") or ""),
+        "from": _texto_unicode_seguro(msg.get("from", "") or ""),
+        "to": _texto_unicode_seguro(msg.get("to", "") or ""),
         "body": cuerpo_texto,
         "html_body": cuerpo_html,
         "headers": headers,
@@ -206,7 +223,7 @@ def _construir_texto_para_analisis(
     """Construye una representación plana del correo a partir de cabeceras y cuerpo."""
     items = headers.items() if isinstance(headers, dict) else headers
     partes = [
-        f"{nombre}: {' '.join(str(valor).splitlines()).strip()}"
+        f"{nombre}: {' '.join(_texto_unicode_seguro(valor).splitlines()).strip()}"
         for nombre, valor in items
         if valor is not None
     ]

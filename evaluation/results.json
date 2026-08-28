@@ -1,12 +1,31 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "dataset": {
-    "path": "controlled_holdout_v1.csv",
-    "sha256": "61d86417de980c747c277d9a9fb9ae97829a8a7762d5ed20eaa20bcd51ef47d9",
+    "path": "evaluation/local_emails_v1/manifest.json",
+    "sha256": "e4cca95dd15a28229451138c063ae591c00961b0c5b275c58dada5dd0a6bb89d",
+    "rows": 16,
+    "composition": "ES clase 0: 4, ES clase 1: 4, EN clase 0: 4, EN clase 1: 4",
+    "representative_scenarios": true,
+    "statistically_representative": false,
+    "training_use": false,
+    "calibration_use": false
+  },
+  "calibration": {
+    "path": "evaluation/calibration_results.json",
+    "dataset_sha256": "61d86417de980c747c277d9a9fb9ae97829a8a7762d5ed20eaa20bcd51ef47d9",
     "rows": 40,
-    "composition": "ES clase 0: 10, ES clase 1: 10, EN clase 0: 10, EN clase 1: 10",
-    "representative": false,
-    "training_use": false
+    "recommendation": {
+      "heur_weight": 20,
+      "neural_weight": 80,
+      "threshold": 45,
+      "high_confidence_threshold": 70,
+      "min_fold_balanced_accuracy": 0.75,
+      "mean_fold_balanced_accuracy": 0.875,
+      "overall_balanced_accuracy": 0.875,
+      "overall_f1": 0.8649,
+      "overall_recall": 0.8,
+      "overall_precision": 0.9412
+    }
   },
   "models": {
     "es": {
@@ -19,970 +38,519 @@
     }
   },
   "threshold": 45.0,
+  "weights": {
+    "heuristic": 20,
+    "neural": 80
+  },
+  "high_confidence_threshold": 70.0,
   "results": {
     "heuristico": {
       "overall": {
-        "n": 40,
-        "tp": 0,
-        "tn": 20,
+        "n": 16,
+        "tp": 6,
+        "tn": 8,
         "fp": 0,
-        "fn": 20,
-        "accuracy": 0.5,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "balanced_accuracy": 0.5
+        "fn": 2,
+        "accuracy": 0.875,
+        "precision": 1.0,
+        "recall": 0.75,
+        "f1": 0.8571,
+        "balanced_accuracy": 0.875
       },
       "by_language": {
         "es": {
-          "n": 20,
-          "tp": 0,
-          "tn": 10,
+          "n": 8,
+          "tp": 3,
+          "tn": 4,
           "fp": 0,
-          "fn": 10,
-          "accuracy": 0.5,
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "balanced_accuracy": 0.5
+          "fn": 1,
+          "accuracy": 0.875,
+          "precision": 1.0,
+          "recall": 0.75,
+          "f1": 0.8571,
+          "balanced_accuracy": 0.875
         },
         "en": {
-          "n": 20,
-          "tp": 0,
-          "tn": 10,
+          "n": 8,
+          "tp": 3,
+          "tn": 4,
           "fp": 0,
-          "fn": 10,
-          "accuracy": 0.5,
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "balanced_accuracy": 0.5
+          "fn": 1,
+          "accuracy": 0.875,
+          "precision": 1.0,
+          "recall": 0.75,
+          "f1": 0.8571,
+          "balanced_accuracy": 0.875
         }
       },
       "cases": [
         {
-          "id": "es-p-01",
+          "id": "local-es-p-auth",
+          "language": "es",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 96.0,
+          "scenario": "robo de credenciales con autenticación fallida"
+        },
+        {
+          "id": "local-es-p-bec",
           "language": "es",
           "label": 1,
           "prediction": 0,
-          "risk_score": 22.0
+          "risk_score": 6.0,
+          "scenario": "fraude BEC sin enlace"
         },
         {
-          "id": "es-p-02",
+          "id": "local-es-p-link",
           "language": "es",
           "label": 1,
-          "prediction": 0,
-          "risk_score": 16.0
+          "prediction": 1,
+          "risk_score": 81.0,
+          "scenario": "pago de paquetería con enlace discordante"
         },
         {
-          "id": "es-p-03",
+          "id": "local-es-p-attachment",
           "language": "es",
           "label": 1,
-          "prediction": 0,
-          "risk_score": 21.0
+          "prediction": 1,
+          "risk_score": 84.0,
+          "scenario": "adjunto comprimido malicioso"
         },
         {
-          "id": "es-p-04",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "es-p-05",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 16.0
-        },
-        {
-          "id": "es-p-06",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 10.0
-        },
-        {
-          "id": "es-p-07",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 6.0
-        },
-        {
-          "id": "es-p-08",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 12.0
-        },
-        {
-          "id": "es-p-09",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 6.0
-        },
-        {
-          "id": "es-p-10",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 6.0
-        },
-        {
-          "id": "es-l-01",
+          "id": "local-es-l-meeting",
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 4.0
+          "risk_score": 4.0,
+          "scenario": "reunión interna"
         },
         {
-          "id": "es-l-02",
+          "id": "local-es-l-password",
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 12.0,
+          "scenario": "confirmación de contraseña sin acción"
         },
         {
-          "id": "es-l-03",
+          "id": "local-es-l-invoice",
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 12.0
+          "risk_score": 6.0,
+          "scenario": "factura legítima con autenticación alineada"
         },
         {
-          "id": "es-l-04",
+          "id": "local-es-l-awareness",
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 12.0,
+          "scenario": "formación de seguridad con vocabulario sensible"
         },
         {
-          "id": "es-l-05",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
+          "id": "local-en-p-auth",
+          "language": "en",
+          "label": 1,
+          "prediction": 1,
+          "risk_score": 90.0,
+          "scenario": "credential theft with failed authentication"
         },
         {
-          "id": "es-l-06",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "es-l-07",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 10.0
-        },
-        {
-          "id": "es-l-08",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 6.0
-        },
-        {
-          "id": "es-l-09",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "es-l-10",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-p-01",
+          "id": "local-en-p-bec",
           "language": "en",
           "label": 1,
           "prediction": 0,
-          "risk_score": 22.0
+          "risk_score": 0.0,
+          "scenario": "linkless BEC fraud"
         },
         {
-          "id": "en-p-02",
+          "id": "local-en-p-link",
           "language": "en",
           "label": 1,
-          "prediction": 0,
-          "risk_score": 0.0
+          "prediction": 1,
+          "risk_score": 75.0,
+          "scenario": "parcel fee with mismatched link"
         },
         {
-          "id": "en-p-03",
+          "id": "local-en-p-attachment",
           "language": "en",
           "label": 1,
-          "prediction": 0,
-          "risk_score": 0.0
+          "prediction": 1,
+          "risk_score": 74.0,
+          "scenario": "malicious compressed attachment"
         },
         {
-          "id": "en-p-04",
-          "language": "en",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-p-05",
-          "language": "en",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-p-06",
-          "language": "en",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-p-07",
-          "language": "en",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-p-08",
-          "language": "en",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-p-09",
-          "language": "en",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-p-10",
-          "language": "en",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-l-01",
+          "id": "local-en-l-meeting",
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 0.0,
+          "scenario": "internal meeting"
         },
         {
-          "id": "en-l-02",
+          "id": "local-en-l-password",
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 6.0,
+          "scenario": "password confirmation with no action"
         },
         {
-          "id": "en-l-03",
+          "id": "local-en-l-invoice",
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 6.0
+          "risk_score": 0.0,
+          "scenario": "legitimate invoice with aligned authentication"
         },
         {
-          "id": "en-l-04",
+          "id": "local-en-l-awareness",
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-l-05",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-l-06",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-l-07",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-l-08",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-l-09",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-l-10",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 6.0,
+          "scenario": "security awareness with sensitive wording"
         }
       ]
     },
     "neural": {
       "overall": {
-        "n": 40,
-        "tp": 16,
-        "tn": 19,
-        "fp": 1,
-        "fn": 4,
+        "n": 16,
+        "tp": 6,
+        "tn": 8,
+        "fp": 0,
+        "fn": 2,
         "accuracy": 0.875,
-        "precision": 0.9412,
-        "recall": 0.8,
-        "f1": 0.8649,
+        "precision": 1.0,
+        "recall": 0.75,
+        "f1": 0.8571,
         "balanced_accuracy": 0.875
       },
       "by_language": {
         "es": {
-          "n": 20,
-          "tp": 7,
-          "tn": 10,
+          "n": 8,
+          "tp": 3,
+          "tn": 4,
           "fp": 0,
-          "fn": 3,
-          "accuracy": 0.85,
+          "fn": 1,
+          "accuracy": 0.875,
           "precision": 1.0,
-          "recall": 0.7,
-          "f1": 0.8235,
-          "balanced_accuracy": 0.85
+          "recall": 0.75,
+          "f1": 0.8571,
+          "balanced_accuracy": 0.875
         },
         "en": {
-          "n": 20,
-          "tp": 9,
-          "tn": 9,
-          "fp": 1,
+          "n": 8,
+          "tp": 3,
+          "tn": 4,
+          "fp": 0,
           "fn": 1,
-          "accuracy": 0.9,
-          "precision": 0.9,
-          "recall": 0.9,
-          "f1": 0.9,
-          "balanced_accuracy": 0.9
+          "accuracy": 0.875,
+          "precision": 1.0,
+          "recall": 0.75,
+          "f1": 0.8571,
+          "balanced_accuracy": 0.875
         }
       },
       "cases": [
         {
-          "id": "es-p-01",
+          "id": "local-es-p-auth",
           "language": "es",
           "label": 1,
           "prediction": 1,
-          "risk_score": 87.4
+          "risk_score": 97.5,
+          "scenario": "robo de credenciales con autenticación fallida"
         },
         {
-          "id": "es-p-02",
+          "id": "local-es-p-bec",
           "language": "es",
           "label": 1,
           "prediction": 1,
-          "risk_score": 67.4
+          "risk_score": 45.8,
+          "scenario": "fraude BEC sin enlace"
         },
         {
-          "id": "es-p-03",
+          "id": "local-es-p-link",
           "language": "es",
           "label": 1,
           "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 0.4,
+          "scenario": "pago de paquetería con enlace discordante"
         },
         {
-          "id": "es-p-04",
-          "language": "es",
-          "label": 1,
-          "prediction": 1,
-          "risk_score": 93.7
-        },
-        {
-          "id": "es-p-05",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.5
-        },
-        {
-          "id": "es-p-06",
+          "id": "local-es-p-attachment",
           "language": "es",
           "label": 1,
           "prediction": 1,
-          "risk_score": 83.8
+          "risk_score": 95.2,
+          "scenario": "adjunto comprimido malicioso"
         },
         {
-          "id": "es-p-07",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 28.6
-        },
-        {
-          "id": "es-p-08",
-          "language": "es",
-          "label": 1,
-          "prediction": 1,
-          "risk_score": 90.4
-        },
-        {
-          "id": "es-p-09",
-          "language": "es",
-          "label": 1,
-          "prediction": 1,
-          "risk_score": 94.4
-        },
-        {
-          "id": "es-p-10",
-          "language": "es",
-          "label": 1,
-          "prediction": 1,
-          "risk_score": 98.3
-        },
-        {
-          "id": "es-l-01",
+          "id": "local-es-l-meeting",
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 4.0
+          "risk_score": 3.3,
+          "scenario": "reunión interna"
         },
         {
-          "id": "es-l-02",
+          "id": "local-es-l-password",
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 30.1,
+          "scenario": "confirmación de contraseña sin acción"
         },
         {
-          "id": "es-l-03",
+          "id": "local-es-l-invoice",
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 1.0
+          "risk_score": 0.0,
+          "scenario": "factura legítima con autenticación alineada"
         },
         {
-          "id": "es-l-04",
+          "id": "local-es-l-awareness",
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 36.2
+          "risk_score": 38.3,
+          "scenario": "formación de seguridad con vocabulario sensible"
         },
         {
-          "id": "es-l-05",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "es-l-06",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.1
-        },
-        {
-          "id": "es-l-07",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 1.2
-        },
-        {
-          "id": "es-l-08",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "es-l-09",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.1
-        },
-        {
-          "id": "es-l-10",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 37.2
-        },
-        {
-          "id": "en-p-01",
+          "id": "local-en-p-auth",
           "language": "en",
           "label": 1,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.8,
+          "scenario": "credential theft with failed authentication"
         },
         {
-          "id": "en-p-02",
-          "language": "en",
-          "label": 1,
-          "prediction": 1,
-          "risk_score": 100.0
-        },
-        {
-          "id": "en-p-03",
+          "id": "local-en-p-bec",
           "language": "en",
           "label": 1,
           "prediction": 0,
-          "risk_score": 0.4
+          "risk_score": 11.1,
+          "scenario": "linkless BEC fraud"
         },
         {
-          "id": "en-p-04",
+          "id": "local-en-p-link",
           "language": "en",
           "label": 1,
           "prediction": 1,
-          "risk_score": 98.1
+          "risk_score": 55.3,
+          "scenario": "parcel fee with mismatched link"
         },
         {
-          "id": "en-p-05",
+          "id": "local-en-p-attachment",
           "language": "en",
           "label": 1,
           "prediction": 1,
-          "risk_score": 56.3
+          "risk_score": 100.0,
+          "scenario": "malicious compressed attachment"
         },
         {
-          "id": "en-p-06",
-          "language": "en",
-          "label": 1,
-          "prediction": 1,
-          "risk_score": 99.1
-        },
-        {
-          "id": "en-p-07",
-          "language": "en",
-          "label": 1,
-          "prediction": 1,
-          "risk_score": 100.0
-        },
-        {
-          "id": "en-p-08",
-          "language": "en",
-          "label": 1,
-          "prediction": 1,
-          "risk_score": 98.5
-        },
-        {
-          "id": "en-p-09",
-          "language": "en",
-          "label": 1,
-          "prediction": 1,
-          "risk_score": 57.5
-        },
-        {
-          "id": "en-p-10",
-          "language": "en",
-          "label": 1,
-          "prediction": 1,
-          "risk_score": 97.1
-        },
-        {
-          "id": "en-l-01",
+          "id": "local-en-l-meeting",
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 0.0,
+          "scenario": "internal meeting"
         },
         {
-          "id": "en-l-02",
+          "id": "local-en-l-password",
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 0.0,
+          "scenario": "password confirmation with no action"
         },
         {
-          "id": "en-l-03",
+          "id": "local-en-l-invoice",
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 0.0,
+          "scenario": "legitimate invoice with aligned authentication"
         },
         {
-          "id": "en-l-04",
-          "language": "en",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 100.0
-        },
-        {
-          "id": "en-l-05",
+          "id": "local-en-l-awareness",
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-l-06",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-l-07",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 5.2
-        },
-        {
-          "id": "en-l-08",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.6
-        },
-        {
-          "id": "en-l-09",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 31.7
-        },
-        {
-          "id": "en-l-10",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.2
+          "risk_score": 0.0,
+          "scenario": "security awareness with sensitive wording"
         }
       ]
     },
     "combinado": {
       "overall": {
-        "n": 40,
-        "tp": 2,
-        "tn": 20,
+        "n": 16,
+        "tp": 6,
+        "tn": 8,
         "fp": 0,
-        "fn": 18,
-        "accuracy": 0.55,
+        "fn": 2,
+        "accuracy": 0.875,
         "precision": 1.0,
-        "recall": 0.1,
-        "f1": 0.1818,
-        "balanced_accuracy": 0.55
+        "recall": 0.75,
+        "f1": 0.8571,
+        "balanced_accuracy": 0.875
       },
       "by_language": {
         "es": {
-          "n": 20,
-          "tp": 1,
-          "tn": 10,
+          "n": 8,
+          "tp": 3,
+          "tn": 4,
           "fp": 0,
-          "fn": 9,
-          "accuracy": 0.55,
+          "fn": 1,
+          "accuracy": 0.875,
           "precision": 1.0,
-          "recall": 0.1,
-          "f1": 0.1818,
-          "balanced_accuracy": 0.55
+          "recall": 0.75,
+          "f1": 0.8571,
+          "balanced_accuracy": 0.875
         },
         "en": {
-          "n": 20,
-          "tp": 1,
-          "tn": 10,
+          "n": 8,
+          "tp": 3,
+          "tn": 4,
           "fp": 0,
-          "fn": 9,
-          "accuracy": 0.55,
+          "fn": 1,
+          "accuracy": 0.875,
           "precision": 1.0,
-          "recall": 0.1,
-          "f1": 0.1818,
-          "balanced_accuracy": 0.55
+          "recall": 0.75,
+          "f1": 0.8571,
+          "balanced_accuracy": 0.875
         }
       },
       "cases": [
         {
-          "id": "es-p-01",
+          "id": "local-es-p-auth",
           "language": "es",
           "label": 1,
           "prediction": 1,
-          "risk_score": 48.2
+          "risk_score": 97.5,
+          "scenario": "robo de credenciales con autenticación fallida"
         },
         {
-          "id": "es-p-02",
+          "id": "local-es-p-bec",
           "language": "es",
           "label": 1,
           "prediction": 0,
-          "risk_score": 36.6
+          "risk_score": 37.8,
+          "scenario": "fraude BEC sin enlace"
         },
         {
-          "id": "es-p-03",
+          "id": "local-es-p-link",
           "language": "es",
           "label": 1,
-          "prediction": 0,
-          "risk_score": 12.6
+          "prediction": 1,
+          "risk_score": 81.0,
+          "scenario": "pago de paquetería con enlace discordante"
         },
         {
-          "id": "es-p-04",
+          "id": "local-es-p-attachment",
           "language": "es",
           "label": 1,
-          "prediction": 0,
-          "risk_score": 37.5
+          "prediction": 1,
+          "risk_score": 95.2,
+          "scenario": "adjunto comprimido malicioso"
         },
         {
-          "id": "es-p-05",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 9.8
-        },
-        {
-          "id": "es-p-06",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 39.5
-        },
-        {
-          "id": "es-p-07",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 15.0
-        },
-        {
-          "id": "es-p-08",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 43.4
-        },
-        {
-          "id": "es-p-09",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 41.4
-        },
-        {
-          "id": "es-p-10",
-          "language": "es",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 42.9
-        },
-        {
-          "id": "es-l-01",
+          "id": "local-es-l-meeting",
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 4.0
+          "risk_score": 3.4,
+          "scenario": "reunión interna"
         },
         {
-          "id": "es-l-02",
+          "id": "local-es-l-password",
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 26.5,
+          "scenario": "confirmación de contraseña sin acción"
         },
         {
-          "id": "es-l-03",
+          "id": "local-es-l-invoice",
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 7.6
+          "risk_score": 1.2,
+          "scenario": "factura legítima con autenticación alineada"
         },
         {
-          "id": "es-l-04",
+          "id": "local-es-l-awareness",
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 14.5
+          "risk_score": 33.0,
+          "scenario": "formación de seguridad con vocabulario sensible"
         },
         {
-          "id": "es-l-05",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "es-l-06",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "es-l-07",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 6.5
-        },
-        {
-          "id": "es-l-08",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 3.6
-        },
-        {
-          "id": "es-l-09",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "es-l-10",
-          "language": "es",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 14.9
-        },
-        {
-          "id": "en-p-01",
+          "id": "local-en-p-auth",
           "language": "en",
           "label": 1,
           "prediction": 1,
-          "risk_score": 53.2
+          "risk_score": 99.8,
+          "scenario": "credential theft with failed authentication"
         },
         {
-          "id": "en-p-02",
+          "id": "local-en-p-bec",
           "language": "en",
           "label": 1,
           "prediction": 0,
-          "risk_score": 40.0
+          "risk_score": 8.9,
+          "scenario": "linkless BEC fraud"
         },
         {
-          "id": "en-p-03",
+          "id": "local-en-p-link",
           "language": "en",
           "label": 1,
-          "prediction": 0,
-          "risk_score": 0.2
+          "prediction": 1,
+          "risk_score": 75.0,
+          "scenario": "parcel fee with mismatched link"
         },
         {
-          "id": "en-p-04",
+          "id": "local-en-p-attachment",
           "language": "en",
           "label": 1,
-          "prediction": 0,
-          "risk_score": 39.2
+          "prediction": 1,
+          "risk_score": 100.0,
+          "scenario": "malicious compressed attachment"
         },
         {
-          "id": "en-p-05",
-          "language": "en",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 22.5
-        },
-        {
-          "id": "en-p-06",
-          "language": "en",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 39.6
-        },
-        {
-          "id": "en-p-07",
-          "language": "en",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 40.0
-        },
-        {
-          "id": "en-p-08",
-          "language": "en",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 39.4
-        },
-        {
-          "id": "en-p-09",
-          "language": "en",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 23.0
-        },
-        {
-          "id": "en-p-10",
-          "language": "en",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 38.8
-        },
-        {
-          "id": "en-l-01",
+          "id": "local-en-l-meeting",
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 0.0,
+          "scenario": "internal meeting"
         },
         {
-          "id": "en-l-02",
+          "id": "local-en-l-password",
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 1.2,
+          "scenario": "password confirmation with no action"
         },
         {
-          "id": "en-l-03",
+          "id": "local-en-l-invoice",
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 3.6
+          "risk_score": 0.0,
+          "scenario": "legitimate invoice with aligned authentication"
         },
         {
-          "id": "en-l-04",
+          "id": "local-en-l-awareness",
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 40.0
-        },
-        {
-          "id": "en-l-05",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-l-06",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "en-l-07",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 2.1
-        },
-        {
-          "id": "en-l-08",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.2
-        },
-        {
-          "id": "en-l-09",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 12.7
-        },
-        {
-          "id": "en-l-10",
-          "language": "en",
-          "label": 0,
-          "prediction": 0,
-          "risk_score": 0.1
+          "risk_score": 1.2,
+          "scenario": "security awareness with sensitive wording"
         }
       ]
     }

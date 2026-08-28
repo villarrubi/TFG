@@ -46,7 +46,7 @@ Palabras clave: phishing, ciberseguridad, ingeniería social, machine learning, 
 
 Abstract
 
-Phishing remains one of the most persistent and damaging cybersecurity threats. This Bachelor's Thesis designs, implements and evaluates a client-server system for phishing email detection. The browser uses Streamlit as the presentation layer, while Streamlit, the Gmail extension and the monitor send text, EML or structured fields through HTTP to a mandatory central backend. Only the server parses messages, combines explainable heuristics with Spanish and English TF-IDF + MLP models, trains them and keeps one active version per language, so an update is shared by every client. The prototype is validated with automated tests, real browser-to-backend journeys and a controlled bilingual holdout, while its limitations for production deployment are stated explicitly.
+Phishing remains one of the most persistent and damaging cybersecurity threats. This Bachelor's Thesis designs, implements and evaluates a client-server system for phishing email detection. The browser uses Streamlit as the presentation layer, while Streamlit, the Gmail extension and the monitor send text, EML or structured fields through HTTP to a mandatory central backend. Only the server parses messages, combines explainable heuristics with Spanish and English TF-IDF + MLP models, trains them and keeps one active version per language, so an update is shared by every client. The prototype is validated with automated tests, real browser-to-backend journeys, separate calibration and a reserved local EML scenario corpus, while its limits for production are stated explicitly.
 
 
 
@@ -678,7 +678,7 @@ Git y GitHub	Control de versiones, trazabilidad y respaldo del desarrollo.
 
 Validación y control de calidad
 
-La validación del sistema se realiza en cuatro niveles complementarios: 72 pruebas Python de componentes e integración, 2 recorridos reales con Chromium, un benchmark reproducible de arranque/inferencia y un holdout controlado bilingüe de 40 casos. Uno de los recorridos levanta cliente web y backend en procesos separados y verifica el intercambio HTTP. El holdout está separado del entrenamiento, pero su carácter sintético impide extrapolarlo a producción.
+La validación del sistema se realiza en cinco niveles complementarios: 81 pruebas Python de componentes e integración, 2 recorridos reales con Chromium, un benchmark reproducible, una calibración controlada bilingüe de 40 casos y una evaluación final sobre 16 archivos EML locales reservados. Un recorrido levanta cliente web y backend separados; otro prueba Gmail, HTTP y Telegram de extremo a extremo con dobles externos. Los corpus son sintéticos y no permiten extrapolar a producción.
 
 En segundo lugar, la aplicación permite evaluar el clasificador neuronal con un CSV de prueba independiente, separado del conjunto de entrenamiento. La interfaz calcula exactitud, precisión, recall, F1, accuracy balanceada y la matriz de confusión; no se fija una partición automática 70/30 ni se presentan resultados estadísticos sin indicar el conjunto utilizado. En tercer lugar, se comprobaron los flujos funcionales de la aplicación web: análisis de texto pegado y archivos .eml, selección del modelo por idioma, importación mediante Gmail y navegación entre las vistas de detección y entrenamiento. Los resultados reproducibles se presentan en la sección de pruebas y discusión.
 
@@ -752,7 +752,7 @@ Durante el desarrollo se ha realizado una refactorización orientada a SOLID y a
 
 Esta organización permite que cada módulo tenga una responsabilidad principal. Por ejemplo, SignalBuilder no calcula puntuaciones, sino que únicamente construye señales; RiskScorer no conoce cómo se han obtenido las señales, solo calcula el riesgo; y ExplanationBuilder no decide si un correo es phishing, sino que transforma resultados técnicos en texto comprensible.
 
-Esta separación facilita la evolución del prototipo. Pueden añadirse reglas o sustituirse el clasificador en el servidor sin redistribuir los clientes. La versión revisada ejecuta correctamente 72 pruebas Python y 2 recorridos reales con Chromium; GitHub Actions repite pruebas, Ruff, evaluación reproducible y navegación de interfaz.
+Esta separación facilita la evolución del prototipo. Pueden añadirse reglas o sustituirse el clasificador en el servidor sin redistribuir los clientes. La versión revisada ejecuta correctamente 81 pruebas Python y 2 recorridos reales con Chromium; GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible y navegación de interfaz.
 
 Limitaciones
 
@@ -766,7 +766,7 @@ Pruebas, resultados y discusión
 
 Pruebas unitarias y de integración
 
-La versión revisada ejecuta 72 pruebas unitarias y de integración mediante unittest. Cubren EML, combinación, cliente HTTP, entrenamiento central, Gmail, monitor, heurísticas, clasificador, persistencia, API, autenticación administrativa, extensión, evaluación y Telegram. Además, 2 pruebas con Chromium recorren la extensión y un análisis real entre Streamlit y backend. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.
+La versión revisada ejecuta 81 pruebas unitarias y de integración mediante unittest. Cubren EML, combinación calibrada, selección determinista de idioma, cliente HTTP, entrenamiento central, Gmail, monitor, heurísticas, clasificador, persistencia, API, autenticación administrativa, extensión, evaluación y Telegram. Una prueba integral recorre Gmail EML, JSON, HTTP, backend, estado y alerta Telegram. Además, 2 pruebas con Chromium recorren la extensión y un análisis real entre Streamlit y backend. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.
 
 Rendimiento y eficiencia de arranque
 
@@ -782,19 +782,19 @@ Para probar el arranque del clasificador sin depender de información personal, 
 
 Resultados del clasificador neuronal
 
-La evaluación separada incorpora un desafío controlado bilingüe de 40 mensajes, equilibrado por idioma y clase, creado después de congelar los modelos y excluido del entrenamiento. Con umbral 45, el modo neuronal obtuvo 87,5 % de accuracy, 94,1 % de precisión, 80,0 % de recall y 86,5 % de F1; el combinado 55,0 %, 100,0 %, 10,0 % y 18,2 %; y el heurístico 50,0 %, 0,0 %, 0,0 % y 0,0 %. El evaluador registra SHA-256 de datos/modelos y conserva cada error. Al ser textos sintéticos sin cabeceras reales, estas cifras son regresión funcional y no estiman producción.
+La metodología cuantitativa separa ajuste y comprobación. Cuarenta casos controlados y cinco particiones estratificadas calibran el modo combinado en 20 % heurístico, 80 % neuronal, umbral 45 y conservación de evidencia a partir de 70. Después se evalúan 16 EML locales reservados con cabeceras, HTML y adjuntos. Los tres modos obtuvieron 87,5 % de accuracy, 100,0 % de precisión, 75,0 % de recall y 85,7 % de F1. Se registran hashes y errores por caso. Los escenarios son sintéticos y no estiman producción.
 
 Comportamiento del sistema heurístico
 
-El sistema heurístico es deliberadamente conservador. En el desafío controlado no superó el umbral en los 20 mensajes maliciosos, porque los casos sintéticos carecen de Received y resultados SPF/DKIM/DMARC y sus dominios .example son inocuos. El combinado heredó esta limitación: con peso neuronal 40 %, una predicción neuronal alta no basta por sí sola para superar 45. Este hallazgo exige calibrar pesos y umbral en un conjunto de validación distinto y confirmar después en un corpus externo; no se ajusta el sistema contra el holdout publicado.
+La mezcla ponderada original podía diluir una evidencia fuerte. La calibración separada asignó 20 % a heurística y 80 % al modelo, mantuvo el umbral 45 y añadió un nivel de alta confianza 70: si cualquiera lo alcanza, su puntuación máxima se conserva. En los EML reservados esto evita perder cabeceras claramente falsificadas cuando el texto aporta poca evidencia. Los dos falsos negativos restantes son fraudes BEC sin enlace, una limitación honesta para trabajo futuro.
 
 Prueba funcional de la aplicación web
 
-Se realizaron 72 pruebas Python y 2 recorridos Chromium. Las comprobaciones verifican los tres modos, el cliente HTTP, entrenamiento y versión central, caché por idioma, señales, API, límites, token administrativo, extensión y Streamlit. El reto de 40 casos añade una medición separada, pero no se presenta como evaluación estadística de producción.
+Se realizaron 81 pruebas Python y 2 recorridos Chromium. Las comprobaciones verifican los tres modos, calibración, idioma determinista, EML serializable, Gmail a backend y Telegram, cliente HTTP, entrenamiento y versión central, caché, señales, API, límites, token administrativo, extensión y Streamlit. Los 16 EML reservados añaden medición separada, pero no se presentan como evaluación estadística de producción.
 
 Discusión
 
-Los resultados confirman el diseño como base funcional y revelan una limitación importante: el clasificador neuronal reconoce la mayoría del reto controlado, pero la combinación 60/40 y el umbral 45 reducen demasiado el recall cuando faltan cabeceras completas. La evidencia se conserva sin recalibrar sobre el propio holdout. La principal tarea experimental pendiente es validar y calibrar con corpus reales, recientes, licenciados y deduplicados frente a todas las fuentes de entrenamiento.
+Los resultados confirman el diseño como base funcional y muestran que la fusión calibrada ya no degrada las señales técnicas de alta confianza: en los 16 EML reservados iguala el 87,5 % de accuracy y el 75,0 % de recall del modo heurístico, sin falsos positivos. La limitación principal son dos casos BEC sin enlace y la ausencia de un corpus real estadísticamente representativo, reciente, licenciado y deduplicado frente al entrenamiento.
 
 Conclusiones
 
@@ -812,13 +812,13 @@ El cuarto objetivo, diseñar e implementar un sistema heurístico explicable y u
 
 El quinto objetivo, integrar la aplicación con Gmail y proporcionar alertas mediante Telegram, se cumple mediante OAuth de solo lectura y el monitor opcional. Los mensajes autorizados se envían al backend central y Telegram recibe únicamente la alerta configurada; ni Streamlit ni el monitor duplican la lógica de análisis.
 
-El sexto objetivo, evaluar el comportamiento del sistema, se aborda con 72 pruebas Python, 2 recorridos Chromium —incluido web a backend—, benchmark reproducible y un holdout controlado bilingüe de 40 casos con hashes, matriz de confusión y resultados por mensaje. La estimación sobre correo real sigue delimitada como trabajo pendiente.
+El sexto objetivo, evaluar el comportamiento del sistema, se aborda con 81 pruebas Python, 2 recorridos Chromium —incluido web a backend—, benchmark reproducible, calibración separada de 40 casos y 16 EML reservados con hashes, matriz de confusión y resultados por mensaje. La estimación sobre correo real sigue delimitada como trabajo pendiente.
 
-Entre los logros principales destacan la arquitectura cliente-servidor, una versión activa por idioma compartida por todos los clientes, activación atómica de modelos, Gmail/Telegram, 72 pruebas Python, 2 pruebas de navegador, CI y evaluación trazable. La carga diferida reduce el arranque de heurísticas un 96,6 % y el de la aplicación un 76,2 %. El holdout hace visible la necesidad de calibrar el modo combinado.
+Entre los logros principales destacan la arquitectura cliente-servidor, una versión activa por idioma compartida por todos los clientes, activación atómica, Gmail/Telegram, 81 pruebas Python, 2 pruebas de navegador, CI, calibración separada y evaluación trazable. La carga diferida reduce históricamente el arranque de heurísticas un 96,6 % y el de la aplicación un 76,2 %. La fusión 20/80 conserva evidencia de alta confianza.
 
 Trabajo futuro
 
-Como trabajo futuro prioritario se plantea evaluar datasets reales y recientes en español e inglés, con licencia, procedencia temporal y deduplicación frente a las fuentes de entrenamiento. Pesos y umbral deben calibrarse en validación y confirmarse en un test externo separado. También se estudiarán ataques adversariales, transformers/LLM, reputación de dominios, análisis dinámico y etiquetado seguro. Un despliegue multiusuario requerirá autenticación, TLS, rate limiting, secretos e aislamiento de sesiones.
+Como trabajo futuro prioritario se plantea confirmar la calibración sobre datasets reales y recientes en español e inglés, con licencia, procedencia temporal y deduplicación frente al entrenamiento, y mejorar la detección de BEC sin enlaces. También se estudiarán ataques adversariales, transformers/LLM, reputación de dominios, análisis dinámico y etiquetado seguro. Un despliegue multiusuario requerirá autenticación, TLS, rate limiting, secretos e aislamiento de sesiones.
 
 Glosario
 
@@ -1306,7 +1306,7 @@ Anexo D: Lista de verificación de la validación
 
 La siguiente lista resume las comprobaciones realizadas sobre el prototipo durante la fase de validación, tal y como se detalla en el capítulo de pruebas y resultados.
 
-Verificado: 72 pruebas Python y 2 recorridos reales con Chromium, incluido cliente web a backend.
+Verificado: 81 pruebas Python y 2 recorridos reales con Chromium, incluido cliente web a backend.
 
 Verificado: Benchmark reproducible de arranque e inferencia con comparación antes/después.
 
@@ -1314,7 +1314,7 @@ Verificado: Normalización correcta de etiquetas phishing y correo legítimo.
 
 Verificado: Entrenamiento del modelo TF-IDF + MLP en español e inglés.
 
-Verificado: holdout controlado bilingüe de 40 casos, hashes, métricas y errores por caso; pendiente corpus externo representativo.
+Verificado: calibración controlada de 40 casos y evaluación final de 16 EML locales reservados, con hashes, métricas y errores por caso; pendiente corpus real representativo.
 
 Verificado: Cálculo de exactitud, precisión, recall y F1.
 
@@ -1332,4 +1332,4 @@ Anexo E: Resumen de arquitectura y evidencia
 
 El sistema es cliente-servidor. Streamlit, la extensión y el monitor son clientes HTTP; backend_server.py centraliza parser, análisis, entrenamiento y una versión activa por idioma. En la configuración de defensa todos los procesos están en el mismo equipo y loopback, pero el servidor es obligatorio y puede separarse cambiando PHISHING_BACKEND_URL.
 
-La evidencia reproducible comprende 72 pruebas Python, 2 recorridos con Chromium, integración continua, benchmark y un holdout controlado bilingüe de 40 casos. Este último detecta regresiones, pero no sustituye una evaluación externa representativa.
+La evidencia reproducible comprende 81 pruebas Python, 2 recorridos con Chromium, integración continua, benchmark, calibración separada de 40 casos y evaluación de 16 EML reservados. Los corpus sintéticos no sustituyen una evaluación externa representativa.

@@ -1,0 +1,16 @@
+From: Dirección Financiera <direccion@empresa-pagos.test>
+To: contabilidad@empresa.test
+Return-Path: <direccion@empresa-pagos.test>
+Subject: Cambio de IBAN del proveedor hoy
+Date: Tue, 25 Aug 2026 09:06:00 +0200
+Message-ID: <cambio-iban@empresa-pagos.test>
+Received: from mail.empresa-pagos.test (mail.empresa-pagos.test [192.0.2.44]) by mx.empresa.test
+Received-SPF: pass (mx.empresa.test: empresa-pagos.test autoriza 192.0.2.44)
+Authentication-Results: mx.empresa.test; spf=pass; dkim=pass; dmarc=pass
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+Soy Carlos, el director. Estoy reunido y no puedo atender llamadas. Sustituye
+ahora el IBAN habitual del proveedor por ES00 0000 0000 0000 0000 0000 y
+confírmame la transferencia antes de las 12. Es confidencial.

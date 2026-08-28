@@ -1,0 +1,15 @@
+From: Security Team <awareness@company.test>
+To: staff@company.test
+Return-Path: <awareness@company.test>
+Subject: Training: how to recognize a phishing attempt
+Date: Wed, 26 Aug 2026 13:05:00 +0200
+Message-ID: <phishing-training@company.test>
+Received: from mail.company.test (mail.company.test [192.0.2.20]) by mx.company.test
+Received-SPF: pass (mx.company.test: company.test authorizes 192.0.2.20)
+Authentication-Results: mx.company.test; spf=pass; dkim=pass header.d=company.test; dmarc=pass
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Friday's awareness session covers examples that request a password, card
+details, or an urgent transfer. Do not reply to those examples or open their
+links. The session is already listed in the corporate calendar.

@@ -1,0 +1,26 @@
+From: Facturación <facturas@proveedor-documentos.test>
+To: administracion@empresa.test
+Reply-To: pagos@documentos-urgentes.test
+Return-Path: <pagos@documentos-urgentes.test>
+Subject: Factura vencida - acción urgente
+Date: Wed, 26 Aug 2026 10:21:00 +0200
+Message-ID: <factura-urgente@documentos-urgentes.test>
+Received: from unknown (unknown [192.0.2.63]) by mx.empresa.test
+Received-SPF: fail (mx.empresa.test: proveedor-documentos.test no autoriza 192.0.2.63)
+Authentication-Results: mx.empresa.test; spf=fail; dkim=none; dmarc=fail
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="local-boundary-es"
+
+--local-boundary-es
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+La factura está vencida. Abre el adjunto y habilita el contenido para evitar
+un recargo inmediato. Responde con el justificante de pago.
+--local-boundary-es
+Content-Type: application/zip; name="factura_agosto.zip"
+Content-Disposition: attachment; filename="factura_agosto.zip"
+Content-Transfer-Encoding: base64
+
+UEsDBAoAAAAAAAEAIQAAAAAAAAAAAAAAAAAJAAAAZmljdGljaW8=
+--local-boundary-es--

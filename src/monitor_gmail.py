@@ -62,8 +62,8 @@ def construir_config() -> MonitorConfig:
         state_path=os.getenv("MONITOR_STATE_PATH", DEFAULT_STATE_PATH),
         threshold=env_float("PHISHING_THRESHOLD", 45.0),
         mode=os.getenv("MONITOR_ANALYSIS_MODE", "combinado").lower(),
-        heur_weight=env_int("MONITOR_HEUR_WEIGHT", 60),
-        neural_weight=env_int("MONITOR_NEURAL_WEIGHT", 40),
+        heur_weight=env_int("MONITOR_HEUR_WEIGHT", 20),
+        neural_weight=env_int("MONITOR_NEURAL_WEIGHT", 80),
         backend_url=backend_url_from_env(),
         mark_existing_as_seen=os.getenv("MONITOR_MARK_EXISTING_AS_SEEN", "1") != "0",
     )

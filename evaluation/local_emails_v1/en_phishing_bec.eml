@@ -1,0 +1,15 @@
+From: Finance Director <director@company-payments.test>
+To: accounts@company.test
+Return-Path: <director@company-payments.test>
+Subject: Change the vendor bank account today
+Date: Tue, 25 Aug 2026 09:12:00 +0200
+Message-ID: <vendor-change@company-payments.test>
+Received: from mail.company-payments.test (mail.company-payments.test [192.0.2.74]) by mx.company.test
+Received-SPF: pass (mx.company.test: company-payments.test authorizes 192.0.2.74)
+Authentication-Results: mx.company.test; spf=pass; dkim=pass; dmarc=pass
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+This is Charles, the finance director. I am in a meeting and cannot take a
+call. Replace the supplier bank details and complete the transfer before noon.
+Keep this confidential and reply when it is done.

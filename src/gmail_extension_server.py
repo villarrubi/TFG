@@ -273,13 +273,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--heur-weight",
         type=int,
-        default=env_int("GMAIL_EXTENSION_HEUR_WEIGHT", 60),
+        default=env_int("GMAIL_EXTENSION_HEUR_WEIGHT", 20),
         help="Peso heuristico en modo combinado.",
     )
     parser.add_argument(
         "--neural-weight",
         type=int,
-        default=env_int("GMAIL_EXTENSION_NEURAL_WEIGHT", 40),
+        default=env_int("GMAIL_EXTENSION_NEURAL_WEIGHT", 80),
         help="Peso neuronal en modo combinado.",
     )
     return parser.parse_args()

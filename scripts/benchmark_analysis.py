@@ -96,8 +96,8 @@ def ejecutar_benchmarks(iteraciones: int, repeticiones: int) -> dict[str, dict[s
     config = SimpleNamespace(
         threshold=45.0,
         mode="combinado",
-        heur_weight=60,
-        neural_weight=40,
+        heur_weight=20,
+        neural_weight=80,
         model_path_es=str(ROOT_DIR / "modelo_neural_es.joblib"),
         model_path_en=str(ROOT_DIR / "modelo_neural_en.joblib"),
     )

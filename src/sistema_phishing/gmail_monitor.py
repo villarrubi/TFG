@@ -36,8 +36,8 @@ class MonitorConfig:
     state_path: str
     threshold: float = 45.0
     mode: str = MODO_COMBINADO
-    heur_weight: int = 60
-    neural_weight: int = 40
+    heur_weight: int = 20
+    neural_weight: int = 80
     backend_url: str = DEFAULT_BACKEND_URL
     mark_existing_as_seen: bool = True
 

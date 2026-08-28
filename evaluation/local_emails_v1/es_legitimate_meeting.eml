@@ -1,0 +1,15 @@
+From: Ana López <ana@empresa.test>
+To: equipo@empresa.test
+Return-Path: <ana@empresa.test>
+Subject: Acta y próxima reunión del equipo
+Date: Tue, 25 Aug 2026 11:15:00 +0200
+Message-ID: <reunion-20260825@empresa.test>
+Received: from mail.empresa.test (mail.empresa.test [192.0.2.10]) by mx.empresa.test
+Received-SPF: pass (mx.empresa.test: empresa.test autoriza 192.0.2.10)
+Authentication-Results: mx.empresa.test; spf=pass; dkim=pass header.d=empresa.test; dmarc=pass
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+Hola equipo. Adjunto queda el acta revisada. La próxima reunión será el martes
+a las diez en la sala Norte. No hace falta realizar ninguna acción antes.

@@ -47,8 +47,9 @@ class AnalysisBackendConfig:
 
     threshold: float = 45.0
     mode: str = MODO_COMBINADO
-    heur_weight: int = 60
-    neural_weight: int = 40
+    heur_weight: int = 20
+    neural_weight: int = 80
+    high_confidence_threshold: float = 70.0
     model_path_es: str = os.path.join(ROOT_DIR, "modelo_neural_es.joblib")
     model_path_en: str = os.path.join(ROOT_DIR, "modelo_neural_en.joblib")
 
@@ -90,6 +91,7 @@ class AnalysisBackendService:
             "threshold": self.config.threshold,
             "heur_weight": self.config.heur_weight,
             "neural_weight": self.config.neural_weight,
+            "high_confidence_threshold": self.config.high_confidence_threshold,
             "models": {
                 language: self._model_metadata(language, details=False)
                 for language in ("es", "en")
@@ -132,6 +134,7 @@ class AnalysisBackendService:
                 threshold=threshold,
                 heur_weight=heur_weight,
                 neural_weight=neural_weight,
+                high_confidence_threshold=self.config.high_confidence_threshold,
             )
             resultado_combinado = construir_resultado_combinado(
                 resultados["heuristico"],

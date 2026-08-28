@@ -117,10 +117,10 @@ def main():
         "33 pruebas unitarias y de integración": "41 pruebas unitarias y de integración",
         "33 pruebas unitarias y de integración mediante unittest": "41 pruebas unitarias y de integración mediante unittest",
         "33 pruebas automatizadas": "41 pruebas automatizadas",
-        "41 pruebas unitarias y de integración": "72 pruebas unitarias y de integración",
-        "41 pruebas unitarias y de integración mediante unittest": "72 pruebas unitarias y de integración mediante unittest",
-        "41 pruebas automatizadas": "72 pruebas automatizadas",
-        "contiene 41 pruebas.": "contiene 72 pruebas.",
+        "41 pruebas unitarias y de integración": "81 pruebas unitarias y de integración",
+        "41 pruebas unitarias y de integración mediante unittest": "81 pruebas unitarias y de integración mediante unittest",
+        "41 pruebas automatizadas": "81 pruebas automatizadas",
+        "contiene 41 pruebas.": "contiene 81 pruebas.",
         "la interfaz Streamlit invoca directamente el motor heurístico y el clasificador neuronal dentro del mismo entorno de ejecución": "la interfaz Streamlit actúa como cliente de un backend HTTP obligatorio que centraliza análisis, entrenamiento y modelos",
         "La solución adopta una arquitectura modular autocontenida dentro de una única aplicación Python. Streamlit proporciona la capa de presentación y organiza las vistas de inicio, configuración, detección, monitorización y entrenamiento. Estas vistas invocan directamente los servicios del paquete sistema_phishing en el mismo proceso, por lo que el análisis no depende de un servicio HTTP separado ni requiere enviar el contenido del correo a un servidor central.": "La solución adopta una arquitectura cliente-servidor. Streamlit proporciona la capa de presentación y consume un backend HTTP obligatorio; extensión y monitor usan el mismo contrato y ninguna interfaz carga modelos.",
     }
@@ -150,7 +150,7 @@ def main():
         ("Evaluación", "La aplicación presenta accuracy, precisión, recall, F1, accuracy balanceada y matriz VP/VN/FP/FN sobre un CSV de prueba separado."),
     ])
     add_heading(doc, "Evidencia reproducible", 2)
-    add_para(doc, "La suite se ejecuta con python -m unittest discover -s tests -p \"test_*.py\" y contiene 72 pruebas. También se ejecuta python -m ruff check src tests scripts browser_tests, que finaliza sin errores estáticos. Las advertencias de convergencia observadas pertenecen únicamente a pruebas deliberadamente configuradas con 20 iteraciones para comprobar el flujo rápido.")
+    add_para(doc, "La suite se ejecuta con python -m unittest discover -s tests -p \"test_*.py\" y contiene 81 pruebas. También se ejecuta python -m ruff check src tests scripts browser_tests, que finaliza sin errores estáticos. Las advertencias de convergencia observadas pertenecen únicamente a pruebas deliberadamente configuradas con 20 iteraciones para comprobar el flujo rápido.")
     add_heading(doc, "Requisitos funcionales explícitos", 2)
     add_table(doc, ["ID", "Requisito y evidencia"], [
         ("RF-01", "Analizar texto pegado, EML y mensajes Gmail sin ejecutar adjuntos."),

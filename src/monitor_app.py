@@ -242,9 +242,9 @@ def main():
         else 0,
     )
     threshold = st.slider("Umbral de alerta", 0, 100, int(float(valores.get("PHISHING_THRESHOLD", "45"))))
-    heur_weight = 60
+    heur_weight = 20
     if modo == "combinado":
-        heur_weight = st.slider("Peso heurístico (%)", 0, 100, int(valores.get("MONITOR_HEUR_WEIGHT", "60")))
+        heur_weight = st.slider("Peso heurístico (%)", 0, 100, int(valores.get("MONITOR_HEUR_WEIGHT", "20")))
     enviar_alertas = st.checkbox("Enviar alertas Telegram durante esta comprobación", value=False)
 
     if st.button("Comprobar correos ahora"):

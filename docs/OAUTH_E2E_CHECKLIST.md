@@ -4,6 +4,11 @@ Las pruebas automáticas no pueden incluir credenciales reales. Antes de una
 entrega o defensa, ejecutar este recorrido en una cuenta de pruebas sin correo
 personal y anotar fecha, sistema operativo y resultado:
 
+La integración local equivalente ya está automatizada en
+`tests/test_gmail_telegram_integration.py` y su último resultado se documenta en
+`docs/INTEGRATION_VALIDATION.md`. Los pasos siguientes validan únicamente la
+frontera externa que requiere secretos.
+
 1. Arrancar `python src/backend_server.py` y comprobar `/health` en el puerto 8766.
 2. Arrancar `streamlit run src/app.py` y confirmar que muestra el backend conectado.
 3. Copiar un cliente OAuth de escritorio válido a `credentials.json`.

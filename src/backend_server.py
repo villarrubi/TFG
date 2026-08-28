@@ -46,8 +46,13 @@ def parse_args() -> argparse.Namespace:
         "--mode", choices=sorted(VALID_MODES), default=os.getenv("BACKEND_MODE", MODO_COMBINADO)
     )
     parser.add_argument("--threshold", type=float, default=env_float("BACKEND_THRESHOLD", 45.0))
-    parser.add_argument("--heur-weight", type=int, default=env_int("BACKEND_HEUR_WEIGHT", 60))
-    parser.add_argument("--neural-weight", type=int, default=env_int("BACKEND_NEURAL_WEIGHT", 40))
+    parser.add_argument("--heur-weight", type=int, default=env_int("BACKEND_HEUR_WEIGHT", 20))
+    parser.add_argument("--neural-weight", type=int, default=env_int("BACKEND_NEURAL_WEIGHT", 80))
+    parser.add_argument(
+        "--high-confidence-threshold",
+        type=float,
+        default=env_float("BACKEND_HIGH_CONFIDENCE_THRESHOLD", 70.0),
+    )
     return parser.parse_args()
 
 
@@ -62,6 +67,7 @@ def main() -> None:
         mode=args.mode,
         heur_weight=args.heur_weight,
         neural_weight=args.neural_weight,
+        high_confidence_threshold=args.high_confidence_threshold,
         model_path_es=os.getenv("BACKEND_MODEL_ES", os.path.join(ROOT_DIR, "modelo_neural_es.joblib")),
         model_path_en=os.getenv("BACKEND_MODEL_EN", os.path.join(ROOT_DIR, "modelo_neural_en.joblib")),
     )

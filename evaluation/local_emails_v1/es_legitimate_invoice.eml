@@ -1,0 +1,15 @@
+From: Proveedor Habitual <facturacion@proveedor.test>
+To: administracion@empresa.test
+Return-Path: <facturacion@proveedor.test>
+Subject: Factura mensual disponible
+Date: Wed, 26 Aug 2026 08:45:00 +0200
+Message-ID: <factura-2026-08@proveedor.test>
+Received: from mail.proveedor.test (mail.proveedor.test [192.0.2.15]) by mx.empresa.test
+Received-SPF: pass (mx.empresa.test: proveedor.test autoriza 192.0.2.15)
+Authentication-Results: mx.empresa.test; spf=pass; dkim=pass header.d=proveedor.test; dmarc=pass
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+<html><body><p>La factura mensual ya está disponible. Se cobrará mediante la domiciliación acordada.</p>
+<p><a href="https://proveedor.test/clientes/facturas">Consulta el histórico en el portal habitual</a>.</p></body></html>

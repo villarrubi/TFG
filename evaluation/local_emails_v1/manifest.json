@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "name": "local_emails_v1",
+  "description": "Corpus EML local, anonimizado y sintético con escenarios operativos reservados para evaluación.",
+  "representative_scenarios": true,
+  "statistically_representative": false,
+  "training_use": false,
+  "calibration_use": false,
+  "cases": [
+    {"id": "local-es-p-auth", "language": "es", "label": 1, "scenario": "robo de credenciales con autenticación fallida", "file": "es_phishing_auth_fail.eml"},
+    {"id": "local-es-p-bec", "language": "es", "label": 1, "scenario": "fraude BEC sin enlace", "file": "es_phishing_bec.eml"},
+    {"id": "local-es-p-link", "language": "es", "label": 1, "scenario": "pago de paquetería con enlace discordante", "file": "es_phishing_anchor.eml"},
+    {"id": "local-es-p-attachment", "language": "es", "label": 1, "scenario": "adjunto comprimido malicioso", "file": "es_phishing_attachment.eml"},
+    {"id": "local-es-l-meeting", "language": "es", "label": 0, "scenario": "reunión interna", "file": "es_legitimate_meeting.eml"},
+    {"id": "local-es-l-password", "language": "es", "label": 0, "scenario": "confirmación de contraseña sin acción", "file": "es_legitimate_password.eml"},
+    {"id": "local-es-l-invoice", "language": "es", "label": 0, "scenario": "factura legítima con autenticación alineada", "file": "es_legitimate_invoice.eml"},
+    {"id": "local-es-l-awareness", "language": "es", "label": 0, "scenario": "formación de seguridad con vocabulario sensible", "file": "es_legitimate_awareness.eml"},
+    {"id": "local-en-p-auth", "language": "en", "label": 1, "scenario": "credential theft with failed authentication", "file": "en_phishing_auth_fail.eml"},
+    {"id": "local-en-p-bec", "language": "en", "label": 1, "scenario": "linkless BEC fraud", "file": "en_phishing_bec.eml"},
+    {"id": "local-en-p-link", "language": "en", "label": 1, "scenario": "parcel fee with mismatched link", "file": "en_phishing_anchor.eml"},
+    {"id": "local-en-p-attachment", "language": "en", "label": 1, "scenario": "malicious compressed attachment", "file": "en_phishing_attachment.eml"},
+    {"id": "local-en-l-meeting", "language": "en", "label": 0, "scenario": "internal meeting", "file": "en_legitimate_meeting.eml"},
+    {"id": "local-en-l-password", "language": "en", "label": 0, "scenario": "password confirmation with no action", "file": "en_legitimate_password.eml"},
+    {"id": "local-en-l-invoice", "language": "en", "label": 0, "scenario": "legitimate invoice with aligned authentication", "file": "en_legitimate_invoice.eml"},
+    {"id": "local-en-l-awareness", "language": "en", "label": 0, "scenario": "security awareness with sensitive wording", "file": "en_legitimate_awareness.eml"}
+  ]
+}
