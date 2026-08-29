@@ -79,6 +79,7 @@ def ejecutar_benchmarks(iteraciones: int, repeticiones: int) -> dict[str, dict[s
     idioma = importlib.import_module("sistema_phishing.idioma")
     modelo = importlib.import_module("sistema_phishing.modelo_neural")
     servicio_mod = importlib.import_module("sistema_phishing.analysis_service")
+    defaults = importlib.import_module("sistema_phishing.defaults")
 
     texto = (
         "From: Banco Ejemplo <alerta@seguro.example>\n"
@@ -94,10 +95,10 @@ def ejecutar_benchmarks(iteraciones: int, repeticiones: int) -> dict[str, dict[s
         "urls": ["https://secure-login.example.com/login?next=https://evil.example"],
     }
     config = SimpleNamespace(
-        threshold=45.0,
+        threshold=defaults.DEFAULT_PHISHING_THRESHOLD,
         mode="combinado",
-        heur_weight=20,
-        neural_weight=80,
+        heur_weight=defaults.DEFAULT_HEUR_WEIGHT,
+        neural_weight=defaults.DEFAULT_NEURAL_WEIGHT,
         model_path_es=str(ROOT_DIR / "modelo_neural_es.joblib"),
         model_path_en=str(ROOT_DIR / "modelo_neural_en.joblib"),
     )

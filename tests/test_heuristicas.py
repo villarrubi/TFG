@@ -1,5 +1,6 @@
 import unittest
 
+from sistema_phishing.defaults import DEFAULT_PHISHING_THRESHOLD
 from sistema_phishing.heuristicas import analizar_correo
 
 
@@ -172,4 +173,63 @@ class TestHeuristicas(unittest.TestCase):
         )
         resultado = analizar_correo(correo)
         self.assertFalse(resultado["is_phishing"])
-        self.assertLess(resultado["risk_score"], 45)
+        self.assertLess(resultado["risk_score"], DEFAULT_PHISHING_THRESHOLD)
+
+    def test_detecta_bec_sin_enlaces_en_espanol(self):
+        correo = (
+            "From: Director financiero <direccion@proveedor-externo.test>\n"
+            "Subject: Cambio de beneficiario\n\n"
+            "Estoy reunido y no puedo atender llamadas. Sustituye el IBAN del "
+            "beneficiario y confírmame la transferencia antes de las 12. Es confidencial."
+        )
+
+        resultado = analizar_correo(correo)
+
+        self.assertTrue(resultado["signals"]["cambio_datos_bancarios"])
+        self.assertTrue(resultado["signals"]["transferencia_urgente"])
+        self.assertTrue(resultado["signals"]["suplantacion_ejecutivo"])
+        self.assertTrue(resultado["is_phishing"])
+        self.assertGreaterEqual(resultado["risk_score"], 70)
+
+    def test_detecta_bec_sin_enlaces_en_ingles(self):
+        correo = (
+            "From: Finance Director <director@external-supplier.test>\n"
+            "Subject: New bank details\n\n"
+            "I am in a meeting and cannot take a call. Replace the beneficiary bank "
+            "account and complete the transfer before noon. This is confidential."
+        )
+
+        resultado = analizar_correo(correo)
+
+        self.assertTrue(resultado["signals"]["cambio_datos_bancarios"])
+        self.assertTrue(resultado["signals"]["transferencia_urgente"])
+        self.assertTrue(resultado["signals"]["suplantacion_ejecutivo"])
+        self.assertTrue(resultado["is_phishing"])
+        self.assertGreaterEqual(resultado["risk_score"], 70)
+
+    def test_aviso_formativo_sobre_bec_no_activa_el_patron_completo(self):
+        correo = (
+            "From: Seguridad <seguridad@empresa.test>\n"
+            "Subject: Formación mensual\n\n"
+            "Un fraude puede pedir una transferencia urgente. No respondas ni realices "
+            "pagos: informa al equipo de seguridad."
+        )
+
+        resultado = analizar_correo(correo)
+
+        self.assertFalse(resultado["signals"]["cambio_datos_bancarios"])
+        self.assertFalse(resultado["signals"]["transferencia_urgente"])
+        self.assertFalse(resultado["signals"]["suplantacion_ejecutivo"])
+        self.assertFalse(resultado["is_phishing"])
+
+        aviso_ingles = analizar_correo(
+            "From: Security <security@company.test>\n"
+            "Subject: Awareness training\n\n"
+            "A CEO fraud may ask you to replace bank details and make an urgent "
+            "transfer. Do not reply or make the payment; report it to Security."
+        )
+        self.assertTrue(aviso_ingles["signals"]["cambio_datos_bancarios"])
+        self.assertTrue(aviso_ingles["signals"]["transferencia_urgente"])
+        self.assertFalse(aviso_ingles["signals"]["suplantacion_ejecutivo"])
+        self.assertFalse(aviso_ingles["is_phishing"])
+        self.assertLess(aviso_ingles["risk_score"], DEFAULT_PHISHING_THRESHOLD)

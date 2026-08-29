@@ -6,6 +6,10 @@ import os
 import streamlit as st
 
 from sistema_phishing.backend_client import BackendClient, backend_url_from_env
+from sistema_phishing.defaults import (
+    DEFAULT_HEUR_WEIGHT,
+    DEFAULT_PHISHING_THRESHOLD,
+)
 from sistema_phishing.env_loader import cargar_env_local, leer_env_file
 from sistema_phishing.gmail_client import (
     GmailIntegrationError,
@@ -137,7 +141,7 @@ def _mostrar_estado_general(valores: dict) -> None:
 def _mostrar_configuracion_activa(valores: dict) -> None:
     """Muestra los parámetros que gobernarán la comprobación."""
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Umbral", f"{_valor_float(valores, 'PHISHING_THRESHOLD', 45):.0f}%")
+    col1.metric("Umbral", f"{_valor_float(valores, 'PHISHING_THRESHOLD', DEFAULT_PHISHING_THRESHOLD):.0f}%")
     col2.metric("Modo", valores.get("MONITOR_ANALYSIS_MODE", "combinado"))
     col3.metric("Query", valores.get("GMAIL_MONITOR_QUERY", "in:inbox newer_than:1d"))
     col4.metric("Límite", _valor_entero(valores, "GMAIL_MONITOR_LIMIT", 20))
@@ -241,10 +245,10 @@ def main():
         if valores.get("MONITOR_ANALYSIS_MODE", "combinado") in modo_options
         else 0,
     )
-    threshold = st.slider("Umbral de alerta", 0, 100, int(float(valores.get("PHISHING_THRESHOLD", "45"))))
-    heur_weight = 20
+    threshold = st.slider("Umbral de alerta", 0, 100, int(float(valores.get("PHISHING_THRESHOLD", str(DEFAULT_PHISHING_THRESHOLD)))))
+    heur_weight = DEFAULT_HEUR_WEIGHT
     if modo == "combinado":
-        heur_weight = st.slider("Peso heurístico (%)", 0, 100, int(valores.get("MONITOR_HEUR_WEIGHT", "20")))
+        heur_weight = st.slider("Peso heurístico (%)", 0, 100, int(valores.get("MONITOR_HEUR_WEIGHT", str(DEFAULT_HEUR_WEIGHT))))
     enviar_alertas = st.checkbox("Enviar alertas Telegram durante esta comprobación", value=False)
 
     if st.button("Comprobar correos ahora"):

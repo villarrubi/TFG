@@ -1,6 +1,6 @@
 # Estado de puesta a punto y deuda restante
 
-Revisión actualizada el 28 de agosto de 2026 sobre `main`. Este documento sustituye
+Revisión actualizada el 29 de agosto de 2026 sobre `main`. Este documento sustituye
 el plan histórico de `feature/web`, que ya no describía el estado real de las
 ramas ni de la entrega.
 
@@ -22,7 +22,7 @@ ramas ni de la entrega.
 - Se separan calibración y evaluación: 40 casos controlados calibran la fusión y
   16 EML locales reservados verifican escenarios con cabeceras y MIME completos.
   Ambos conservan hashes, resultados por caso e informe de limitaciones.
-- La suite crece a 81 pruebas Python y 2 recorridos Chromium. Uno levanta web y
+- La suite crece a 87 pruebas Python y 2 recorridos Chromium. Uno levanta web y
   backend separados y comprueba el intercambio HTTP real. GitHub Actions
   ejecuta pruebas, Ruff, evaluación reproducible y navegación real.
 - `constraints.txt` fija las versiones directas y transitivas validadas.
@@ -38,9 +38,17 @@ ramas ni de la entrega.
   administrativas desde navegador y HTTP remoto sin TLS.
 - La inicialización del estado del monitor distingue entre «sin fichero previo»
   y «fichero previo vacío», evitando saltarse el primer correo que aparezca.
-- El modo combinado queda calibrado en 20/80, umbral 45 y alta confianza 70. La
+- El modo combinado queda recalibrado en 35/65, umbral 26 y alta confianza 70. La
   fusión conserva una evidencia individual concluyente y la selección de idioma
   fija la semilla para producir el mismo resultado entre procesos.
+- Tres señales bilingües detectan cambios bancarios, transferencias urgentes y
+  suplantación ejecutiva. Los dos casos BEC sin enlace reservados pasan a ser
+  detectados sin elevar los cuatro controles legítimos de cada idioma.
+- Se añade un diagnóstico de 1.528 textos externos DIFrauD con revisión, licencia
+  y SHA-256 fijados. Se documenta como evidencia con riesgo de fuga de fuentes,
+  no como validación independiente ni como estimación de producción.
+- Se versionan un respaldo determinista de la demo y una lista de 20 capturas,
+  con reglas expresas para ocultar credenciales y datos personales.
 - Una prueba integral recorre EML de Gmail, serialización JSON, HTTP, backend,
   estado del monitor y Telegram. Corrige cabeceras enriquecidas/surrogateescape
   que antes impedían al monitor enviar determinados correos al servidor.
@@ -52,10 +60,11 @@ ramas ni de la entrega.
 
 ## Deuda técnica que no debe ocultarse
 
-1. **Validación externa representativa.** El holdout actual es sintético y no
-   estima producción. Hace falta un corpus real, reciente, licenciado y
-   deduplicado frente a `train.csv`, `dataset_renombrado.csv`, CEAS, Enron,
-   Ling, Nazario, Nigerian Fraud, Phishing Email y SpamAssassin.
+1. **Validación externa plenamente independiente.** DIFrauD añade correo real
+   licenciado, pero es histórico y no puede deduplicarse fila a fila contra el
+   entrenamiento ya saneado. Sigue haciendo falta un corpus reciente, bilingüe,
+   con procedencia verificable y sin solapamiento con CEAS, Enron, Ling, Nazario,
+   Nigerian Fraud, Phishing Email y SpamAssassin.
 2. **OAuth real.** Gmail y Telegram disponen de dobles automatizados, recorrido
    integral local y checklist
    E2E, pero la prueba con credenciales requiere una cuenta de laboratorio y no

@@ -25,6 +25,8 @@ frontera externa que requiere secretos.
    escribe atómicamente en `estado_monitor.json` sin duplicar alertas.
 10. Con un bot y chat de pruebas, enviar el mensaje desde Configuración y
    comprobar recepción. Revocar después los secretos temporales.
+11. Tomar únicamente las capturas 14 a 17 de `docs/DEFENSE_SCREENSHOTS.md`,
+    revisarlas y borrar cualquier dato identificable antes de incorporarlas.
 
 No capturar ni versionar pantallas que muestren tokens, IDs de chat, direcciones
 personales o contenido real. Si un paso falla, conservar solo el error

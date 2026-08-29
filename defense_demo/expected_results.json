@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "purpose": "offline_defense_fallback",
+  "health": {
+    "ok": true,
+    "api_version": "1.0",
+    "architecture": "client-server",
+    "mode": "combinado",
+    "threshold": 26.0,
+    "heur_weight": 35,
+    "neural_weight": 65,
+    "high_confidence_threshold": 70.0,
+    "models": {
+      "es": {
+        "language": "es",
+        "available": true,
+        "version": "432905694ee1",
+        "size_bytes": 6439401
+      },
+      "en": {
+        "language": "en",
+        "available": true,
+        "version": "f414b707d7aa",
+        "size_bytes": 6335457
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "bec_sin_enlace_es",
+      "source": "evaluation/local_emails_v1/es_phishing_bec.eml",
+      "source_sha256": "0c6e731d5fe3c0a06c0e78582efe8db1c73af5be9ecf773ac0879ba560a8fdb7",
+      "expected_label": "phishing",
+      "response_summary": {
+        "label": "phishing",
+        "selected_mode": "combinado",
+        "language": "es",
+        "risk_score": 76.0,
+        "is_phishing": true,
+        "active_signals": [
+          "cambio_datos_bancarios",
+          "lenguaje_urgente",
+          "suplantacion_ejecutivo",
+          "transferencia_urgente"
+        ],
+        "model": {
+          "language": "es",
+          "available": true,
+          "version": "432905694ee1",
+          "size_bytes": 6439401,
+          "active_source": "artifact",
+          "fallback": false
+        }
+      }
+    },
+    {
+      "name": "reunion_legitima_en",
+      "source": "evaluation/local_emails_v1/en_legitimate_meeting.eml",
+      "source_sha256": "600e90fac400f376f8cb3800c1d0ba91801c80ceaaaa8a32954a806c7ba99dec",
+      "expected_label": "legitimate",
+      "response_summary": {
+        "label": "legitimate",
+        "selected_mode": "combinado",
+        "language": "en",
+        "risk_score": 0.0,
+        "is_phishing": false,
+        "active_signals": [],
+        "model": {
+          "language": "en",
+          "available": true,
+          "version": "f414b707d7aa",
+          "size_bytes": 6335457,
+          "active_source": "artifact",
+          "fallback": false
+        }
+      }
+    }
+  ]
+}

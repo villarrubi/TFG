@@ -6,6 +6,11 @@ import time
 from datetime import datetime, timezone
 
 from sistema_phishing.backend_client import BackendClient, backend_url_from_env
+from sistema_phishing.defaults import (
+    DEFAULT_HEUR_WEIGHT,
+    DEFAULT_NEURAL_WEIGHT,
+    DEFAULT_PHISHING_THRESHOLD,
+)
 from sistema_phishing.env_loader import cargar_env_local, env_float, env_int
 from sistema_phishing.gmail_client import (
     construir_servicio_gmail,
@@ -60,10 +65,10 @@ def construir_config() -> MonitorConfig:
     """Construye la configuración del monitor desde variables de entorno."""
     return MonitorConfig(
         state_path=os.getenv("MONITOR_STATE_PATH", DEFAULT_STATE_PATH),
-        threshold=env_float("PHISHING_THRESHOLD", 45.0),
+        threshold=env_float("PHISHING_THRESHOLD", DEFAULT_PHISHING_THRESHOLD),
         mode=os.getenv("MONITOR_ANALYSIS_MODE", "combinado").lower(),
-        heur_weight=env_int("MONITOR_HEUR_WEIGHT", 20),
-        neural_weight=env_int("MONITOR_NEURAL_WEIGHT", 80),
+        heur_weight=env_int("MONITOR_HEUR_WEIGHT", DEFAULT_HEUR_WEIGHT),
+        neural_weight=env_int("MONITOR_NEURAL_WEIGHT", DEFAULT_NEURAL_WEIGHT),
         backend_url=backend_url_from_env(),
         mark_existing_as_seen=os.getenv("MONITOR_MARK_EXISTING_AS_SEEN", "1") != "0",
     )

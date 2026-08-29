@@ -135,11 +135,11 @@ def reconcile_prose(doc) -> None:
         ),
         (
             "La revisión actual de la rama web ejecuta correctamente 44 pruebas",
-            "La rama main ejecuta 81 pruebas automatizadas que protegen los componentes, el contrato cliente-servidor y sus integraciones.",
+            "La rama main ejecuta 87 pruebas automatizadas que protegen los componentes, el contrato cliente-servidor y sus integraciones.",
         ),
         (
             "La revisión actual de la rama web ejecuta 44 pruebas unitarias",
-            "La rama main ejecuta 81 pruebas unitarias y de integración mediante unittest. Cubren EML, combinación, configuración, Gmail, monitor, heurísticas, clasificador, persistencia, cliente y API HTTP, seguridad, extensión, evaluación y Telegram. Todas finalizaron correctamente; los avisos corresponden a iteraciones reducidas del MLP en pruebas rápidas.",
+            "La rama main ejecuta 87 pruebas unitarias y de integración mediante unittest. Cubren EML, BEC, combinación, configuración, Gmail, monitor, heurísticas, clasificador, persistencia, cliente y API HTTP, seguridad, evaluación externa, respaldo, extensión y Telegram. Todas finalizaron correctamente; los avisos corresponden a iteraciones reducidas del MLP en pruebas rápidas.",
         ),
         (
             "En segundo lugar, se evaluó el clasificador neuronal",
@@ -155,7 +155,7 @@ def reconcile_prose(doc) -> None:
         ),
         (
             "Se realizó una prueba funcional del análisis",
-            "Se realizaron comprobaciones funcionales sobre mensajes sintéticos en español e inglés y sobre un correo legítimo de control. Las comprobaciones verificaron los tres modos, el umbral, la selección por idioma y las explicaciones. La suite de 81 pruebas añade contrato HTTP, límites, caché, artefactos inválidos y entradas malformadas; no se presenta como evaluación estadística de producción.",
+            "Se realizaron comprobaciones funcionales sobre mensajes sintéticos en español e inglés y sobre un correo legítimo de control. Las comprobaciones verificaron los tres modos, el umbral, la selección por idioma y las explicaciones. La suite de 87 pruebas añade contrato HTTP, límites, caché, artefactos inválidos y entradas malformadas; no se presenta como evaluación estadística de producción.",
         ),
         (
             "Los resultados confirman el diseño",

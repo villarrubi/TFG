@@ -11,6 +11,7 @@ from .signals import (
     adjuntos_sospechosos,
     asunto_sospechoso,
     cabecera_spoofing,
+    cambio_datos_bancarios,
     contiene_formulario_html,
     contiene_html_sospechoso,
     contiene_javascript_redireccion,
@@ -31,11 +32,13 @@ from .signals import (
     remitente_marca_engano,
     saludo_generico,
     solicitud_datos_credenciales,
+    suplantacion_ejecutivo,
     texto_enlace_distinto,
     tiene_fallo_autenticacion,
     tiene_parametros_sospechosos_url,
     tiene_recibidos_sospechosos,
     tiene_reply_to_diferente,
+    transferencia_urgente,
 )
 
 
@@ -85,6 +88,9 @@ class SignalBuilder:
         return {
             "saludo_generico": saludo_generico(self.correo.body),
             "solicitud_credenciales": solicitud_datos_credenciales(self.correo.body),
+            "cambio_datos_bancarios": cambio_datos_bancarios(self.correo.body),
+            "transferencia_urgente": transferencia_urgente(self.correo.body),
+            "suplantacion_ejecutivo": suplantacion_ejecutivo(self.correo.body),
             "mensaje_id_sospechoso": mensaje_id_sospechoso(self.correo.full_text, self.correo.from_address),
         }
 

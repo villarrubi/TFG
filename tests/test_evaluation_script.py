@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import unittest
@@ -17,6 +18,12 @@ from evaluate_models import (
     metrics_payload,
 )
 
+from sistema_phishing.defaults import (
+    DEFAULT_HEUR_WEIGHT,
+    DEFAULT_NEURAL_WEIGHT,
+    DEFAULT_PHISHING_THRESHOLD,
+)
+
 CALIBRATION_DATASET = os.path.join(
     ROOT, "evaluation", "calibration_controlled_v1.csv"
 )
@@ -33,6 +40,12 @@ class TestEvaluationScript(unittest.TestCase):
             ) + 1
         self.assertEqual(len(rows), 40)
         self.assertEqual(set(counts.values()), {10})
+        calibration = json.loads(
+            Path(ROOT, "evaluation", "calibration_results.json").read_text(encoding="utf-8")
+        )["recommendation"]
+        self.assertEqual(calibration["threshold"], DEFAULT_PHISHING_THRESHOLD)
+        self.assertEqual(calibration["heur_weight"], DEFAULT_HEUR_WEIGHT)
+        self.assertEqual(calibration["neural_weight"], DEFAULT_NEURAL_WEIGHT)
 
     def test_payload_separa_urls_y_metricas_exponen_errores(self):
         row = {
@@ -64,8 +77,18 @@ class TestEvaluationScript(unittest.TestCase):
     def test_evaluacion_eml_es_reproducible(self):
         cases, _ = load_eml_cases(Path(EML_MANIFEST))
 
-        first = evaluate(cases, 45, 20, 80)
-        second = evaluate(cases, 45, 20, 80)
+        first = evaluate(
+            cases,
+            DEFAULT_PHISHING_THRESHOLD,
+            DEFAULT_HEUR_WEIGHT,
+            DEFAULT_NEURAL_WEIGHT,
+        )
+        second = evaluate(
+            cases,
+            DEFAULT_PHISHING_THRESHOLD,
+            DEFAULT_HEUR_WEIGHT,
+            DEFAULT_NEURAL_WEIGHT,
+        )
 
         self.assertEqual(first, second)
 

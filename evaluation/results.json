@@ -15,16 +15,16 @@
     "dataset_sha256": "61d86417de980c747c277d9a9fb9ae97829a8a7762d5ed20eaa20bcd51ef47d9",
     "rows": 40,
     "recommendation": {
-      "heur_weight": 20,
-      "neural_weight": 80,
-      "threshold": 45,
+      "heur_weight": 35,
+      "neural_weight": 65,
+      "threshold": 26,
       "high_confidence_threshold": 70,
       "min_fold_balanced_accuracy": 0.75,
-      "mean_fold_balanced_accuracy": 0.875,
-      "overall_balanced_accuracy": 0.875,
-      "overall_f1": 0.8649,
-      "overall_recall": 0.8,
-      "overall_precision": 0.9412
+      "mean_fold_balanced_accuracy": 0.9,
+      "overall_balanced_accuracy": 0.9,
+      "overall_f1": 0.8947,
+      "overall_recall": 0.85,
+      "overall_precision": 0.9444
     }
   },
   "models": {
@@ -37,50 +37,50 @@
       "sha256": "f414b707d7aa35c6fff11851a047f0ef4df997139f9a949eff50c4c451d7bde4"
     }
   },
-  "threshold": 45.0,
+  "threshold": 26.0,
   "weights": {
-    "heuristic": 20,
-    "neural": 80
+    "heuristic": 35,
+    "neural": 65
   },
   "high_confidence_threshold": 70.0,
   "results": {
     "heuristico": {
       "overall": {
         "n": 16,
-        "tp": 6,
+        "tp": 8,
         "tn": 8,
         "fp": 0,
-        "fn": 2,
-        "accuracy": 0.875,
+        "fn": 0,
+        "accuracy": 1.0,
         "precision": 1.0,
-        "recall": 0.75,
-        "f1": 0.8571,
-        "balanced_accuracy": 0.875
+        "recall": 1.0,
+        "f1": 1.0,
+        "balanced_accuracy": 1.0
       },
       "by_language": {
         "es": {
           "n": 8,
-          "tp": 3,
+          "tp": 4,
           "tn": 4,
           "fp": 0,
-          "fn": 1,
-          "accuracy": 0.875,
+          "fn": 0,
+          "accuracy": 1.0,
           "precision": 1.0,
-          "recall": 0.75,
-          "f1": 0.8571,
-          "balanced_accuracy": 0.875
+          "recall": 1.0,
+          "f1": 1.0,
+          "balanced_accuracy": 1.0
         },
         "en": {
           "n": 8,
-          "tp": 3,
+          "tp": 4,
           "tn": 4,
           "fp": 0,
-          "fn": 1,
-          "accuracy": 0.875,
+          "fn": 0,
+          "accuracy": 1.0,
           "precision": 1.0,
-          "recall": 0.75,
-          "f1": 0.8571,
-          "balanced_accuracy": 0.875
+          "recall": 1.0,
+          "f1": 1.0,
+          "balanced_accuracy": 1.0
         }
       },
       "cases": [
@@ -96,8 +96,8 @@
           "id": "local-es-p-bec",
           "language": "es",
           "label": 1,
-          "prediction": 0,
-          "risk_score": 6.0,
+          "prediction": 1,
+          "risk_score": 76.0,
           "scenario": "fraude BEC sin enlace"
         },
         {
@@ -160,8 +160,8 @@
           "id": "local-en-p-bec",
           "language": "en",
           "label": 1,
-          "prediction": 0,
-          "risk_score": 0.0,
+          "prediction": 1,
+          "risk_score": 70.0,
           "scenario": "linkless BEC fraud"
         },
         {
@@ -218,27 +218,27 @@
       "overall": {
         "n": 16,
         "tp": 6,
-        "tn": 8,
-        "fp": 0,
+        "tn": 6,
+        "fp": 2,
         "fn": 2,
-        "accuracy": 0.875,
-        "precision": 1.0,
+        "accuracy": 0.75,
+        "precision": 0.75,
         "recall": 0.75,
-        "f1": 0.8571,
-        "balanced_accuracy": 0.875
+        "f1": 0.75,
+        "balanced_accuracy": 0.75
       },
       "by_language": {
         "es": {
           "n": 8,
           "tp": 3,
-          "tn": 4,
-          "fp": 0,
+          "tn": 2,
+          "fp": 2,
           "fn": 1,
-          "accuracy": 0.875,
-          "precision": 1.0,
+          "accuracy": 0.625,
+          "precision": 0.6,
           "recall": 0.75,
-          "f1": 0.8571,
-          "balanced_accuracy": 0.875
+          "f1": 0.6667,
+          "balanced_accuracy": 0.625
         },
         "en": {
           "n": 8,
@@ -298,7 +298,7 @@
           "id": "local-es-l-password",
           "language": "es",
           "label": 0,
-          "prediction": 0,
+          "prediction": 1,
           "risk_score": 30.1,
           "scenario": "confirmación de contraseña sin acción"
         },
@@ -314,7 +314,7 @@
           "id": "local-es-l-awareness",
           "language": "es",
           "label": 0,
-          "prediction": 0,
+          "prediction": 1,
           "risk_score": 38.3,
           "scenario": "formación de seguridad con vocabulario sensible"
         },
@@ -387,40 +387,40 @@
     "combinado": {
       "overall": {
         "n": 16,
-        "tp": 6,
-        "tn": 8,
-        "fp": 0,
-        "fn": 2,
-        "accuracy": 0.875,
-        "precision": 1.0,
-        "recall": 0.75,
-        "f1": 0.8571,
-        "balanced_accuracy": 0.875
+        "tp": 8,
+        "tn": 7,
+        "fp": 1,
+        "fn": 0,
+        "accuracy": 0.9375,
+        "precision": 0.8889,
+        "recall": 1.0,
+        "f1": 0.9412,
+        "balanced_accuracy": 0.9375
       },
       "by_language": {
         "es": {
           "n": 8,
-          "tp": 3,
-          "tn": 4,
-          "fp": 0,
-          "fn": 1,
+          "tp": 4,
+          "tn": 3,
+          "fp": 1,
+          "fn": 0,
           "accuracy": 0.875,
-          "precision": 1.0,
-          "recall": 0.75,
-          "f1": 0.8571,
+          "precision": 0.8,
+          "recall": 1.0,
+          "f1": 0.8889,
           "balanced_accuracy": 0.875
         },
         "en": {
           "n": 8,
-          "tp": 3,
+          "tp": 4,
           "tn": 4,
           "fp": 0,
-          "fn": 1,
-          "accuracy": 0.875,
+          "fn": 0,
+          "accuracy": 1.0,
           "precision": 1.0,
-          "recall": 0.75,
-          "f1": 0.8571,
-          "balanced_accuracy": 0.875
+          "recall": 1.0,
+          "f1": 1.0,
+          "balanced_accuracy": 1.0
         }
       },
       "cases": [
@@ -436,8 +436,8 @@
           "id": "local-es-p-bec",
           "language": "es",
           "label": 1,
-          "prediction": 0,
-          "risk_score": 37.8,
+          "prediction": 1,
+          "risk_score": 76.0,
           "scenario": "fraude BEC sin enlace"
         },
         {
@@ -461,7 +461,7 @@
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 3.4,
+          "risk_score": 3.5,
           "scenario": "reunión interna"
         },
         {
@@ -469,7 +469,7 @@
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 26.5,
+          "risk_score": 23.8,
           "scenario": "confirmación de contraseña sin acción"
         },
         {
@@ -477,15 +477,15 @@
           "language": "es",
           "label": 0,
           "prediction": 0,
-          "risk_score": 1.2,
+          "risk_score": 2.1,
           "scenario": "factura legítima con autenticación alineada"
         },
         {
           "id": "local-es-l-awareness",
           "language": "es",
           "label": 0,
-          "prediction": 0,
-          "risk_score": 33.0,
+          "prediction": 1,
+          "risk_score": 29.1,
           "scenario": "formación de seguridad con vocabulario sensible"
         },
         {
@@ -500,8 +500,8 @@
           "id": "local-en-p-bec",
           "language": "en",
           "label": 1,
-          "prediction": 0,
-          "risk_score": 8.9,
+          "prediction": 1,
+          "risk_score": 70.0,
           "scenario": "linkless BEC fraud"
         },
         {
@@ -533,7 +533,7 @@
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 1.2,
+          "risk_score": 2.1,
           "scenario": "password confirmation with no action"
         },
         {
@@ -549,7 +549,7 @@
           "language": "en",
           "label": 0,
           "prediction": 0,
-          "risk_score": 1.2,
+          "risk_score": 2.1,
           "scenario": "security awareness with sensitive wording"
         }
       ]

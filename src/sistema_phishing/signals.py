@@ -5,10 +5,13 @@
 from .content_signals import (
     adjuntos_sospechosos,
     asunto_sospechoso,
+    cambio_datos_bancarios,
     contiene_palabras_urgentes,
     contiene_referencia_archivo,
     saludo_generico,
     solicitud_datos_credenciales,
+    suplantacion_ejecutivo,
+    transferencia_urgente,
 )
 from .header_signals import (
     cabecera_spoofing,
@@ -52,6 +55,7 @@ __all__ = [
     "adjuntos_sospechosos",
     "asunto_sospechoso",
     "cabecera_spoofing",
+    "cambio_datos_bancarios",
     "contiene_formulario_html",
     "contiene_html_sospechoso",
     "contiene_javascript_redireccion",
@@ -80,10 +84,12 @@ __all__ = [
     "remitente_marca_engano",
     "saludo_generico",
     "solicitud_datos_credenciales",
+    "suplantacion_ejecutivo",
     "texto_contiene_dominio",
     "texto_enlace_distinto",
     "tiene_fallo_autenticacion",
     "tiene_parametros_sospechosos_url",
     "tiene_recibidos_sospechosos",
     "tiene_reply_to_diferente",
+    "transferencia_urgente",
 ]

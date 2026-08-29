@@ -12,6 +12,11 @@ from pathlib import Path
 from sistema_phishing.analizador_email import parsear_eml_bytes
 from sistema_phishing.analysis_service import EmailAnalysisService
 from sistema_phishing.backend_service import AnalysisBackendConfig
+from sistema_phishing.defaults import (
+    DEFAULT_HEUR_WEIGHT,
+    DEFAULT_NEURAL_WEIGHT,
+    DEFAULT_PHISHING_THRESHOLD,
+)
 from sistema_phishing.metrics import calcular_metricas_clasificacion
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -289,9 +294,9 @@ def main() -> None:
     parser.add_argument("--dataset", type=Path, default=DEFAULT_DATASET)
     parser.add_argument("--json-output", type=Path, default=DEFAULT_JSON)
     parser.add_argument("--report-output", type=Path, default=DEFAULT_REPORT)
-    parser.add_argument("--threshold", type=float, default=45.0)
-    parser.add_argument("--heur-weight", type=int, default=20)
-    parser.add_argument("--neural-weight", type=int, default=80)
+    parser.add_argument("--threshold", type=float, default=DEFAULT_PHISHING_THRESHOLD)
+    parser.add_argument("--heur-weight", type=int, default=DEFAULT_HEUR_WEIGHT)
+    parser.add_argument("--neural-weight", type=int, default=DEFAULT_NEURAL_WEIGHT)
     parser.add_argument("--calibration", type=Path, default=DEFAULT_CALIBRATION)
     args = parser.parse_args()
 

@@ -18,6 +18,11 @@ from sistema_phishing.analysis_service import (
 )
 from sistema_phishing.backend_client import BackendClient, backend_url_from_env
 from sistema_phishing.backend_service import MAX_LIST_ITEMS, MAX_TEXT_CHARS
+from sistema_phishing.defaults import (
+    DEFAULT_HEUR_WEIGHT,
+    DEFAULT_NEURAL_WEIGHT,
+    DEFAULT_PHISHING_THRESHOLD,
+)
 from sistema_phishing.env_loader import cargar_env_local, env_float, env_int
 from sistema_phishing.gmail_monitor import MonitorConfig
 from sistema_phishing.http_api import crear_handler as crear_handler_http
@@ -261,7 +266,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--threshold",
         type=float,
-        default=env_float("GMAIL_EXTENSION_THRESHOLD", 45.0),
+        default=env_float("GMAIL_EXTENSION_THRESHOLD", DEFAULT_PHISHING_THRESHOLD),
         help="Umbral de riesgo para marcar phishing.",
     )
     parser.add_argument(
@@ -273,13 +278,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--heur-weight",
         type=int,
-        default=env_int("GMAIL_EXTENSION_HEUR_WEIGHT", 20),
+        default=env_int("GMAIL_EXTENSION_HEUR_WEIGHT", DEFAULT_HEUR_WEIGHT),
         help="Peso heuristico en modo combinado.",
     )
     parser.add_argument(
         "--neural-weight",
         type=int,
-        default=env_int("GMAIL_EXTENSION_NEURAL_WEIGHT", 80),
+        default=env_int("GMAIL_EXTENSION_NEURAL_WEIGHT", DEFAULT_NEURAL_WEIGHT),
         help="Peso neuronal en modo combinado.",
     )
     return parser.parse_args()

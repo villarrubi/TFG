@@ -26,6 +26,7 @@ _docx_qa/
 _docx_qa_*/
 debug.log
 .test_tmp/
+.external-evaluation/
 
 # OS
 .DS_Store

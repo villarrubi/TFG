@@ -75,6 +75,7 @@ class TestTelegramNotifier(unittest.TestCase):
             {"from": "a@example.com", "subject": "Aviso"},
             {
                 "risk_score": 40,
+                "is_phishing": True,
                 "urls": [],
                 "signals": {
                     "reply_to_diferente": False,
@@ -90,3 +91,4 @@ class TestTelegramNotifier(unittest.TestCase):
 
         self.assertIn("Lenguaje urgente", mensaje)
         self.assertNotIn("No se encontró", mensaje)
+        self.assertIn("Riesgo alto", mensaje)

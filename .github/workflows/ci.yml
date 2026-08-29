@@ -37,6 +37,7 @@ jobs:
         run: |
           python scripts/calibrate_combined.py --check
           python scripts/evaluate_models.py
+          python scripts/prepare_defense_demo.py --check
           git diff --exit-code -- EVALUATION_REPORT.md evaluation/calibration_results.json evaluation/results.json
       - name: Pruebas reales de navegador
         run: python -m unittest discover -s browser_tests -p "test_*.py"

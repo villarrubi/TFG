@@ -1,6 +1,6 @@
 # Validación de Gmail y Telegram
 
-Fecha de ejecución: 28 de agosto de 2026.
+Fecha de ejecución: 29 de agosto de 2026.
 
 ## Resultado automatizado local
 
@@ -18,6 +18,7 @@ Resultado: superado. También se prueba por separado el contrato de listado,
 descarga `raw` y perfil de Gmail, además de errores de red y escape HTML de
 Telegram. Esta ejecución descubrió y corrigió la falta de serialización JSON de
 cabeceras enriquecidas y bytes SMTPUTF8 conservados como `surrogateescape`.
+La suite completa que incluye este recorrido contiene 87 pruebas Python.
 
 ## Preparación de servicios reales
 
@@ -31,3 +32,5 @@ Por tanto, no se inició OAuth ni se envió un mensaje externo. Esto evita inven
 una validación y protege cuentas personales. Cuando se proporcionen credenciales
 de laboratorio, debe ejecutarse `docs/OAUTH_E2E_CHECKLIST.md` y registrar solo
 fecha, entorno y resultado anonimizado; nunca tokens, chats ni correos reales.
+Las capturas concretas y sus reglas de anonimización están enumeradas en
+`docs/DEFENSE_SCREENSHOTS.md`.

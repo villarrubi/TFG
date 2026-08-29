@@ -10,6 +10,12 @@ from sistema_phishing.backend_service import (
     AnalysisBackendConfig,
     AnalysisBackendService,
 )
+from sistema_phishing.defaults import (
+    DEFAULT_HEUR_WEIGHT,
+    DEFAULT_HIGH_CONFIDENCE_THRESHOLD,
+    DEFAULT_NEURAL_WEIGHT,
+    DEFAULT_PHISHING_THRESHOLD,
+)
 from sistema_phishing.env_loader import cargar_env_local, env_float, env_int
 from sistema_phishing.http_api import crear_servidor_http
 from sistema_phishing.network import validar_host_local
@@ -45,13 +51,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--mode", choices=sorted(VALID_MODES), default=os.getenv("BACKEND_MODE", MODO_COMBINADO)
     )
-    parser.add_argument("--threshold", type=float, default=env_float("BACKEND_THRESHOLD", 45.0))
-    parser.add_argument("--heur-weight", type=int, default=env_int("BACKEND_HEUR_WEIGHT", 20))
-    parser.add_argument("--neural-weight", type=int, default=env_int("BACKEND_NEURAL_WEIGHT", 80))
+    parser.add_argument("--threshold", type=float, default=env_float("BACKEND_THRESHOLD", DEFAULT_PHISHING_THRESHOLD))
+    parser.add_argument("--heur-weight", type=int, default=env_int("BACKEND_HEUR_WEIGHT", DEFAULT_HEUR_WEIGHT))
+    parser.add_argument("--neural-weight", type=int, default=env_int("BACKEND_NEURAL_WEIGHT", DEFAULT_NEURAL_WEIGHT))
     parser.add_argument(
         "--high-confidence-threshold",
         type=float,
-        default=env_float("BACKEND_HIGH_CONFIDENCE_THRESHOLD", 70.0),
+        default=env_float("BACKEND_HIGH_CONFIDENCE_THRESHOLD", DEFAULT_HIGH_CONFIDENCE_THRESHOLD),
     )
     return parser.parse_args()
 

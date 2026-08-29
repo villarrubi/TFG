@@ -678,7 +678,7 @@ Git y GitHub	Control de versiones, trazabilidad y respaldo del desarrollo.
 
 Validación y control de calidad
 
-La validación del sistema se realiza en cinco niveles complementarios: 81 pruebas Python de componentes e integración, 2 recorridos reales con Chromium, un benchmark reproducible, una calibración controlada bilingüe de 40 casos y una evaluación final sobre 16 archivos EML locales reservados. Un recorrido levanta cliente web y backend separados; otro prueba Gmail, HTTP y Telegram de extremo a extremo con dobles externos. Los corpus son sintéticos y no permiten extrapolar a producción.
+La validación del sistema se realiza en seis niveles complementarios: 87 pruebas Python de componentes e integración, 2 recorridos reales con Chromium, un benchmark reproducible, una calibración bilingüe de 40 casos, 16 EML locales reservados y un diagnóstico de 1.528 textos externos DIFrauD. Un recorrido levanta cliente web y backend separados; otro prueba Gmail, HTTP y Telegram de extremo a extremo con dobles externos. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento con fuentes de entrenamiento; ninguna cifra se extrapola a producción.
 
 En segundo lugar, la aplicación permite evaluar el clasificador neuronal con un CSV de prueba independiente, separado del conjunto de entrenamiento. La interfaz calcula exactitud, precisión, recall, F1, accuracy balanceada y la matriz de confusión; no se fija una partición automática 70/30 ni se presentan resultados estadísticos sin indicar el conjunto utilizado. En tercer lugar, se comprobaron los flujos funcionales de la aplicación web: análisis de texto pegado y archivos .eml, selección del modelo por idioma, importación mediante Gmail y navegación entre las vistas de detección y entrenamiento. Los resultados reproducibles se presentan en la sección de pruebas y discusión.
 
@@ -714,7 +714,7 @@ El flujo general comienza con la entrada del correo. Si el usuario sube un archi
 
 A continuación, la entrada se normaliza en una representación interna común (CorreoAnalizado), de modo que las reglas heurísticas no dependen del formato original del mensaje.
 
-Una vez normalizado el correo, el componente SignalBuilder ejecuta las reglas de detección y genera un diccionario de señales booleanas. Cada señal representa un posible indicador de phishing, como la existencia de un Reply-To diferente al From, fallos SPF/DKIM/DMARC, enlaces con dominios sospechosos, formularios HTML, redirecciones mediante JavaScript o presencia de lenguaje urgente. Si el modo de análisis lo requiere, se detecta el idioma del texto y se carga el modelo neuronal correspondiente.
+Una vez normalizado el correo, SignalBuilder ejecuta 31 reglas y produce un diccionario estable de señales. Además de cabeceras, autenticación, URLs, HTML y adjuntos, incorpora tres patrones bilingües para BEC sin enlace: cambio de datos bancarios, orden urgente de transferencia y suplantación de un directivo bajo aislamiento o confidencialidad. Si el modo lo requiere, el backend detecta el idioma y reutiliza el modelo neuronal central correspondiente.
 
 RiskScorer asigna una ponderación a cada señal activa y calcula una puntuación final entre 0 y 100. Si la puntuación supera el umbral configurado, el mensaje se clasifica como phishing probable. ExplanationBuilder transforma las señales en explicaciones comprensibles. El backend central devuelve ese resultado por HTTP a Streamlit, la extensión o el monitor; los clientes solo lo presentan o, en el caso del monitor, pueden generar una alerta de Telegram y registrar el identificador para evitar duplicados.
 
@@ -752,7 +752,7 @@ Durante el desarrollo se ha realizado una refactorización orientada a SOLID y a
 
 Esta organización permite que cada módulo tenga una responsabilidad principal. Por ejemplo, SignalBuilder no calcula puntuaciones, sino que únicamente construye señales; RiskScorer no conoce cómo se han obtenido las señales, solo calcula el riesgo; y ExplanationBuilder no decide si un correo es phishing, sino que transforma resultados técnicos en texto comprensible.
 
-Esta separación facilita la evolución del prototipo. Pueden añadirse reglas o sustituirse el clasificador en el servidor sin redistribuir los clientes. La versión revisada ejecuta correctamente 81 pruebas Python y 2 recorridos reales con Chromium; GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible y navegación de interfaz.
+Esta separación facilita la evolución del prototipo. Pueden añadirse reglas o sustituirse el clasificador en el servidor sin redistribuir los clientes. La versión revisada ejecuta correctamente 87 pruebas Python y 2 recorridos reales con Chromium; GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible, respaldo de defensa y navegación de interfaz.
 
 Limitaciones
 
@@ -766,7 +766,7 @@ Pruebas, resultados y discusión
 
 Pruebas unitarias y de integración
 
-La versión revisada ejecuta 81 pruebas unitarias y de integración mediante unittest. Cubren EML, combinación calibrada, selección determinista de idioma, cliente HTTP, entrenamiento central, Gmail, monitor, heurísticas, clasificador, persistencia, API, autenticación administrativa, extensión, evaluación y Telegram. Una prueba integral recorre Gmail EML, JSON, HTTP, backend, estado y alerta Telegram. Además, 2 pruebas con Chromium recorren la extensión y un análisis real entre Streamlit y backend. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.
+La versión revisada ejecuta 87 pruebas unitarias y de integración mediante unittest. Cubren EML, señales BEC, combinación calibrada, selección determinista de idioma, cliente HTTP, entrenamiento central, Gmail, monitor, heurísticas, clasificador, persistencia, API, autenticación administrativa, extensión, evaluación externa, respaldo de defensa y Telegram. Una prueba integral recorre Gmail EML, JSON, HTTP, backend, estado y alerta Telegram. Además, 2 pruebas con Chromium recorren la extensión y un análisis real entre Streamlit y backend. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.
 
 Rendimiento y eficiencia de arranque
 
@@ -782,19 +782,19 @@ Para probar el arranque del clasificador sin depender de información personal, 
 
 Resultados del clasificador neuronal
 
-La metodología cuantitativa separa ajuste y comprobación. Cuarenta casos controlados y cinco particiones estratificadas calibran el modo combinado en 20 % heurístico, 80 % neuronal, umbral 45 y conservación de evidencia a partir de 70. Después se evalúan 16 EML locales reservados con cabeceras, HTML y adjuntos. Los tres modos obtuvieron 87,5 % de accuracy, 100,0 % de precisión, 75,0 % de recall y 85,7 % de F1. Se registran hashes y errores por caso. Los escenarios son sintéticos y no estiman producción.
+La metodología cuantitativa separa ajuste y comprobación. Cuarenta casos controlados y cinco particiones estratificadas calibran el modo combinado en 35 % heurístico, 65 % neuronal, umbral 26 y conservación de evidencia a partir de 70. Después se evalúan 16 EML reservados: el heurístico alcanza 100,0 % de accuracy, recall y F1; el combinado obtiene 93,8 % de accuracy, 100,0 % de recall y 94,1 % de F1; el neuronal obtiene 75,0 % en esas métricas. Un diagnóstico DIFrauD de 1.528 textos externos da 90,8 % de accuracy y 96,4 % de recall al combinado, pero se documenta riesgo de solapamiento. Ninguna muestra estima producción.
 
 Comportamiento del sistema heurístico
 
-La mezcla ponderada original podía diluir una evidencia fuerte. La calibración separada asignó 20 % a heurística y 80 % al modelo, mantuvo el umbral 45 y añadió un nivel de alta confianza 70: si cualquiera lo alcanza, su puntuación máxima se conserva. En los EML reservados esto evita perder cabeceras claramente falsificadas cuando el texto aporta poca evidencia. Los dos falsos negativos restantes son fraudes BEC sin enlace, una limitación honesta para trabajo futuro.
+La mezcla ponderada original podía diluir una evidencia fuerte. Tras incorporar señales bilingües de cambio bancario, transferencia urgente y suplantación ejecutiva, la calibración separada asignó 35 % a heurística y 65 % al modelo, fijó el umbral 26 y mantuvo alta confianza 70. Los indicios BEC aislados pesan poco y solo la coincidencia de los tres recibe el refuerzo de alta confianza. Los dos BEC sin enlace reservados pasan a detectarse. Esto resuelve esos escenarios concretos, no todo BEC posible.
 
 Prueba funcional de la aplicación web
 
-Se realizaron 81 pruebas Python y 2 recorridos Chromium. Las comprobaciones verifican los tres modos, calibración, idioma determinista, EML serializable, Gmail a backend y Telegram, cliente HTTP, entrenamiento y versión central, caché, señales, API, límites, token administrativo, extensión y Streamlit. Los 16 EML reservados añaden medición separada, pero no se presentan como evaluación estadística de producción.
+Se realizaron 87 pruebas Python y 2 recorridos Chromium. Las comprobaciones verifican los tres modos, calibración, idioma determinista, EML serializable, Gmail a backend y Telegram, cliente HTTP, entrenamiento y versión central, caché, señales BEC, API, límites, token administrativo, evaluación externa, respaldo, extensión y Streamlit. Los 16 EML y DIFrauD añaden medición separada con sus límites expresos; no se presentan como evaluación estadística de producción.
 
 Discusión
 
-Los resultados confirman el diseño como base funcional y muestran que la fusión calibrada ya no degrada las señales técnicas de alta confianza: en los 16 EML reservados iguala el 87,5 % de accuracy y el 75,0 % de recall del modo heurístico, sin falsos positivos. La limitación principal son dos casos BEC sin enlace y la ausencia de un corpus real estadísticamente representativo, reciente, licenciado y deduplicado frente al entrenamiento.
+Los resultados confirman el diseño como base funcional: en los 16 EML reservados, el heurístico obtiene 100,0 % de accuracy y recall; el combinado detecta los ocho phishing, incluido BEC sin enlace, con 93,8 % de accuracy y un falso positivo; el neuronal conserva dos falsos negativos y dos falsos positivos. En DIFrauD el combinado logra 90,8 % de accuracy y 96,4 % de recall. La limitación principal pasa a ser la independencia y actualidad de los datos externos, además de la falta de validación real bilingüe y de controles de producción.
 
 Conclusiones
 
@@ -812,13 +812,13 @@ El cuarto objetivo, diseñar e implementar un sistema heurístico explicable y u
 
 El quinto objetivo, integrar la aplicación con Gmail y proporcionar alertas mediante Telegram, se cumple mediante OAuth de solo lectura y el monitor opcional. Los mensajes autorizados se envían al backend central y Telegram recibe únicamente la alerta configurada; ni Streamlit ni el monitor duplican la lógica de análisis.
 
-El sexto objetivo, evaluar el comportamiento del sistema, se aborda con 81 pruebas Python, 2 recorridos Chromium —incluido web a backend—, benchmark reproducible, calibración separada de 40 casos y 16 EML reservados con hashes, matriz de confusión y resultados por mensaje. La estimación sobre correo real sigue delimitada como trabajo pendiente.
+El sexto objetivo, evaluar el comportamiento del sistema, se aborda con 87 pruebas Python, 2 recorridos Chromium —incluido web a backend—, benchmark reproducible, calibración separada de 40 casos, 16 EML reservados y 1.528 textos externos con hashes, matriz de confusión y errores por identificador. La estimación independiente sobre correo real reciente sigue delimitada como trabajo pendiente.
 
-Entre los logros principales destacan la arquitectura cliente-servidor, una versión activa por idioma compartida por todos los clientes, activación atómica, Gmail/Telegram, 81 pruebas Python, 2 pruebas de navegador, CI, calibración separada y evaluación trazable. La carga diferida reduce históricamente el arranque de heurísticas un 96,6 % y el de la aplicación un 76,2 %. La fusión 20/80 conserva evidencia de alta confianza.
+Entre los logros principales destacan la arquitectura cliente-servidor, una versión activa por idioma compartida por todos los clientes, activación atómica, Gmail/Telegram, 87 pruebas Python, 2 pruebas de navegador, CI, calibración separada, detección BEC y evaluación trazable local/externa. La carga diferida reduce históricamente el arranque de heurísticas un 96,6 % y el de la aplicación un 76,2 %. La fusión 35/65 conserva evidencia de alta confianza.
 
 Trabajo futuro
 
-Como trabajo futuro prioritario se plantea confirmar la calibración sobre datasets reales y recientes en español e inglés, con licencia, procedencia temporal y deduplicación frente al entrenamiento, y mejorar la detección de BEC sin enlaces. También se estudiarán ataques adversariales, transformers/LLM, reputación de dominios, análisis dinámico y etiquetado seguro. Un despliegue multiusuario requerirá autenticación, TLS, rate limiting, secretos e aislamiento de sesiones.
+Como trabajo futuro prioritario se plantea confirmar la calibración sobre datasets reales, recientes e independientes en español e inglés, con licencia, procedencia temporal y deduplicación frente al entrenamiento, y ampliar la detección BEC más allá de los patrones actuales. También se estudiarán ataques adversariales, transformers/LLM, reputación de dominios, análisis dinámico y etiquetado seguro. Un despliegue multiusuario requerirá autenticación, TLS, rate limiting, secretos e aislamiento de sesiones.
 
 Glosario
 
@@ -1306,7 +1306,7 @@ Anexo D: Lista de verificación de la validación
 
 La siguiente lista resume las comprobaciones realizadas sobre el prototipo durante la fase de validación, tal y como se detalla en el capítulo de pruebas y resultados.
 
-Verificado: 81 pruebas Python y 2 recorridos reales con Chromium, incluido cliente web a backend.
+Verificado: 87 pruebas Python y 2 recorridos reales con Chromium, incluido cliente web a backend.
 
 Verificado: Benchmark reproducible de arranque e inferencia con comparación antes/después.
 
@@ -1332,4 +1332,4 @@ Anexo E: Resumen de arquitectura y evidencia
 
 El sistema es cliente-servidor. Streamlit, la extensión y el monitor son clientes HTTP; backend_server.py centraliza parser, análisis, entrenamiento y una versión activa por idioma. En la configuración de defensa todos los procesos están en el mismo equipo y loopback, pero el servidor es obligatorio y puede separarse cambiando PHISHING_BACKEND_URL.
 
-La evidencia reproducible comprende 81 pruebas Python, 2 recorridos con Chromium, integración continua, benchmark, calibración separada de 40 casos y evaluación de 16 EML reservados. Los corpus sintéticos no sustituyen una evaluación externa representativa.
+La evidencia reproducible comprende 87 pruebas Python, 2 recorridos con Chromium, integración continua, benchmark, calibración separada de 40 casos, evaluación de 16 EML reservados y diagnóstico de 1.528 textos DIFrauD. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento; ninguna cifra estima producción.

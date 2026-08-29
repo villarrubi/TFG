@@ -7,7 +7,7 @@ Esta ejecución usa un corpus local de archivos EML reservado después de calibr
 - Dataset: `evaluation/local_emails_v1/manifest.json` (16 EML; SHA-256 de manifiesto + mensajes `e4cca95dd15a28229451138c063ae591c00961b0c5b275c58dada5dd0a6bb89d`).
 - Composición: ES clase 0: 4, ES clase 1: 4, EN clase 0: 4, EN clase 1: 4.
 - Calibración separada: `evaluation/calibration_results.json` (40 casos; SHA-256 `61d86417de980c747c277d9a9fb9ae97829a8a7762d5ed20eaa20bcd51ef47d9`).
-- Umbral común: 45.0 %; combinado 20 % heurístico + 80 % neuronal.
+- Umbral común: 26.0 %; combinado 35 % heurístico + 65 % neuronal.
 - Evidencia de alta confianza: si cualquier detector alcanza 70.0 %, su puntuación no se diluye en la media.
 - Modelo ES SHA-256: `432905694ee1db6ba1ef7c33dfb8e2540ee94efbbbc09c952837fd786482dbad`.
 - Modelo EN SHA-256: `f414b707d7aa35c6fff11851a047f0ef4df997139f9a949eff50c4c451d7bde4`.
@@ -16,20 +16,20 @@ Esta ejecución usa un corpus local de archivos EML reservado después de calibr
 
 | Modo | Accuracy | Precisión | Recall | F1 | Accuracy balanceada | VP | VN | FP | FN |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| heuristico | 87.5 % | 100.0 % | 75.0 % | 85.7 % | 87.5 % | 6 | 8 | 0 | 2 |
-| neural | 87.5 % | 100.0 % | 75.0 % | 85.7 % | 87.5 % | 6 | 8 | 0 | 2 |
-| combinado | 87.5 % | 100.0 % | 75.0 % | 85.7 % | 87.5 % | 6 | 8 | 0 | 2 |
+| heuristico | 100.0 % | 100.0 % | 100.0 % | 100.0 % | 100.0 % | 8 | 8 | 0 | 0 |
+| neural | 75.0 % | 75.0 % | 75.0 % | 75.0 % | 75.0 % | 6 | 6 | 2 | 2 |
+| combinado | 93.8 % | 88.9 % | 100.0 % | 94.1 % | 93.8 % | 8 | 7 | 1 | 0 |
 
 ## Desglose por idioma
 
 | Modo | Idioma | N | Accuracy | Recall | F1 | FP | FN |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| heuristico | ES | 8 | 87.5 % | 75.0 % | 85.7 % | 0 | 1 |
-| heuristico | EN | 8 | 87.5 % | 75.0 % | 85.7 % | 0 | 1 |
-| neural | ES | 8 | 87.5 % | 75.0 % | 85.7 % | 0 | 1 |
+| heuristico | ES | 8 | 100.0 % | 100.0 % | 100.0 % | 0 | 0 |
+| heuristico | EN | 8 | 100.0 % | 100.0 % | 100.0 % | 0 | 0 |
+| neural | ES | 8 | 62.5 % | 75.0 % | 66.7 % | 2 | 1 |
 | neural | EN | 8 | 87.5 % | 75.0 % | 85.7 % | 0 | 1 |
-| combinado | ES | 8 | 87.5 % | 75.0 % | 85.7 % | 0 | 1 |
-| combinado | EN | 8 | 87.5 % | 75.0 % | 85.7 % | 0 | 1 |
+| combinado | ES | 8 | 87.5 % | 100.0 % | 88.9 % | 1 | 0 |
+| combinado | EN | 8 | 100.0 % | 100.0 % | 100.0 % | 0 | 0 |
 
 ## Interpretación responsable
 

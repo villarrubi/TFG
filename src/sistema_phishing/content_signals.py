@@ -21,6 +21,63 @@ def solicitud_datos_credenciales(texto: str) -> bool:
     return bool(re.search(r"\b(credenciales|contraseña|password|usuario|datos de acceso|iniciar sesión|inicie sesión|login|codigo de verificacion|código de verificación|verificación de seguridad)\b", texto, flags=re.IGNORECASE))
 
 
+def cambio_datos_bancarios(texto: str) -> bool:
+    """Detecta peticiones de sustituir datos bancarios o del beneficiario."""
+    cambio = re.search(
+        r"\b(cambi\w*|sustitu\w*|actualiz\w*|reemplaz\w*|nuev[oa]s?|"
+        r"chang\w*|replac\w*|updat\w*|new)\b",
+        texto,
+        flags=re.IGNORECASE,
+    )
+    datos_bancarios = re.search(
+        r"\b(iban|swift|cuenta bancaria|datos bancarios|beneficiari\w*|"
+        r"bank account|bank details|banking details|beneficiar\w*|routing number)\b",
+        texto,
+        flags=re.IGNORECASE,
+    )
+    return bool(cambio and datos_bancarios)
+
+
+def transferencia_urgente(texto: str) -> bool:
+    """Detecta una orden urgente de transferencia o pago, en español o inglés."""
+    operacion = re.search(
+        r"\b(transferencia\w*|transfer\w*|pago\w*|payment\w*|wire)\b",
+        texto,
+        flags=re.IGNORECASE,
+    )
+    accion = re.search(
+        r"\b(conf[ií]rm\w*|complet\w*|realiz\w*|proces\w*|ejecut\w*|"
+        r"env[ií]\w*|autor[ií]z\w*|send\w*|make|pay|execut\w*|authori[sz]\w*)\b",
+        texto,
+        flags=re.IGNORECASE,
+    )
+    urgencia = re.search(
+        r"\b(ahora|hoy|urgente\w*|inmediat\w*|antes de|"
+        r"now|today|urgent\w*|immediate\w*|asap|before noon|end of day|eod)\b",
+        texto,
+        flags=re.IGNORECASE,
+    )
+    return bool(operacion and accion and urgencia)
+
+
+def suplantacion_ejecutivo(texto: str) -> bool:
+    """Detecta el pretexto de autoridad y aislamiento habitual en ataques BEC."""
+    autoridad = re.search(
+        r"\b(director(?:a)?|president(?:e|a)?|gerente|jefe|ceo|cfo|"
+        r"finance director|chief executive|chief financial|boss)\b",
+        texto,
+        flags=re.IGNORECASE,
+    )
+    aislamiento = re.search(
+        r"\b(reunid[oa]|no puedo atender|no (?:me )?llames|confidencial\w*|"
+        r"en secreto|meeting|cannot (?:take|answer)|can't (?:take|answer)|"
+        r"do not call|don't call|confidential\w*|secret\w*)\b",
+        texto,
+        flags=re.IGNORECASE,
+    )
+    return bool(autoridad and aislamiento)
+
+
 def adjuntos_sospechosos(attachments: list[str]) -> bool:
     """Detecta adjuntos con extensiones sospechosas en el correo."""
     # La lista mezcla ejecutables, scripts, comprimidos y documentos con macros:

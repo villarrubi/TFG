@@ -14,6 +14,11 @@ from .analysis_service import (
     MODO_NEURAL,
 )
 from .backend_client import DEFAULT_BACKEND_URL, RemoteAnalysisService
+from .defaults import (
+    DEFAULT_HEUR_WEIGHT,
+    DEFAULT_NEURAL_WEIGHT,
+    DEFAULT_PHISHING_THRESHOLD,
+)
 from .telegram_notifier import TelegramNotifier, construir_mensaje_alerta
 
 __all__ = [
@@ -34,10 +39,10 @@ class MonitorConfig:
     """Configuración del monitor de correos."""
 
     state_path: str
-    threshold: float = 45.0
+    threshold: float = DEFAULT_PHISHING_THRESHOLD
     mode: str = MODO_COMBINADO
-    heur_weight: int = 20
-    neural_weight: int = 80
+    heur_weight: int = DEFAULT_HEUR_WEIGHT
+    neural_weight: int = DEFAULT_NEURAL_WEIGHT
     backend_url: str = DEFAULT_BACKEND_URL
     mark_existing_as_seen: bool = True
 

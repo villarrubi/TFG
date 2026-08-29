@@ -11,6 +11,11 @@ from sistema_phishing.backend_client import (
     BackendClientError,
     normalize_backend_url,
 )
+from sistema_phishing.defaults import (
+    DEFAULT_HEUR_WEIGHT,
+    DEFAULT_NEURAL_WEIGHT,
+    DEFAULT_PHISHING_THRESHOLD,
+)
 from sistema_phishing.env_loader import (
     actualizar_env_local,
     cargar_env_local,
@@ -194,7 +199,7 @@ def _mostrar_config_monitor(valores: dict) -> None:
         "Umbral de alerta",
         0,
         100,
-        int(_valor_float(valores, "PHISHING_THRESHOLD", 45)),
+        int(_valor_float(valores, "PHISHING_THRESHOLD", DEFAULT_PHISHING_THRESHOLD)),
     )
     mode_options = ["combinado", "heuristico", "neural"]
     mode = st.selectbox(
@@ -209,7 +214,7 @@ def _mostrar_config_monitor(valores: dict) -> None:
         "Peso heurístico (%)",
         0,
         100,
-        _valor_entero(valores, "MONITOR_HEUR_WEIGHT", 20),
+        _valor_entero(valores, "MONITOR_HEUR_WEIGHT", DEFAULT_HEUR_WEIGHT),
         disabled=mode != "combinado",
         key="monitor_heur_weight",
     )
@@ -217,7 +222,7 @@ def _mostrar_config_monitor(valores: dict) -> None:
         neural_weight = 100 - int(heur_weight)
         st.markdown(f"**Peso neuronal (%)**: {neural_weight} _(derivado automáticamente)_")
     else:
-        neural_weight = _valor_entero(valores, "MONITOR_NEURAL_WEIGHT", 80)
+        neural_weight = _valor_entero(valores, "MONITOR_NEURAL_WEIGHT", DEFAULT_NEURAL_WEIGHT)
     query = st.text_input(
         "Consulta de Gmail del monitor",
         value=valores.get("GMAIL_MONITOR_QUERY", "in:inbox newer_than:1d"),

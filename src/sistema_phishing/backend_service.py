@@ -24,6 +24,12 @@ from .analysis_service import (
     construir_resultado_combinado,
 )
 from .dataset import cargar_dataset_csv
+from .defaults import (
+    DEFAULT_HEUR_WEIGHT,
+    DEFAULT_HIGH_CONFIDENCE_THRESHOLD,
+    DEFAULT_NEURAL_WEIGHT,
+    DEFAULT_PHISHING_THRESHOLD,
+)
 from .idioma import detectar_idioma_correo
 from .metrics import calcular_metricas_clasificacion
 from .modelo_neural import (
@@ -45,11 +51,11 @@ API_VERSION = "1.0"
 class AnalysisBackendConfig:
     """Configuración central compartida por todos los clientes."""
 
-    threshold: float = 45.0
+    threshold: float = DEFAULT_PHISHING_THRESHOLD
     mode: str = MODO_COMBINADO
-    heur_weight: int = 20
-    neural_weight: int = 80
-    high_confidence_threshold: float = 70.0
+    heur_weight: int = DEFAULT_HEUR_WEIGHT
+    neural_weight: int = DEFAULT_NEURAL_WEIGHT
+    high_confidence_threshold: float = DEFAULT_HIGH_CONFIDENCE_THRESHOLD
     model_path_es: str = os.path.join(ROOT_DIR, "modelo_neural_es.joblib")
     model_path_en: str = os.path.join(ROOT_DIR, "modelo_neural_en.joblib")
 

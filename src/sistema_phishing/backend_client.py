@@ -12,6 +12,11 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
+from .defaults import (
+    DEFAULT_HEUR_WEIGHT,
+    DEFAULT_NEURAL_WEIGHT,
+    DEFAULT_PHISHING_THRESHOLD,
+)
 from .network import es_host_loopback
 
 DEFAULT_BACKEND_URL = "http://127.0.0.1:8766"
@@ -86,9 +91,9 @@ class BackendClient:
         email: str | bytes | Mapping[str, Any],
         *,
         mode: str = "combinado",
-        threshold: float = 45.0,
-        heur_weight: int = 20,
-        neural_weight: int = 80,
+        threshold: float = DEFAULT_PHISHING_THRESHOLD,
+        heur_weight: int = DEFAULT_HEUR_WEIGHT,
+        neural_weight: int = DEFAULT_NEURAL_WEIGHT,
         include_all: bool = False,
     ) -> dict[str, Any]:
         payload: dict[str, Any]

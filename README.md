@@ -38,11 +38,14 @@ python -m ruff check src tests scripts browser_tests
 python scripts/benchmark_analysis.py
 python scripts/calibrate_combined.py --check
 python scripts/evaluate_models.py
+python scripts/evaluate_external.py --download
+python scripts/evaluate_external.py --check
+python scripts/prepare_defense_demo.py --check
 python -m unittest discover -s browser_tests -p "test_*.py"
 python scripts/generate_defense_guides.py
 ```
 
-La validación actual contiene 81 pruebas unitarias y de integración en Python y 2 recorridos con Chromium. Uno de ellos levanta el backend y Streamlit en procesos separados, introduce un correo desde el navegador y comprueba que la respuesta HTTP se presenta en la web. Otra prueba recorre Gmail EML → cliente HTTP → backend → alerta Telegram sin usar secretos externos. Las advertencias de convergencia del MLP pertenecen únicamente a pruebas rápidas con pocas iteraciones. GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible y navegación real en cada `push` y `pull_request`.
+La validación actual contiene 87 pruebas unitarias y de integración en Python y 2 recorridos con Chromium. Uno de ellos levanta el backend y Streamlit en procesos separados, introduce un correo desde el navegador y comprueba que la respuesta HTTP se presenta en la web. Otra prueba recorre Gmail EML → cliente HTTP → backend → alerta Telegram sin usar secretos externos. Las advertencias de convergencia del MLP pertenecen únicamente a pruebas rápidas con pocas iteraciones. GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible y navegación real en cada `push` y `pull_request`.
 
 ## Cómo está montado
 
@@ -111,7 +114,7 @@ Ejemplo:
 curl http://127.0.0.1:8766/health
 curl -X POST http://127.0.0.1:8766/analyze `
   -H "Content-Type: application/json" `
-  -d '{"email":{"subject":"Verificación de cuenta","from":"soporte@ejemplo.com","body":"Haga clic para confirmar su cuenta."},"options":{"mode":"combinado","threshold":45}}'
+  -d '{"email":{"subject":"Verificación de cuenta","from":"soporte@ejemplo.com","body":"Haga clic para confirmar su cuenta."},"options":{"mode":"combinado","threshold":26}}'
 ```
 
 `/analyze` admite hasta 16 MiB y las operaciones con datasets hasta 256 MiB. Todas exigen JSON UTF-8, validan tamaños y tipos, devuelven errores sin trazas internas y usan `Cache-Control: no-store`. CORS se restringe a Gmail Web y extensiones de Chrome autorizadas.
@@ -122,9 +125,9 @@ Los clientes solo admiten HTTP sobre loopback; una URL remota debe ser HTTPS. La
 
 ## Modos y modelos
 
-- `heuristico`: cabeceras, SPF/DKIM/DMARC, remitente, URLs, dominios, HTML, adjuntos y lenguaje.
+- `heuristico`: 31 señales de cabeceras, SPF/DKIM/DMARC, remitente, URLs, dominios, HTML, adjuntos, lenguaje y fraude BEC sin enlaces.
 - `neural`: clasificador TF-IDF + `MLPClassifier`; selecciona el modelo español o inglés según el mensaje.
-- `combinado`: media calibrada 20 % heurística + 80 % neuronal; si cualquiera alcanza 70 % de alta confianza se conserva esa evidencia para que el otro detector no la diluya. El umbral de decisión sigue siendo 45 % por defecto.
+- `combinado`: media calibrada 35 % heurística + 65 % neuronal; si cualquiera alcanza 70 % de alta confianza se conserva esa evidencia para que el otro detector no la diluya. El umbral de decisión es 26 % por defecto.
 
 Los artefactos centrales son `modelo_neural_es.joblib` y `modelo_neural_en.joblib`. Si falta uno, el backend puede construir un fallback sintético del mismo idioma y lo declara como tal; los clientes no crean copias. Los ficheros `.joblib` son artefactos de confianza y no deben sustituirse por descargas no verificadas, porque su carga usa deserialización de Python.
 
@@ -134,7 +137,9 @@ La vista **Entrenamiento** es un cliente ligero. Sube uno o varios CSV al backen
 
 La evaluación usa un CSV distinto y muestra accuracy, precisión, recall, F1, accuracy balanceada y matriz de confusión. La comparación entrena hasta tres configuraciones en memoria y no modifica el modelo activo.
 
-El script offline `scripts/calibrate_combined.py` selecciona pesos, umbral y nivel de alta confianza sobre 40 casos controlados mediante cinco particiones estratificadas. Ese conjunto no se reutiliza para la comprobación final. `scripts/evaluate_models.py` evalúa después 16 archivos EML locales reservados, equilibrados por idioma y clase, con escenarios de credenciales, BEC, enlaces, adjuntos y mensajes legítimos. Los resultados están en [EVALUATION_REPORT.md](EVALUATION_REPORT.md). Ambos corpus son sintéticos: representan escenarios, no la distribución estadística de producción.
+El script offline `scripts/calibrate_combined.py` selecciona pesos, umbral y nivel de alta confianza sobre 40 casos controlados mediante cinco particiones estratificadas. Ese conjunto no se reutiliza para la comprobación final. `scripts/evaluate_models.py` evalúa después 16 archivos EML locales reservados, equilibrados por idioma y clase, con escenarios de credenciales, BEC, enlaces, adjuntos y mensajes legítimos. El heurístico obtiene 100,0 % de accuracy; el combinado, 93,8 % con 100,0 % de recall; y el neuronal, 75,0 %. Los resultados y límites están en [EVALUATION_REPORT.md](EVALUATION_REPORT.md).
+
+Como diagnóstico adicional, `scripts/evaluate_external.py` comprueba 1.528 textos del split de prueba de phishing de DIFrauD, con revisión y SHA-256 fijados y corpus bruto excluido de Git. El combinado obtiene 90,8 % de accuracy y 96,4 % de recall. [El informe externo](EXTERNAL_EVALUATION_REPORT.md) no lo presenta como validación independiente: el origen es histórico, carece de MIME completo y no puede descartarse solapamiento con fuentes del modelo inglés.
 
 ## Gmail y Telegram
 
@@ -157,10 +162,10 @@ PHISHING_BACKEND_URL=http://127.0.0.1:8766
 BACKEND_HOST=127.0.0.1
 BACKEND_PORT=8766
 BACKEND_ADMIN_TOKEN=
-PHISHING_THRESHOLD=45
+PHISHING_THRESHOLD=26
 MONITOR_ANALYSIS_MODE=combinado
-MONITOR_HEUR_WEIGHT=20
-MONITOR_NEURAL_WEIGHT=80
+MONITOR_HEUR_WEIGHT=35
+MONITOR_NEURAL_WEIGHT=65
 BACKEND_HIGH_CONFIDENCE_THRESHOLD=70
 ```
 
@@ -188,10 +193,13 @@ src/
     ├── modelo_neural.py          # TF-IDF, MLP y persistencia del servidor
     └── ...                       # señales, URLs, HTML y explicaciones
 extension_gmail/                  # cliente Manifest V3
-tests/                            # 81 pruebas unitarias/de integración
+tests/                            # 87 pruebas unitarias/de integración
 browser_tests/                    # 2 recorridos reales con Chromium
 evaluation/                       # calibración separada, EML reservados y resultados
+defense_demo/                     # respuestas reproducibles para el plan B
 ```
+
+La lista ordenada de capturas está en [docs/DEFENSE_SCREENSHOTS.md](docs/DEFENSE_SCREENSHOTS.md) y el respaldo offline en [defense_demo/README.md](defense_demo/README.md).
 
 ## Alcance
 

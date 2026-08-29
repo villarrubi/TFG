@@ -2,6 +2,7 @@
 
 
 from .correo import CorreoAnalizado
+from .defaults import DEFAULT_PHISHING_THRESHOLD
 from .explanations import ExplanationBuilder
 from .scorer import RiskScorer
 from .signal_builder import SignalBuilder
@@ -29,7 +30,7 @@ class PhishingAnalyzer:
         # El resultado mantiene una estructura estable para que la UI pueda
         # pintar la misma tabla y los mismos campos aunque cambien las reglas.
         return {
-            "is_phishing": riesgo >= 45,
+            "is_phishing": riesgo >= DEFAULT_PHISHING_THRESHOLD,
             "risk_score": round(riesgo, 1),
             "signals": signals,
             "urls": self.correo.urls,

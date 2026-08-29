@@ -9,6 +9,11 @@ from sistema_phishing.backend_client import (
     BackendClientError,
     BackendUnavailableError,
 )
+from sistema_phishing.defaults import (
+    DEFAULT_HEUR_WEIGHT,
+    DEFAULT_NEURAL_WEIGHT,
+    DEFAULT_PHISHING_THRESHOLD,
+)
 from sistema_phishing.gmail_client import (
     GmailIntegrationError,
     construir_servicio_gmail,
@@ -292,6 +297,9 @@ SIGNAL_GROUPS = {
     "Contenido y adjuntos": [
         "saludo_generico",
         "solicitud_credenciales",
+        "cambio_datos_bancarios",
+        "transferencia_urgente",
+        "suplantacion_ejecutivo",
         "lenguaje_urgente",
         "asunto_sospechoso",
         "adjunto_sospechoso",
@@ -366,8 +374,8 @@ def analizar_entrada(
     texto_modelo: str = "",
     remitente: str = "",
     subject: str = "",
-    heur_weight: int = 20,
-    neural_weight: int = 80,
+    heur_weight: int = DEFAULT_HEUR_WEIGHT,
+    neural_weight: int = DEFAULT_NEURAL_WEIGHT,
     backend_client: BackendClient | None = None,
 ):
     """Envía la entrada al backend; la UI no ejecuta modelos ni heurísticas."""
@@ -375,7 +383,7 @@ def analizar_entrada(
     response = (backend_client or BackendClient()).analyze(
         entrada,
         mode="combinado",
-        threshold=45,
+        threshold=DEFAULT_PHISHING_THRESHOLD,
         heur_weight=heur_weight,
         neural_weight=neural_weight,
         include_all=True,
@@ -415,7 +423,7 @@ def analizar_correos_gmail(
             response = client.analyze(
                 correo_gmail.raw_bytes,
                 mode=ANALYSIS_MODES[tipo_analisis],
-                threshold=45,
+                threshold=DEFAULT_PHISHING_THRESHOLD,
                 heur_weight=heur_weight,
                 neural_weight=neural_weight,
                 include_all=True,
@@ -678,12 +686,12 @@ def main():
                 st.markdown(GMAIL_QUERY_HELP_MD)
 
     tipo_analisis = st.radio("Tipo de análisis", ["Heurístico", "Red neuronal", "Combinado"], index=2)
-    heur_weight = 20
-    neural_weight = 80
+    heur_weight = DEFAULT_HEUR_WEIGHT
+    neural_weight = DEFAULT_NEURAL_WEIGHT
     if tipo_analisis == "Combinado":
         # El peso neuronal se calcula como complemento para evitar que la suma
         # de ponderaciones pueda superar o quedarse por debajo del 100%.
-        heur_weight = st.slider("Peso heurístico (%)", 0, 100, 20)
+        heur_weight = st.slider("Peso heurístico (%)", 0, 100, DEFAULT_HEUR_WEIGHT)
         neural_weight = 100 - heur_weight
 
     if modo == "Analizar correos de Gmail":

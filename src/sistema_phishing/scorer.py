@@ -21,6 +21,12 @@ class RiskScorer:
         "recibidos_sospechosos": 0.08,
         "saludo_generico": 0.06,
         "solicitud_credenciales": 0.06,
+        # Cada indicio BEC aislado es débil. La coincidencia de los tres recibe
+        # un refuerzo explícito en ``score`` porque sí describe el patrón de
+        # alta confianza completo.
+        "cambio_datos_bancarios": 0.08,
+        "transferencia_urgente": 0.08,
+        "suplantacion_ejecutivo": 0.08,
         "mensaje_id_sospechoso": 0.06,
         "meta_refresh_html": 0.06,
         "javascript_redireccion": 0.06,
@@ -45,4 +51,11 @@ class RiskScorer:
         # Las señales desconocidas pesan 0 para poder añadir reglas nuevas sin
         # romper llamadas antiguas que todavía no tengan peso asignado.
         total = sum(cls.weights.get(name, 0.0) * (1.0 if value else 0.0) for name, value in signals.items())
+        bec_signals = (
+            "cambio_datos_bancarios",
+            "transferencia_urgente",
+            "suplantacion_ejecutivo",
+        )
+        if all(signals.get(name, False) for name in bec_signals):
+            total += 0.46
         return min(max(total * 100, 0), 100)

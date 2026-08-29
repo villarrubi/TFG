@@ -25,6 +25,9 @@ SUSPICIOUS_EXPLANATIONS = {
     "recibidos_sospechosos": "Cabeceras Received con intermediarios sospechosos.",
     "saludo_generico": "Saludo genérico típico de campañas masivas.",
     "solicitud_credenciales": "Solicitud explícita de credenciales o datos de acceso.",
+    "cambio_datos_bancarios": "Solicitud de cambio de datos bancarios o beneficiario.",
+    "transferencia_urgente": "Orden de transferencia o pago con presión temporal.",
+    "suplantacion_ejecutivo": "Pretexto de autoridad, aislamiento o confidencialidad propio de BEC.",
     "mensaje_id_sospechoso": "Message-ID con dominio inconsistente.",
     "url_parametros_sospechosos": "Parámetros de URL compatibles con redirección sospechosa.",
     "meta_refresh_html": "HTML con meta refresh.",
@@ -47,7 +50,9 @@ def _recortar(texto: str, limite: int = 90) -> str:
     return texto if len(texto) <= limite else f"{texto[: limite - 3]}..."
 
 
-def _clasificacion(score: float) -> str:
+def _clasificacion(score: float, is_phishing: bool = False) -> str:
+    if is_phishing:
+        return "Riesgo alto"
     if score >= 70:
         return "Riesgo alto"
     if score >= 45:
@@ -112,7 +117,7 @@ def construir_mensaje_alerta(datos_email: dict, resultado: dict, modo: str) -> s
     score = float(resultado["risk_score"])
     lineas = [
         "<b>ALERTA DE PHISHING</b>",
-        f"<b>{_clasificacion(score)}</b> - {score:.1f}%",
+        f"<b>{_clasificacion(score, bool(resultado.get('is_phishing')))}</b> - {score:.1f}%",
         "",
         f"<b>Modo:</b> {modo_seguro}",
         f"<b>Remitente:</b> {remitente}",

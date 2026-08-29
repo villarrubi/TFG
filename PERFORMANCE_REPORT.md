@@ -25,22 +25,22 @@ observado.
 ## Revalidación tras la calibración
 
 El 28 de agosto de 2026 se repitió el comando documentado, con 200 operaciones y
-cinco repeticiones. La configuración ya usa fusión 20/80, umbral 45 y alta
+cinco repeticiones. La configuración ya usa fusión 35/65, umbral 26 y alta
 confianza 70.
 
 | Benchmark | Mediana actual (ms) | Mejor actual (ms) |
 | --- | ---: | ---: |
-| Import frío de heurísticas | 40,1517 | 39,2340 |
-| Import frío de la app | 343,3145 | 336,6951 |
-| Análisis heurístico | 0,1215 | 0,1204 |
-| Detección de idioma | 2,9550 | 2,9134 |
-| Carga del modelo ES | 12,9035 | 12,8527 |
-| Predicción neuronal | 0,3668 | 0,3577 |
-| Análisis combinado, caliente | 3,5748 | 3,5475 |
-| Análisis combinado, frío | 16,6803 | 16,3212 |
+| Import frío de heurísticas | 37,2476 | 36,3934 |
+| Import frío de la app | 322,3704 | 318,3322 |
+| Análisis heurístico | 0,1481 | 0,1451 |
+| Detección de idioma | 2,7160 | 2,6995 |
+| Carga del modelo ES | 12,1477 | 12,0782 |
+| Predicción neuronal | 0,3143 | 0,3130 |
+| Análisis combinado, caliente | 3,4012 | 3,3862 |
+| Análisis combinado, frío | 16,0074 | 15,9266 |
 
 La repetición confirma que no reaparece el coste de importación inicial: las
-heurísticas cargan en unos 40 ms y la aplicación en unos 343 ms. Las diferencias
+heurísticas cargan en unos 37 ms y la aplicación en unos 322 ms. Las diferencias
 frente a la medición del día 24 no son un experimento antes/después controlado y
 no se presentan como regresiones; pueden depender de carga del equipo, cachés y
 planificación del sistema operativo. En valor absoluto, el análisis combinado
@@ -48,7 +48,7 @@ caliente continúa por debajo de 4 ms en este equipo.
 
 En aquella medición, la suite de 47 casos pasó de 2,435 s a 2,398 s; este cambio
 pequeño se considera ruido, no una optimización de entrenamiento. La validación
-actual ha crecido hasta 81 pruebas Python y 2 recorridos reales con Chromium.
+actual ha crecido hasta 87 pruebas Python y 2 recorridos reales con Chromium.
 El recorrido principal levanta el cliente Streamlit y el backend en procesos
 distintos y valida una petición de análisis completa.
 
