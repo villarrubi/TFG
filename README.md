@@ -188,7 +188,17 @@ BACKEND_HIGH_CONFIDENCE_THRESHOLD=70
 
 Para apuntar los clientes a otro equipo o a un despliegue posterior, publica primero el backend detrás de HTTPS y cambia `PHISHING_BACKEND_URL` a ese origen seguro. El modelo permanece únicamente en el servidor seleccionado.
 
-No se versionan credenciales, tokens, estado del monitor, `Propuestaformato.pdf` ni los artefactos temporales de revisión visual. La memoria y las cuatro guías finales de defensa sí se versionan como entregables reproducibles. `constraints.txt` fija el entorno completo validado sobre Python 3.12.
+No se versionan credenciales, tokens, estado del monitor, `Propuestaformato.pdf` ni los artefactos temporales de revisión visual. La memoria, las cuatro guías finales y la presentación de defensa sí se versionan como entregables reproducibles. `constraints.txt` fija el entorno completo validado sobre Python 3.12.
+
+## Presentación de defensa
+
+La presentación editable está en [`Presentacion_defensa_TFG.pptx`](Presentacion_defensa_TFG.pptx). Resume en 14 diapositivas el problema, los objetivos, la arquitectura cliente-servidor, el flujo de análisis, el modelo centralizado, la evaluación, la demostración, las limitaciones y las conclusiones. Todas las diapositivas incluyen notas del orador y las fuentes internas utilizadas.
+
+Se puede regenerar en Windows con Microsoft PowerPoint instalado:
+
+```powershell
+pwsh -NoProfile -File scripts/generate_defense_presentation.ps1
+```
 
 ## Organización
 
