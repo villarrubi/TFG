@@ -71,3 +71,15 @@ chat, tokens, rutas de usuario y cualquier correo real. No captures nunca
 
 Comprueba después que ninguna imagen contenga secretos y conserva también una
 copia PDF de la guía y los EML sintéticos en el equipo de la presentación.
+
+## Capturas reproducibles incluidas en la memoria
+
+Las figuras 6.1 y 6.2 se generan automáticamente con una instancia real de
+backend, Streamlit y Chromium. Para actualizarlas:
+
+```powershell
+python scripts/capture_tfg_screenshots.py
+```
+
+El script utiliza únicamente el EML sintético BEC del repositorio y no abre
+Gmail, Telegram ni credenciales locales.

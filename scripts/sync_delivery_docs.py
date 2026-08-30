@@ -119,7 +119,10 @@ def _restore_page_fields(doc: DocumentObject) -> None:
 
 def _replace_controlled_results_table(doc: DocumentObject) -> None:
     for table in doc.tables:
-        if not table.rows or table.rows[0].cells[0].text.strip() not in {"Caso", "Modo"}:
+        if not table.rows or table.rows[0].cells[0].text.strip() not in {
+            "Caso",
+            "Modo",
+        }:
             continue
         rows = [
             ["Modo", "N", "Accuracy", "Precisión", "Recall", "F1"],
@@ -133,7 +136,9 @@ def _replace_controlled_results_table(doc: DocumentObject) -> None:
             for cell, value in zip(table.rows[row_index].cells, values):
                 cell.text = value
         return
-    raise ValueError("No se encontró la tabla de resultados controlados en la guía extensa.")
+    raise ValueError(
+        "No se encontró la tabla de resultados controlados en la guía extensa."
+    )
 
 
 def _replace_signal_weights_table(doc: DocumentObject) -> None:
@@ -159,7 +164,10 @@ def _replace_signal_weights_table(doc: DocumentObject) -> None:
         ["Firmado/cifrado", "-3", "", ""],
     ]
     for table in doc.tables:
-        if not table.rows or [cell.text.strip() for cell in table.rows[0].cells] != rows[0]:
+        if (
+            not table.rows
+            or [cell.text.strip() for cell in table.rows[0].cells] != rows[0]
+        ):
             continue
         while len(table.rows) < len(rows):
             table.add_row()
@@ -382,11 +390,15 @@ def sync_memory() -> None:
         "# Casos de uso del servidor central",
     )
     if not any(
-        "backend_client.py" in paragraph.text and "Cliente HTTP compartido" in paragraph.text
+        "backend_client.py" in paragraph.text
+        and "Cliente HTTP compartido" in paragraph.text
         for paragraph in doc.paragraphs
     ):
         for paragraph in doc.paragraphs:
-            if "backend_service.py" in paragraph.text and "Casos de uso" in paragraph.text:
+            if (
+                "backend_service.py" in paragraph.text
+                and "Casos de uso" in paragraph.text
+            ):
                 insert_paragraph_after(
                     paragraph,
                     "│       ├── backend_client.py         # Cliente HTTP compartido",
@@ -394,7 +406,10 @@ def sync_memory() -> None:
                 break
     if not any("model_config.py" in paragraph.text for paragraph in doc.paragraphs):
         for paragraph in doc.paragraphs:
-            if "backend_client.py" not in paragraph.text or "Cliente HTTP" not in paragraph.text:
+            if (
+                "backend_client.py" not in paragraph.text
+                or "Cliente HTTP" not in paragraph.text
+            ):
                 continue
             anchor = paragraph
             for line in (
@@ -422,17 +437,17 @@ def sync_memory() -> None:
     replace_next_nonempty(
         doc,
         "# 3. Ejecutar primero el backend central",
-        "$env:PYTHONPATH=\"src\"; python src/backend_server.py",
+        '$env:PYTHONPATH="src"; python src/backend_server.py',
     )
     replace_next_nonempty(
         doc,
         "# 3b. Ejecutar el cliente web en otra terminal",
-        "$env:PYTHONPATH=\"src\"; streamlit run src/app.py",
+        '$env:PYTHONPATH="src"; streamlit run src/app.py',
     )
     replace_next_nonempty(
         doc,
         "# 3c. El proxy 8765 solo se usa por compatibilidad antigua",
-        "$env:PYTHONPATH=\"src\"; python src/gmail_extension_server.py",
+        '$env:PYTHONPATH="src"; python src/gmail_extension_server.py',
     )
     annex_heading = "Anexo E: Resumen de arquitectura y evidencia"
     if not any(paragraph.text == annex_heading for paragraph in doc.paragraphs):
@@ -453,6 +468,23 @@ def sync_memory() -> None:
         "La evidencia reproducible comprende 87 pruebas Python, 2 recorridos con Chromium, integración continua, benchmark, calibración separada de 40 casos, evaluación de 16 EML reservados y diagnóstico de 1.528 textos DIFrauD. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento; ninguna cifra estima producción.",
     )
     _keep_table_rows_together(doc)
+    # Estas dos piezas se sustituyen después por la versión ampliada solicitada
+    # por el tutor. Su ausencia es correcta en ejecuciones posteriores.
+    if any(paragraph.text == "Conclusiones generales" for paragraph in doc.paragraphs):
+        missing = [
+            prefix
+            for prefix in missing
+            if prefix != "El Trabajo Fin de Grado ha alcanzado"
+        ]
+    if any(
+        paragraph.text == "Diseño experimental y datasets"
+        for paragraph in doc.paragraphs
+    ):
+        missing = [
+            prefix
+            for prefix in missing
+            if prefix != "La metodología cuantitativa separa"
+        ]
     if missing:
         raise ValueError(f"No se encontraron párrafos de la memoria: {missing}")
     doc.save(path)
@@ -800,8 +832,16 @@ def sync_full_guide() -> None:
     replace_fragment(doc, "28 reglas", "31 reglas")
     replace_fragment(doc, "superar 45", "superar 26")
     replace_fragment(doc, "superar 36", "superar 26")
-    replace_fragment(doc, "phishing_heuristico = riesgo_heuristico >= 45", "phishing_heuristico = riesgo_heuristico >= 26")
-    replace_fragment(doc, "phishing_heurístico = riesgo_heurístico >= 45", "phishing_heurístico = riesgo_heurístico >= 26")
+    replace_fragment(
+        doc,
+        "phishing_heuristico = riesgo_heuristico >= 45",
+        "phishing_heuristico = riesgo_heuristico >= 26",
+    )
+    replace_fragment(
+        doc,
+        "phishing_heurístico = riesgo_heurístico >= 45",
+        "phishing_heurístico = riesgo_heurístico >= 26",
+    )
     replace_fragment(
         doc,
         "Los 27 pesos positivos suman 1,97; por tanto, varios indicadores pueden saturar la puntuación y el límite evita superar 100.",
@@ -812,9 +852,13 @@ def sync_full_guide() -> None:
         "Urgencia, saludo genérico, credenciales, asunto, referencias a archivos.",
         "Urgencia, saludo genérico, credenciales, asunto, referencias a archivos y patrones BEC.",
     )
-    replace_fragment(doc, "umbral habitual del combinado: 45", "umbral calibrado del combinado: 26")
+    replace_fragment(
+        doc, "umbral habitual del combinado: 45", "umbral calibrado del combinado: 26"
+    )
     replace_fragment(doc, "¿Por qué un umbral de 45?", "¿Por qué un umbral de 26?")
-    replace_fragment(doc, "Combinado con 60 % heurística", "Combinado con 35 % heurística")
+    replace_fragment(
+        doc, "Combinado con 60 % heurística", "Combinado con 35 % heurística"
+    )
     replace_fragment(
         doc,
         "Si no hay modelo del idioma esperado, se prueba el del otro idioma",
@@ -863,6 +907,15 @@ def sync_full_guide() -> None:
     _replace_controlled_results_table(doc)
     _replace_signal_weights_table(doc)
     _keep_table_rows_together(doc)
+    if any(
+        paragraph.text.startswith("Los modelos activos declaran 1.298 muestras")
+        for paragraph in _all_paragraphs(doc)
+    ):
+        missing = [
+            prefix
+            for prefix in missing
+            if prefix != "El repositorio separa 40 casos de calibración"
+        ]
     if missing:
         raise ValueError(f"No se encontraron párrafos de la guía: {missing}")
     doc.save(path)
@@ -885,7 +938,9 @@ def export_text(docx_path: Path, text_path: Path) -> None:
         else:
             for row in block.rows:
                 lines.append(
-                    "\t".join(cell.text.replace("\n", " ") for cell in row.cells).rstrip()
+                    "\t".join(
+                        cell.text.replace("\n", " ") for cell in row.cells
+                    ).rstrip()
                 )
         lines.append("")
     text_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
@@ -894,6 +949,10 @@ def export_text(docx_path: Path, text_path: Path) -> None:
 def main() -> None:
     sync_memory()
     sync_full_guide()
+    from apply_tutor_feedback import apply_full_guide, apply_memory
+
+    apply_memory(ROOT / "TFG.docx")
+    apply_full_guide(ROOT / "Guia_defensa_TFG.docx")
     export_text(ROOT / "TFG.docx", ROOT / "TFG.txt")
     export_text(ROOT / "Guia_defensa_TFG.docx", ROOT / "Guia_defensa_TFG.txt")
     print("Memoria y guía extensa sincronizadas.")

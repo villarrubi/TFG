@@ -142,7 +142,7 @@ Los clientes solo admiten HTTP sobre loopback; una URL remota debe ser HTTPS. La
 
 ## Modos y modelos
 
-- `heuristico`: 31 señales de cabeceras, SPF/DKIM/DMARC, remitente, URLs, dominios, HTML, adjuntos, lenguaje y fraude BEC sin enlaces.
+- `heuristico`: 31 señales de cabeceras, remitente, URLs, dominios, HTML, adjuntos, lenguaje y fraude BEC sin enlaces. Para SPF, DKIM y DMARC interpreta de forma pasiva los resultados ya escritos por los servidores de correo en `Received-SPF`, `Authentication-Results` y cabeceras ARC; no consulta DNS ni valida firmas criptográficas.
 - `neural`: clasificador TF-IDF + `MLPClassifier`; selecciona el modelo español o inglés según el mensaje.
 - `combinado`: media calibrada 35 % heurística + 65 % neuronal; si cualquiera alcanza 70 % de alta confianza se conserva esa evidencia para que el otro detector no la diluya. El umbral de decisión es 26 % por defecto.
 
@@ -153,6 +153,8 @@ Los artefactos centrales son `modelo_neural_es.joblib` y `modelo_neural_en.jobli
 La vista **Entrenamiento** es un cliente ligero. Sube uno o varios CSV al backend, que valida columnas, entrena desde cero, persiste el modelo de forma atómica y devuelve versión, fecha, tamaño y métricas. Las etiquetas aceptadas incluyen `1`/`phishing` y `0`/`legitimate`/`safe`. Los artefactos nuevos no serializan los textos brutos del dataset.
 
 La evaluación usa un CSV distinto y muestra accuracy, precisión, recall, F1, accuracy balanceada y matriz de confusión. La comparación entrena hasta tres configuraciones en memoria y no modifica el modelo activo.
+
+Los artefactos entregados conservan metadatos, pero no los mensajes originales. El modelo ES declara 1.298 muestras (686 phishing y 612 legítimas) procedentes de `train.csv` y `dataset_renombrado.csv`; el modelo EN, 164.971 (85.781 phishing y 79.190 legítimas) de CEAS, Enron, Ling, Nazario, Nigerian Fraud, Phishing Email y SpamAssassin. Los CSV históricos no se distribuyen, por lo que no se inventa una partición 70/30 ni se promete reproducir exactamente aquel entrenamiento: sí son reproducibles la calibración y las evaluaciones incluidas.
 
 El script offline `scripts/calibrate_combined.py` selecciona pesos, umbral y nivel de alta confianza sobre 40 casos controlados mediante cinco particiones estratificadas. Ese conjunto no se reutiliza para la comprobación final. `scripts/evaluate_models.py` evalúa después 16 archivos EML locales reservados, equilibrados por idioma y clase, con escenarios de credenciales, BEC, enlaces, adjuntos y mensajes legítimos. El heurístico obtiene 100,0 % de accuracy; el combinado, 93,8 % con 100,0 % de recall; y el neuronal, 75,0 %. Los resultados y límites están en [EVALUATION_REPORT.md](EVALUATION_REPORT.md).
 
@@ -226,7 +228,9 @@ evaluation/                       # calibración separada, EML reservados y resu
 defense_demo/                     # respuestas reproducibles para el plan B
 ```
 
-La lista ordenada de capturas está en [docs/DEFENSE_SCREENSHOTS.md](docs/DEFENSE_SCREENSHOTS.md) y el respaldo offline en [defense_demo/README.md](defense_demo/README.md).
+La lista ordenada de capturas está en [docs/DEFENSE_SCREENSHOTS.md](docs/DEFENSE_SCREENSHOTS.md) y el respaldo offline en [defense_demo/README.md](defense_demo/README.md). Las dos evidencias incorporadas a la memoria se pueden regenerar con `python scripts/capture_tfg_screenshots.py` levantando un backend y un cliente reales sobre puertos libres de loopback.
+
+La correspondencia con las observaciones del tutor está en [docs/TUTOR_FEEDBACK_CHECKLIST.md](docs/TUTOR_FEEDBACK_CHECKLIST.md), la comprobación bibliográfica en [docs/BIBLIOGRAPHY_AUDIT.md](docs/BIBLIOGRAPHY_AUDIT.md) y el borrador de respuesta en [docs/RESPUESTA_TUTOR.md](docs/RESPUESTA_TUTOR.md).
 
 ## Alcance
 

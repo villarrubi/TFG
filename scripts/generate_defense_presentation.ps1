@@ -205,7 +205,7 @@ try {
     [void](Add-Text $s "¿Cómo detectar phishing sin perder la explicación?" 82 170 250 176 32 $C.White $true 1 1 "Question")
     [void](Add-Text $s "Una etiqueta aislada no basta para revisar un correo sospechoso." 82 365 240 60 15 (Get-Color "C9D7E0") $false 1 1 "Question support")
     $items = @(
-        @("01", "Señales técnicas", "SPF, DKIM, DMARC, dominios, URLs, HTML y adjuntos."),
+        @("01", "Señales técnicas", "Resultados SPF, DKIM y DMARC presentes en cabeceras, dominios, URLs, HTML y adjuntos."),
         @("02", "Ingeniería social", "Urgencia, autoridad, credenciales y patrones BEC."),
         @("03", "Decisión trazable", "Riesgo, señales activadas y explicación para el usuario.")
     )
@@ -285,7 +285,7 @@ try {
     Add-Header $s "Método" "Dos detectores aportan señales complementarias" 6
     [void](Add-Text $s "HEURÍSTICA EXPLICABLE" 72 137 360 22 12 $C.TealDark $true 1 1 "Heuristic label")
     [void](Add-Text $s "Inspecciona indicios concretos" 72 170 360 34 24 $C.Ink $true 1 1 "Heuristic title")
-    [void](Add-Text $s "Autenticación SPF/DKIM/DMARC`nRemitente, dominio y URLs`nHTML, adjuntos y redirecciones`nUrgencia, credenciales y BEC" 72 225 360 140 16 $C.Muted $false 1 1 "Heuristic list")
+    [void](Add-Text $s "Lectura pasiva de SPF/DKIM/DMARC en cabeceras`nRemitente, dominio y URLs`nHTML, adjuntos y redirecciones`nUrgencia, credenciales y BEC" 72 225 360 140 16 $C.Muted $false 1 1 "Heuristic list")
     [void](Add-Line $s 480 136 480 390 $C.Line 1.4 $false "Detector divider")
     [void](Add-Text $s "CLASIFICADOR NEURONAL" 528 137 360 22 12 $C.Blue $true 1 1 "Neural label")
     [void](Add-Text $s "Aprende patrones del lenguaje" 528 170 360 34 24 $C.Ink $true 1 1 "Neural title")
@@ -334,7 +334,7 @@ try {
     [void](Add-Text $s "CONTROLES DEL PROTOTIPO" 544 160 310 18 11 $C.TealLight $true 1 1 "Security label")
     [void](Add-Text $s "• Backend en loopback por defecto`n• Límites de petición y rutas seguras`n• Orígenes CORS restringidos`n• Credenciales fuera de Git`n• Escrituras y activación atómicas`n• Sin ejecución de adjuntos" 544 202 300 176 16 $C.White $false 1 1 "Security list")
     [void](Add-Text $s "Un despliegue público requeriría TLS, autenticación y aislamiento multiusuario." 544 390 292 45 13 (Get-Color "C9D7E0") $true 1 1 "Security caveat")
-    Add-Notes $s "Relacionar cada tecnología con una decisión, no enumerar herramientas. Diferenciar los controles ya implementados de los controles necesarios para producción.`n`n[Sources]`n- TFG.txt: herramientas, seguridad y privacidad.`n- README.md: Configuración y Alcance.`n[/Sources]"
+    Add-Notes $s "Relacionar cada tecnología con una decisión, no enumerar herramientas. Aclarar que SPF, DKIM y DMARC se interpretan desde las cabeceras recibidas: no hay consultas DNS ni validación criptográfica. Diferenciar los controles ya implementados de los controles necesarios para producción.`n`n[Sources]`n- TFG.txt: herramientas, seguridad y privacidad.`n- README.md: Configuración y Alcance.`n[/Sources]"
 
     # 9. Evaluación
     $s = New-Slide $presentation
@@ -354,7 +354,7 @@ try {
         [void](Add-Text $s $eval[$i][2] $x 351 220 72 14 $C.Muted $false 1 1 "Evaluation detail")
     }
     [void](Add-Text $s "Principio metodológico: ninguna muestra se presenta como estimación de producción." 132 455 696 28 17 $C.Red $true 2 1 "Evaluation caveat")
-    Add-Notes $s "Subrayar la separación entre calibración y evaluación. DIFrauD es un diagnóstico útil, pero no una validación independiente concluyente por posible solapamiento y falta de MIME completo.`n`n[Sources]`n- EVALUATION_REPORT.md.`n- EXTERNAL_EVALUATION_REPORT.md.`n- evaluation/README.md.`n[/Sources]"
+    Add-Notes $s "Los artefactos declaran 1.298 muestras ES y 164.971 EN. Subrayar que no se usó una división 70/30 inventada: entrenamiento, calibración de 40 casos y evaluación de 16 EML cumplen funciones separadas. DIFrauD es un diagnóstico útil, pero no una validación independiente concluyente por posible solapamiento y falta de MIME completo.`n`n[Sources]`n- TFG.txt: diseño experimental y datasets.`n- EVALUATION_REPORT.md.`n- EXTERNAL_EVALUATION_REPORT.md.`n- evaluation/README.md.`n[/Sources]"
 
     # 10. Resultados
     $s = New-Slide $presentation

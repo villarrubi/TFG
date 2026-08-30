@@ -31,6 +31,8 @@ jobs:
         run: python -m unittest discover -s tests -p "test_*.py"
       - name: Calidad estática
         run: python -m ruff check src tests browser_tests scripts
+      - name: Coherencia bibliográfica
+        run: python scripts/audit_bibliography.py
       - name: Calibración y evaluación reproducibles
         env:
           PYTHONPATH: src

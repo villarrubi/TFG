@@ -12,6 +12,15 @@ Esta ejecución usa un corpus local de archivos EML reservado después de calibr
 - Modelo ES SHA-256: `432905694ee1db6ba1ef7c33dfb8e2540ee94efbbbc09c952837fd786482dbad`.
 - Modelo EN SHA-256: `f414b707d7aa35c6fff11851a047f0ef4df997139f9a949eff50c4c451d7bde4`.
 
+## Artefactos de entrenamiento
+
+Los modelos conservan el tamaño, la distribución y las fuentes declaradas, pero no los textos originales. Por ello se describe el entrenamiento histórico sin atribuirle una partición 70/30 inexistente ni prometer su reconstrucción exacta.
+
+| Modelo | Muestras | Phishing | Legítimas | Fuentes declaradas | Textos brutos guardados |
+| --- | ---: | ---: | ---: | --- | ---: |
+| ES | 1298 | 686 | 612 | train.csv, dataset_renombrado.csv | 0 |
+| EN | 164971 | 85781 | 79190 | CEAS_08.csv, Enron.csv, Ling.csv, Nazario.csv, Nigerian_Fraud.csv, phishing_email.csv, SpamAssasin.csv | 0 |
+
 ## Resultados globales
 
 | Modo | Accuracy | Precisión | Recall | F1 | Accuracy balanceada | VP | VN | FP | FN |

@@ -7,6 +7,7 @@ import csv
 import hashlib
 import json
 from collections import Counter
+from dataclasses import asdict
 from pathlib import Path
 
 from sistema_phishing.analizador_email import parsear_eml_bytes
@@ -18,6 +19,7 @@ from sistema_phishing.defaults import (
     DEFAULT_PHISHING_THRESHOLD,
 )
 from sistema_phishing.metrics import calcular_metricas_clasificacion
+from sistema_phishing.modelo_neural import ModelStorage
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATASET = ROOT / "evaluation" / "local_emails_v1" / "manifest.json"
@@ -42,7 +44,9 @@ def load_rows(path: Path) -> list[dict[str, str]]:
         reader = csv.DictReader(file)
         missing = REQUIRED_COLUMNS - set(reader.fieldnames or [])
         if missing:
-            raise ValueError(f"Faltan columnas obligatorias: {', '.join(sorted(missing))}")
+            raise ValueError(
+                f"Faltan columnas obligatorias: {', '.join(sorted(missing))}"
+            )
         rows = list(reader)
     if not rows:
         raise ValueError("El conjunto de evaluación está vacío.")
@@ -73,7 +77,9 @@ def load_eml_cases(path: Path) -> tuple[list[dict[str, object]], dict[str, objec
         try:
             label = int(raw.get("label"))
         except (TypeError, ValueError) as exc:
-            raise ValueError(f"Etiqueta no válida en {identifier or '(sin id)' }.") from exc
+            raise ValueError(
+                f"Etiqueta no válida en {identifier or '(sin id)'}."
+            ) from exc
         filename = str(raw.get("file", "")).strip()
         if (
             not identifier
@@ -83,7 +89,7 @@ def load_eml_cases(path: Path) -> tuple[list[dict[str, object]], dict[str, objec
             or Path(filename).name != filename
             or not filename.lower().endswith(".eml")
         ):
-            raise ValueError(f"Caso EML no válido: {identifier or '(sin id)' }.")
+            raise ValueError(f"Caso EML no válido: {identifier or '(sin id)'}.")
         identifiers.add(identifier)
         eml_path = path.parent / filename
         if not eml_path.is_file():
@@ -205,7 +211,9 @@ def evaluate(
         real = [int(row["label"]) for row in rows]
         per_language = {}
         for language in LANGUAGES:
-            indices = [index for index, row in enumerate(rows) if row["language"] == language]
+            indices = [
+                index for index, row in enumerate(rows) if row["language"] == language
+            ]
             per_language[language] = metrics_payload(
                 [real[index] for index in indices],
                 [predictions[index] for index in indices],
@@ -220,6 +228,22 @@ def evaluate(
 
 def pct(value: float) -> str:
     return f"{value * 100:.1f} %"
+
+
+def model_payload(path: Path) -> dict[str, object]:
+    """Identifica el artefacto y expone solo sus metadatos no sensibles."""
+    model = ModelStorage(str(path)).load()
+    if model is None:
+        raise ValueError(f"No se puede cargar el modelo declarado: {path.name}.")
+    stats = asdict(model.last_training_stats) if model.last_training_stats else None
+    return {
+        "path": path.name,
+        "sha256": sha256(path),
+        "training_stats": stats,
+        "training_sources": list(model.training_sources),
+        "training_datetime": model.last_training_datetime,
+        "raw_training_texts_stored": len(model.training_texts),
+    }
 
 
 def render_report(payload: dict[str, object]) -> str:
@@ -237,6 +261,15 @@ def render_report(payload: dict[str, object]) -> str:
         f"- Evidencia de alta confianza: si cualquier detector alcanza {payload['high_confidence_threshold']:.1f} %, su puntuación no se diluye en la media.",
         f"- Modelo ES SHA-256: `{payload['models']['es']['sha256']}`.",
         f"- Modelo EN SHA-256: `{payload['models']['en']['sha256']}`.",
+        "",
+        "## Artefactos de entrenamiento",
+        "",
+        "Los modelos conservan el tamaño, la distribución y las fuentes declaradas, pero no los textos originales. Por ello se describe el entrenamiento histórico sin atribuirle una partición 70/30 inexistente ni prometer su reconstrucción exacta.",
+        "",
+        "| Modelo | Muestras | Phishing | Legítimas | Fuentes declaradas | Textos brutos guardados |",
+        "| --- | ---: | ---: | ---: | --- | ---: |",
+        f"| ES | {payload['models']['es']['training_stats']['n_samples']} | {payload['models']['es']['training_stats']['phishing_count']} | {payload['models']['es']['training_stats']['legit_count']} | {', '.join(payload['models']['es']['training_sources'])} | {payload['models']['es']['raw_training_texts_stored']} |",
+        f"| EN | {payload['models']['en']['training_stats']['n_samples']} | {payload['models']['en']['training_stats']['phishing_count']} | {payload['models']['en']['training_stats']['legit_count']} | {', '.join(payload['models']['en']['training_sources'])} | {payload['models']['en']['raw_training_texts_stored']} |",
         "",
         "## Resultados globales",
         "",
@@ -277,7 +310,7 @@ def render_report(payload: dict[str, object]) -> str:
             "## Reproducción",
             "",
             "```powershell",
-            "$env:PYTHONPATH = \"src\"",
+            '$env:PYTHONPATH = "src"',
             "python scripts/calibrate_combined.py --check",
             "python scripts/evaluate_models.py",
             "```",
@@ -309,10 +342,7 @@ def main() -> None:
         raise ValueError("El modo combinado necesita al menos un peso positivo.")
     calibration = json.loads(args.calibration.read_text(encoding="utf-8"))
     models = {
-        language: {
-            "path": path.name,
-            "sha256": sha256(path),
-        }
+        language: model_payload(path)
         for language, path in {
             "es": ROOT / "modelo_neural_es.joblib",
             "en": ROOT / "modelo_neural_en.joblib",
@@ -322,7 +352,7 @@ def main() -> None:
         calibration["recommendation"]["high_confidence_threshold"]
     )
     payload = {
-        "schema_version": 2,
+        "schema_version": 3,
         "dataset": {
             "path": dataset.relative_to(ROOT).as_posix(),
             "sha256": corpus_sha256(dataset, rows),

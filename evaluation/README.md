@@ -6,9 +6,20 @@ rejilla determinista con cinco particiones estratificadas y recomienda la
 configuración combinada actual: 35 % heurístico, 65 % neuronal, umbral de
 decisión 26 % y conservación de evidencia individual a partir del 70 %.
 
+Los modelos versionados conservan metadatos descriptivos del entrenamiento,
+pero no los textos originales. El artefacto ES declara 1.298 muestras (686
+phishing y 612 legítimas) de `train.csv` y `dataset_renombrado.csv`; el EN,
+164.971 (85.781 phishing y 79.190 legítimas) de CEAS, Enron, Ling, Nazario,
+Nigerian Fraud, Phishing Email y SpamAssassin. Como los CSV históricos no se
+distribuyen, no puede reconstruirse de forma exacta ese entrenamiento ni
+afirmarse una división 70/30 que no consta en los artefactos. Esta limitación se
+separa de la calibración y de las evaluaciones siguientes, que sí se versionan y
+son reproducibles.
+
 La evaluación final no reutiliza esos mensajes. `local_emails_v1/` contiene 16
 archivos EML reservados, cuatro por idioma y clase, con cabeceras Received,
-SPF/DKIM/DMARC, texto, HTML, enlaces discordantes y adjuntos. Cubre escenarios
+resultados SPF/DKIM/DMARC ya presentes, texto, HTML, enlaces discordantes y
+adjuntos. Cubre escenarios
 operativos de robo de credenciales, BEC sin enlace, paquetería, facturas, avisos
 legítimos y formación de seguridad.
 

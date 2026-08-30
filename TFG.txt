@@ -66,6 +66,10 @@ Figura 2.1: Diagrama de flujo swimlane de las fases de un ataque de phishing.
 
 Figura 2.2: Vectores iniciales en brechas analizadas por el DBIR 2025 (n=9.891).
 
+Figura 6.1: Pantalla inicial del cliente web con el backend central conectado.
+
+Figura 6.2: Resultado combinado del escenario BEC sintético reservado.
+
 
 
 Tablas
@@ -85,6 +89,14 @@ Tabla 3.2: Comparativa de técnicas de deep learning y transformers.
 Tabla 4.1: Planificación temporal del proyecto.
 
 Tabla 4.2: Herramientas y tecnologías utilizadas.
+
+Tabla 5.1: Cambios respecto a la propuesta inicial.
+
+Tabla 6.1: Conjuntos empleados y separación experimental.
+
+Tabla 6.2: Métricas sobre los 16 EML reservados.
+
+Tabla 6.3: Matrices de confusión sobre los 16 EML reservados.
 
 Abreviaturas
 
@@ -500,7 +512,7 @@ Consecuencias organizativas y humanas
 
 El Verizon DBIR 2025 sitúa la participación humana en el 60 % de las brechas analizadas. En España, el 33 % de los usuarios que contactaron con la línea 017 indicó haber recibido algún intento de phishing, vishing o smishing durante 2024 (Verizon, 2025; Instituto Nacional de Ciberseguridad, 2025).
 
-Este factor humano no es estático: la fatiga por alerta, la sobrecarga de correo y la normalización del trabajo remoto reducen la atención sostenida. Los informes de industria señalan además que determinados perfiles, como finanzas, recursos humanos o dirección, reciben un volumen desproporcionado de ataques dirigidos (Proofpoint, 2025a).
+Este factor humano no es estático: la fatiga por alerta, la sobrecarga de correo y la normalización del trabajo remoto reducen la atención sostenida. Los informes de industria señalan además que determinados perfiles, como finanzas, recursos humanos o dirección, reciben un volumen desproporcionado de ataques dirigidos (Proofpoint, 2025).
 
 Implicaciones para la detección
 
@@ -532,7 +544,7 @@ La progresión se divide en tres fases principales, alineadas con la madurez tec
 
 2022-2023: Consolidación del deep learning. CNN, LSTM y modelos preentrenados reducen parte de la ingeniería manual y aprenden patrones en URLs o texto. Su comparación sigue limitada por corpus distintos y por evaluaciones realizadas en entornos controlados.
 
-2024-2025: Transformers y modelos de lenguaje. Los trabajos recientes estudian clasificación zero-shot, ajuste fino y explicaciones generadas por LLM. El potencial es alto, pero la precisión, la fidelidad de las explicaciones, el coste y la privacidad no mejoran siempre de forma simultánea (Koide et al., 2024; Kuikel et al., 2025).
+2024-2025: Transformers y modelos de lenguaje. Los trabajos recientes estudian clasificación zero-shot, ajuste fino, prompt engineering y explicaciones generadas por LLM. El potencial es alto, pero la precisión, la fidelidad de las explicaciones, el coste y la privacidad no mejoran siempre de forma simultánea (Koide et al., 2024; Trad & Chehab, 2024; Kuikel et al., 2025).
 
 Esta evolución refleja el paso de reglas fijas a modelos que aprenden representaciones más ricas. No elimina la utilidad de los enfoques clásicos: en despliegues locales, la velocidad, la trazabilidad y el coste siguen siendo criterios relevantes.
 
@@ -550,7 +562,7 @@ Año	Trabajo	Enfoque	Objeto	Aportación	Limitación
 
 (Fuentes: Hutchinson et al., 2018; Yerima & Alzaylaee, 2020; AlEroud & Karabatis, 2020; Sánchez-Paniagua et al., 2022).
 
-Los enfoques clásicos extraen características de URLs, páginas, cabeceras o texto y las proporcionan a clasificadores supervisados. Su rendimiento puede ser elevado dentro del corpus utilizado, pero cae cuando la distribución cambia o el atacante modifica los rasgos que el modelo espera.
+Los enfoques clásicos extraen características de URLs, páginas, cabeceras o texto y las proporcionan a clasificadores supervisados. Los modelos que aprenden representaciones directamente de la URL reducen parte de esa ingeniería manual (Le et al., 2018), pero su rendimiento también puede caer cuando cambia la distribución o el atacante modifica los rasgos esperados.
 
 Yerima y Alzaylaee (2020) aplicaron redes convolucionales a la detección de phishing, mientras que AlEroud y Karabatis (2020) estudiaron ataques adversariales contra detectores. En conjunto, estos trabajos desplazan el foco desde la precisión estática hacia la capacidad de aprender representaciones y resistir evasiones.
 
@@ -700,6 +712,20 @@ El alcance del prototipo se ha delimitado al análisis estático del correo elec
 
 No obstante, la arquitectura queda preparada para ampliaciones futuras. Podrían añadirse consultas a listas negras públicas, reputación de dominios, validación de certificados TLS, análisis dinámico de páginas o integración con sistemas corporativos de alerta. El prototipo no se plantea, por tanto, como un producto cerrado, sino como una base funcional y extensible.
 
+Cambios respecto a la propuesta inicial
+
+La propuesta de octubre de 2025 contemplaba un prototipo con reglas, servicios externos de reputación, comprobación de certificados y la posible utilización de TensorFlow. Durante el desarrollo se ajustó el alcance para priorizar privacidad, seguridad de la evaluación, reproducibilidad local y una arquitectura cliente-servidor con un único modelo compartido.
+
+Tabla 5.1: Cambios respecto a la propuesta inicial.
+
+Elemento	Propuesta	Implementación final	Justificación
+Aprendizaje	scikit-learn y TensorFlow	TF-IDF + MLPClassifier de scikit-learn	Pipeline ligero, reproducible y suficiente para el alcance; TensorFlow no era necesario.
+Reputación	Listas negras y servicios externos	Listas y señales locales; sin consultas online	Evita enviar URLs sensibles, depender de cuotas o visitar infraestructura potencialmente maliciosa.
+Certificados	Comprobación de certificados digitales	Sin conexión al destino ni validación TLS	Un EML no acredita el certificado actual del enlace; la comprobación activa queda como trabajo futuro aislado.
+Arquitectura	Interfaz sencilla del prototipo	Clientes HTTP y backend central obligatorio	Una actualización del modelo se aplica a web, extensión y monitor sin distribuir copias.
+
+Estos cambios no alteran el objetivo académico de estudiar, implementar y evaluar la detección de phishing. Delimitan qué se demuestra en el prototipo y qué capacidades necesitan infraestructura y controles adicionales.
+
 Arquitectura general
 
 La solución adopta una arquitectura cliente-servidor. El navegador se comunica con Streamlit, que actúa como capa de presentación y cliente HTTP del backend central; la extensión y el monitor consumen esa misma API. Solo backend_server.py normaliza, analiza, entrena y mantiene los modelos activos. En la configuración académica ambos lados se ejecutan en el mismo equipo y sobre loopback, pero son procesos y responsabilidades independientes. Para una demostración en la red local puede exponerse temporalmente solo Streamlit en 0.0.0.0:8501; el backend permanece en 127.0.0.1:8766 y no se publica.
@@ -722,7 +748,7 @@ Sistema heurístico
 
 El sistema heurístico constituye la parte más explicable del prototipo. Está formado por un conjunto de reglas diseñadas a partir de patrones habituales en correos de phishing. Estas reglas se agrupan en varias categorías.
 
-En primer lugar, se analizan las cabeceras del correo. El sistema comprueba incoherencias entre From, Reply-To, Return-Path y Received-SPF, así como fallos de autenticación SPF, DKIM o DMARC. También se evalúan anomalías en cabeceras Received, dominios sospechosos en Message-ID y posibles intentos de suplantación mediante el nombre visible del remitente.
+En primer lugar, se analizan las cabeceras del correo. El sistema interpreta los resultados que los servidores de correo ya han escrito en Received-SPF, Authentication-Results y ARC-Authentication-Results, y detecta estados fail, softfail o errores de SPF, DKIM y DMARC. También revisa incoherencias entre From, Reply-To y Return-Path y si una cabecera DKIM-Signature presente está mal formada. No realiza consultas DNS, no recupera claves públicas y no verifica criptográficamente SPF, DKIM o DMARC; por tanto, es una interpretación pasiva de cabeceras, no una validación completa de autenticación.
 
 En segundo lugar, se analizan los enlaces. El sistema extrae URLs del texto y del HTML, comprueba la presencia de dominios en listas negras locales, detecta acortadores conocidos, identifica dominios con punycode o caracteres Unicode, y revisa parámetros de redirección sospechosos.
 
@@ -776,13 +802,42 @@ El perfilado localizó el principal cuello de botella en las importaciones antic
 
 Las rutas de inferencia permanecieron estables: el análisis heurístico pasó de 0,1097 ms a 0,1084 ms, la detección de idioma de 2,8185 ms a 2,8230 ms, la predicción neuronal de 0,3101 ms a 0,3190 ms y el análisis combinado en caliente de 3,4187 ms a 3,3611 ms. Las variaciones de hasta el 3 % se consideran ruido de medición, ya que no se modificaron reglas, pesos ni modelos.
 
-Dataset de ejemplo
+Diseño experimental y datasets
 
-Para probar el arranque del clasificador sin depender de información personal, el repositorio incluye un dataset sintético mínimo generado bajo demanda: cinco ejemplos de phishing y cinco legítimos por idioma (español e inglés). Los ejemplos cubren urgencia, solicitud de credenciales, enlaces sospechosos y mensajes legítimos de confirmación, reuniones o boletines. No pretende ser un corpus de producción; sirve para demostrar el flujo y mantener una ejecución reproducible cuando todavía no se ha cargado un CSV real.
+Los artefactos neuronales activos declaran las estadísticas del entrenamiento. El modelo español se ajustó con 1.298 textos (686 phishing y 612 legítimos) procedentes de train.csv y dataset_renombrado.csv. El modelo inglés se ajustó con 164.971 textos (85.781 phishing y 79.190 legítimos) procedentes de CEAS_08, Enron, Ling, Nazario, Nigerian Fraud, phishing_email y SpamAssassin. Los modelos versionados no conservan los textos brutos, solo procedencia, estadísticas y el pipeline entrenado.
 
-Resultados del clasificador neuronal
+Tabla 6.1: Conjuntos empleados y separación experimental.
 
-La metodología cuantitativa separa ajuste y comprobación. Cuarenta casos controlados y cinco particiones estratificadas calibran el modo combinado en 35 % heurístico, 65 % neuronal, umbral 26 y conservación de evidencia a partir de 70. Después se evalúan 16 EML reservados: el heurístico alcanza 100,0 % de accuracy, recall y F1; el combinado obtiene 93,8 % de accuracy, 100,0 % de recall y 94,1 % de F1; el neuronal obtiene 75,0 % en esas métricas. Un diagnóstico DIFrauD de 1.528 textos externos da 90,8 % de accuracy y 96,4 % de recall al combinado, pero se documenta riesgo de solapamiento. Ninguna muestra estima producción.
+Conjunto	N	Phishing	Legítimos	Procedencia	Uso
+Entrenamiento ES	1.298	686	612	Dos CSV locales declarados por el artefacto	Ajuste del modelo español
+Entrenamiento EN	164.971	85.781	79.190	CEAS, Enron, Ling, Nazario, Nigerian Fraud, phishing_email y SpamAssassin	Ajuste del modelo inglés
+Calibración	40	20	20	Casos sintéticos ES/EN; 10 por idioma y clase	Cinco particiones para pesos y umbral
+Evaluación EML	16	8	8	EML sintéticos reservados; 4 por idioma y clase	Comparación final de los tres modos
+DIFrauD	1.528	608	920	Split público histórico de phishing	Diagnóstico externo con riesgo de solapamiento
+
+No se aplicó una división aleatoria 70/30 a los artefactos ya entrenados. La separación experimental se realizó por función: los corpus de entrenamiento ajustan el MLP; 40 casos distintos calibran la fusión mediante cinco particiones estratificadas; y 16 EML no usados en entrenamiento ni calibración constituyen la prueba final común. El split de prueba de DIFrauD añade escala, pero no se considera independiente por posible solapamiento con fuentes del modelo inglés (Boumber et al., 2024).
+
+La evaluación local es reproducible desde los ficheros versionados y conserva hashes de corpus y modelos. La repetición exacta del entrenamiento histórico requiere los CSV originales, que no se distribuyen en el repositorio; esta carencia de trazabilidad de las filas de entrenamiento se mantiene como una limitación explícita y justifica no presentar las métricas como estimación de producción.
+
+Resultados comparados
+
+Tras fijar 35 % de peso heurístico, 65 % neuronal, umbral 26 y conservación de evidencia individual a partir de 70, los 16 EML reservados se procesaron sin reajustar parámetros. Accuracy mide el acierto total, precisión la fiabilidad de las alertas, recall la cobertura del phishing real y F1 su equilibrio.
+
+Tabla 6.2: Métricas sobre los 16 EML reservados.
+
+Modo	Accuracy	Precisión	Recall	F1	Accuracy balanceada
+Heurístico	100,0 %	100,0 %	100,0 %	100,0 %	100,0 %
+Neuronal	75,0 %	75,0 %	75,0 %	75,0 %	75,0 %
+Combinado 35/65	93,8 %	88,9 %	100,0 %	94,1 %	93,8 %
+
+Tabla 6.3: Matrices de confusión sobre los 16 EML reservados.
+
+Modo	VN	FP	FN	VP	Lectura
+Heurístico	8	0	0	8	Clasifica correctamente los 16 escenarios
+Neuronal	6	2	2	6	Dos falsas alarmas y dos phishing omitidos
+Combinado 35/65	7	1	0	8	Detecta los 8 phishing y genera una falsa alarma
+
+El heurístico obtiene el mejor resultado en este conjunto pequeño porque los EML contienen las cabeceras, enlaces y escenarios para los que se diseñaron las reglas. El combinado conserva los ocho verdaderos positivos y reduce el riesgo de depender solo del texto, a costa de un falso positivo. El neuronal muestra la mayor sensibilidad a la distribución del corpus: dos falsos positivos y dos falsos negativos. Por ello no se selecciona un ganador universal; se documenta el comportamiento observado y el coste de cada error.
 
 Comportamiento del sistema heurístico
 
@@ -792,13 +847,25 @@ Prueba funcional de la aplicación web
 
 Se realizaron 87 pruebas Python y 2 recorridos Chromium. Las comprobaciones verifican los tres modos, calibración, idioma determinista, EML serializable, Gmail a backend y Telegram, cliente HTTP, entrenamiento y versión central, caché, señales BEC, API, límites, token administrativo, evaluación externa, respaldo, extensión y Streamlit. Los 16 EML y DIFrauD añaden medición separada con sus límites expresos; no se presentan como evaluación estadística de producción.
 
+Evidencia visual del prototipo
+
+Las siguientes capturas se generaron con backend y Streamlit en procesos separados y un navegador Chromium real. La primera confirma la conexión del cliente; la segunda muestra la salida del modo combinado para el EML BEC sintético reservado, sin credenciales ni datos personales.
+
+
+
+Figura 6.1: Pantalla inicial del cliente web con el backend central conectado. Fuente: elaboración propia.
+
+
+
+Figura 6.2: Resultado combinado del escenario BEC sintético reservado. Fuente: elaboración propia.
+
 Discusión
 
 Los resultados confirman el diseño como base funcional: en los 16 EML reservados, el heurístico obtiene 100,0 % de accuracy y recall; el combinado detecta los ocho phishing, incluido BEC sin enlace, con 93,8 % de accuracy y un falso positivo; el neuronal conserva dos falsos negativos y dos falsos positivos. En DIFrauD el combinado logra 90,8 % de accuracy y 96,4 % de recall. La limitación principal pasa a ser la independencia y actualidad de los datos externos, además de la falta de validación real bilingüe y de controles de producción.
 
-Conclusiones
+Conclusiones generales
 
-El Trabajo Fin de Grado ha alcanzado los objetivos planteados. Se ha estudiado el phishing desde su base psicológica y su evolución reciente, se ha revisado el estado del arte en machine learning y deep learning y se ha desarrollado un sistema cliente-servidor funcional que combina análisis heurístico explicable con un clasificador neuronal TF-IDF + MLP. Streamlit, la extensión de Gmail y el monitor envían texto, EML o campos estructurados al backend central obligatorio, que procesa la entrada y mantiene los modelos compartidos.
+Estas conclusiones generales valoran el trabajo completo y se diferencian de las conclusiones del estado del arte. El Trabajo Fin de Grado ha alcanzado los objetivos planteados: se ha estudiado el phishing desde su base psicológica y su evolución reciente, se ha revisado la investigación en machine learning y deep learning y se ha desarrollado un sistema cliente-servidor funcional que combina análisis heurístico explicable con un clasificador TF-IDF + MLP. Streamlit, la extensión de Gmail y el monitor envían las entradas al backend central, que procesa el correo y mantiene los modelos compartidos.
 
 Para comprobar el cumplimiento de los objetivos, se revisa a continuación el grado de consecución de cada uno de los objetivos específicos planteados en la introducción:
 
@@ -862,9 +929,9 @@ Vishing: Variante de phishing mediante llamadas telefónicas.
 
 Referencias
 
-AlEroud, A., & Karabatis, G. (2020). Bypassing detection of URL-based phishing attacks using generative adversarial deep neural networks. InProceedings of the Sixth International Workshop on Security and Privacy Analytics (IWSPA '20)(pp. 53-60). ACM. https://doi.org/10.1145/3375708.3380315
+AlEroud, A., & Karabatis, G. (2020). Bypassing detection of URL-based phishing attacks using generative adversarial deep neural networks. In Proceedings of the Sixth International Workshop on Security and Privacy Analytics (IWSPA '20) (pp. 53-60). ACM. https://doi.org/10.1145/3375708.3380315
 
-Alghenaim, M., Alkawsi, G., & Barnhart, C. R. (2025). The state of the art in AI-based phishing detection: A systematic literature review. In M. A. Al-Sharafi, M. Al-Emran, M. A. Mahmoud, & I. Arpaci (Eds.),Current and Future Trends on AI Applications(Studies in Computational Intelligence, Vol. 1178, pp. 431–458). Springer. https://doi.org/10.1007/978-3-031-75091-5_23
+Alghenaim, M., Alkawsi, G., & Barnhart, C. R. (2025). The state of the art in AI-based phishing detection: A systematic literature review. In M. A. Al-Sharafi, M. Al-Emran, M. A. Mahmoud, & I. Arpaci (Eds.), Current and Future Trends on AI Applications (Studies in Computational Intelligence, Vol. 1178, pp. 431-458). Springer. https://doi.org/10.1007/978-3-031-75091-5_23
 
 Alkhalil, Z., Hewage, C., Nawaf, L., & Khan, I. (2021). Phishing attacks: A recent comprehensive study and a new anatomy. Frontiers in Computer Science, 3, Article 563060. https://doi.org/10.3389/fcomp.2021.563060
 
@@ -872,23 +939,23 @@ Altwaijry, N., Al-Turaiki, I., Alotaibi, R., & Alakeel, F. (2024). Advancing phi
 
 Anti-Phishing Working Group. (2025). Phishing Activity Trends Report – 2nd Quarter 2025. https://docs.apwg.org/reports/apwg_trends_report_q2_2025.pdf
 
+Boumber, D. A., Qachfar, F. Z., & Verma, R. (2024). Domain-agnostic adapter architecture for deception detection: Extensive evaluations with the DIFrauD benchmark. In Proceedings of the 2024 Joint International Conference on Computational Linguistics, Language Resources and Evaluation (LREC-COLING 2024) (pp. 5260-5274). ELRA and ICCL. https://aclanthology.org/2024.lrec-main.468/
+
 Cialdini, R. B. (1984). Influence: The Psychology of Persuasion. William Morrow.
 
 Federal Bureau of Investigation. (2024). 2023 Internet Crime Report. Internet Crime Complaint Center. https://www.ic3.gov/Media/PDF/AnnualReport/2023_IC3Report.pdf
 
 Fortinet. (2025). 19 types of phishing attacks with examples. https://www.fortinet.com/resources/cyberglossary/types-of-phishing-attacks
 
-GreatHorn. (2021). 3 phases of the phishing attack kill chain. https://web.archive.org/web/20231201201455/ https://www.greathorn.com/blog/what-are-the-3-phases-of-the-phishing-attack-kill-chain/
+GreatHorn. (2021). 3 phases of the phishing attack kill chain. https://web.archive.org/web/20231201201455/https://www.greathorn.com/blog/what-are-the-3-phases-of-the-phishing-attack-kill-chain/
 
-Hadnagy, C. (2018). Social Engineering: The Science of Human Hacking(2nd ed.). Wiley.
+Hadnagy, C. (2018). Social Engineering: The Science of Human Hacking (2nd ed.). Wiley.
 
 Heiding, F., Schneier, B., Vishwanath, A., Bernstein, J., & Park, P. S. (2024). Devising and detecting phishing emails using large language models. IEEE Access, 12, 42131-42146. https://doi.org/10.1109/ACCESS.2024.3375882
 
 Hoxhunt. (2024). The Phishing Kill Chain: Three Steps and Five Effects. https://hoxhunt.com/blog/three-steps-and-five-effects-of-the-phishing-attack-kill-chain
 
-Hoxhunt. (2025). Phishing Trends Report 2025. https://hoxhunt.com/guide/phishing-trends-report
-
-Hutchinson, S., Zhang, Z., & Liu, Q. (2018). Detecting phishing websites with random forest. InMachine Learning and Intelligent Communications(pp. 470-479). Springer. https://doi.org/10.1007/978-3-030-00557-3_46
+Hutchinson, S., Zhang, Z., & Liu, Q. (2018). Detecting phishing websites with random forest. In Machine Learning and Intelligent Communications (pp. 470-479). Springer. https://doi.org/10.1007/978-3-030-00557-3_46
 
 IBM. (2025). Cost of a Data Breach Report 2025. https://www.ibm.com/reports/data-breach
 
@@ -906,21 +973,13 @@ Kuikel, S., Piplai, A., & Aggarwal, P. (2025). Evaluating large language models 
 
 Le, H., Pham, Q., Sahoo, D., & Hoi, S. C. H. (2018). URLNet: Learning a URL representation with deep learning for malicious URL detection. arXiv preprint arXiv:1802.03162. https://arxiv.org/abs/1802.03162
 
-LevelBlue. (2024). Dissecting a multi-stage phishing attack. https://levelblue.com/blogs/security-essentials/dissecting-a-multi-stage-phishing-attack
-
 Microsoft. (2025). Microsoft Digital Defense Report 2025. https://www.microsoft.com/en-us/corporate-responsibility/cybersecurity/microsoft-digital-defense-report-2025/
 
 MITRE. (2025). ATT&CK Framework: T1566 Phishing. https://attack.mitre.org/techniques/T1566/
 
-OpenAI. (2023). GPT-4 Technical Report. https://arxiv.org/abs/2303.08774
-
 Popescul, D., & Radu, L. D. (2025). AI in phishing detection: A bibliometric review. Frontiers in Artificial Intelligence, 8, 1496580. https://doi.org/10.3389/frai.2025.1496580
 
-Proofpoint. (2025). What is phishing? Meaning, attack types & more. https://www.proofpoint.com/us/threat-reference/phishing
-
-Proofpoint. (2025a). The Human Factor 2025: Vol. 1 Social Engineering. https://www.proofpoint.com/us/resources/threat-reports/human-factor-social-engineering
-
-Proofpoint. (2025b). The Human Factor 2025 Vol. 2: URL Phishing. https://www.proofpoint.com/us/resources/threat-reports/human-factor-url-phishing
+Proofpoint. (2025). The Human Factor 2025: Vol. 1 Social Engineering. https://www.proofpoint.com/us/resources/threat-reports/human-factor-social-engineering
 
 Rojas-Galeano, S. (2024). Zero-shot spam email classification using pre-trained large language models. arXiv preprint arXiv:2405.15936. https://arxiv.org/abs/2405.15936
 
@@ -934,13 +993,11 @@ Tversky, A., & Kahneman, D. (1974). Judgment under uncertainty: Heuristics and b
 
 Uddin, M. A., Mahiuddin, M., & Sarker, I. H. (2024). An explainable transformer-based model for phishing email detection: A large language model approach. arXiv preprint arXiv:2402.13871. https://arxiv.org/abs/2402.13871
 
-Verizon. (2021). The history of phishing attacks. https://www.verizon.com/business/resources/articles/s/the-history-of-phishing/
-
 Verizon. (2025). 2025 Data Breach Investigations Report. https://www.verizon.com/business/resources/reports/2025-dbir-executive-summary.pdf
 
-Wang, Y., Zhu, W., Xu, H., Qin, Z., Ren, K., & Ma, W. (2023). A large-scale pretrained deep model for phishing URL detection. InICASSP 2023 - 2023 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)(pp. 1-5). IEEE. https://doi.org/10.1109/ICASSP49357.2023.10095719
+Wang, Y., Zhu, W., Xu, H., Qin, Z., Ren, K., & Ma, W. (2023). A large-scale pretrained deep model for phishing URL detection. In ICASSP 2023 - 2023 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) (pp. 1-5). IEEE. https://doi.org/10.1109/ICASSP49357.2023.10095719
 
-Yerima, S. Y., & Alzaylaee, M. K. (2020). High accuracy phishing detection based on convolutional neural networks. InProceedings of the 3rd International Conference on Computer Applications & Information Security(pp. 1-6). IEEE. https://doi.org/10.1109/ICCAIS48893.2020.9096869
+Yerima, S. Y., & Alzaylaee, M. K. (2020). High accuracy phishing detection based on convolutional neural networks. In Proceedings of the 3rd International Conference on Computer Applications & Information Security (pp. 1-6). IEEE. https://doi.org/10.1109/ICCAIS48893.2020.9096869
 
 Anexos
 
@@ -1294,7 +1351,7 @@ C.1. Uso del prototipo
 
 La aplicación ofrece texto, EML y Gmail desde Streamlit, además del correo visible en la extensión. Todos esos clientes envían la entrada al backend central. /analyze acepta campos JSON o EML Base64 y devuelve riesgo, señales, explicación, idioma y versión para que cada cliente se limite a presentarlos.
 
-Para cada correo, el sistema devuelve una puntuación global de riesgo, una clasificación y un desglose de señales. Se revisan autenticación SPF/DKIM/DMARC, coherencia del remitente, urgencia en el asunto, URLs sospechosas, IPs, punycode, acortadores, redirecciones, adjuntos y técnicas de ingeniería social. Las señales activadas se acompañan de explicaciones para interpretar por qué se ha clasificado un mensaje como phishing.
+Para cada correo, el sistema devuelve una puntuación global de riesgo, una clasificación y un desglose de señales. Interpreta los resultados SPF/DKIM/DMARC ya presentes en las cabeceras, sin consultas DNS ni validación criptográfica, y revisa coherencia del remitente, urgencia, URLs, IPs, punycode, acortadores, redirecciones, adjuntos e ingeniería social. Las señales activadas se acompañan de explicaciones para interpretar por qué se ha clasificado el mensaje.
 
 El clasificador neuronal del backend asigna la probabilidad y selecciona el modelo por idioma. Streamlit recibe conjuntamente la puntuación neuronal y las señales heurísticas; no carga el pipeline ni recalcula la decisión.
 

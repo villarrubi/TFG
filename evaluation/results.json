@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "dataset": {
     "path": "evaluation/local_emails_v1/manifest.json",
     "sha256": "e4cca95dd15a28229451138c063ae591c00961b0c5b275c58dada5dd0a6bb89d",
@@ -30,11 +30,40 @@
   "models": {
     "es": {
       "path": "modelo_neural_es.joblib",
-      "sha256": "432905694ee1db6ba1ef7c33dfb8e2540ee94efbbbc09c952837fd786482dbad"
+      "sha256": "432905694ee1db6ba1ef7c33dfb8e2540ee94efbbbc09c952837fd786482dbad",
+      "training_stats": {
+        "n_samples": 1298,
+        "phishing_count": 686,
+        "legit_count": 612,
+        "accuracy": 0.9984591679506933
+      },
+      "training_sources": [
+        "train.csv",
+        "dataset_renombrado.csv"
+      ],
+      "training_datetime": "2026-07-08 22:22:35",
+      "raw_training_texts_stored": 0
     },
     "en": {
       "path": "modelo_neural_en.joblib",
-      "sha256": "f414b707d7aa35c6fff11851a047f0ef4df997139f9a949eff50c4c451d7bde4"
+      "sha256": "f414b707d7aa35c6fff11851a047f0ef4df997139f9a949eff50c4c451d7bde4",
+      "training_stats": {
+        "n_samples": 164971,
+        "phishing_count": 85781,
+        "legit_count": 79190,
+        "accuracy": 0.9998181498566415
+      },
+      "training_sources": [
+        "CEAS_08.csv",
+        "Enron.csv",
+        "Ling.csv",
+        "Nazario.csv",
+        "Nigerian_Fraud.csv",
+        "phishing_email.csv",
+        "SpamAssasin.csv"
+      ],
+      "training_datetime": "2026-07-07 21:49:58",
+      "raw_training_texts_stored": 0
     }
   },
   "threshold": 26.0,

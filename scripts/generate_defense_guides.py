@@ -33,7 +33,12 @@ def _set_cell_margins(cell, top=80, start=120, bottom=80, end=120):
     if margins is None:
         margins = OxmlElement("w:tcMar")
         tc_pr.append(margins)
-    for side, value in (("top", top), ("start", start), ("bottom", bottom), ("end", end)):
+    for side, value in (
+        ("top", top),
+        ("start", start),
+        ("bottom", bottom),
+        ("end", end),
+    ):
         node = margins.find(qn(f"w:{side}"))
         if node is None:
             node = OxmlElement(f"w:{side}")
@@ -156,11 +161,37 @@ def _setup_document(title):
     section.footer_distance = Inches(0.492)
 
     _set_style(doc.styles["Normal"], after=6, line=1.25)
-    _set_style(doc.styles["Title"], size=30, color="203748", bold=True, after=8, line=1.0)
+    _set_style(
+        doc.styles["Title"], size=30, color="203748", bold=True, after=8, line=1.0
+    )
     _set_style(doc.styles["Subtitle"], size=15, color="2B5163", after=18, line=1.1)
-    _set_style(doc.styles["Heading 1"], size=16, color=BLUE, bold=True, before=18, after=10, line=1.1)
-    _set_style(doc.styles["Heading 2"], size=13, color=BLUE, bold=True, before=14, after=7, line=1.1)
-    _set_style(doc.styles["Heading 3"], size=12, color=DARK_BLUE, bold=True, before=10, after=5, line=1.1)
+    _set_style(
+        doc.styles["Heading 1"],
+        size=16,
+        color=BLUE,
+        bold=True,
+        before=18,
+        after=10,
+        line=1.1,
+    )
+    _set_style(
+        doc.styles["Heading 2"],
+        size=13,
+        color=BLUE,
+        bold=True,
+        before=14,
+        after=7,
+        line=1.1,
+    )
+    _set_style(
+        doc.styles["Heading 3"],
+        size=12,
+        color=DARK_BLUE,
+        bold=True,
+        before=10,
+        after=5,
+        line=1.1,
+    )
     _set_style(doc.styles["List Bullet"], after=4, line=1.25)
     _set_style(doc.styles["List Number"], after=4, line=1.25)
 
@@ -194,7 +225,12 @@ def _cover(doc, kicker, title, subtitle):
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_before = Pt(24)
-    _set_run_font(p.add_run("Proyecto TFG · versión alineada con el código actual"), size=10, color=MUTED, italic=True)
+    _set_run_font(
+        p.add_run("Proyecto TFG · versión alineada con el código actual"),
+        size=10,
+        color=MUTED,
+        italic=True,
+    )
     doc.add_page_break()
 
 
@@ -206,7 +242,7 @@ def _para(doc, text, *, bold_prefix=None):
     p = doc.add_paragraph()
     if bold_prefix and text.startswith(bold_prefix):
         _set_run_font(p.add_run(bold_prefix), bold=True)
-        _set_run_font(p.add_run(text[len(bold_prefix):]))
+        _set_run_font(p.add_run(text[len(bold_prefix) :]))
     else:
         _set_run_font(p.add_run(text))
     return p
@@ -260,10 +296,22 @@ def _table(doc, headers, rows, widths):
 
 def flujo():
     doc = _setup_document("Flujo y funcionamiento · TFG Phishing")
-    _cover(doc, "Guía 01 · mapa del sistema", "Flujo y funcionamiento", "Qué ocurre desde que entra un correo hasta que se explica el riesgo")
+    _cover(
+        doc,
+        "Guía 01 · mapa del sistema",
+        "Flujo y funcionamiento",
+        "Qué ocurre desde que entra un correo hasta que se explica el riesgo",
+    )
     _heading(doc, "1. Idea general", 1)
-    _para(doc, "El montaje es cliente-servidor. El navegador usa Streamlit como capa de presentación y Streamlit envía peticiones HTTP/JSON al backend central. La extensión y el monitor también consumen esa API. Solo el servidor parsea, analiza, entrena y guarda los modelos; Gmail y Telegram son integraciones externas. La web comparte una interfaz adaptable con navegación de marca, estados homogéneos y un flujo de detección ordenado en tres pasos.")
-    _callout(doc, "Frase para la defensa", "Aunque cliente y servidor estén en el mismo ordenador, son procesos separados con un contrato HTTP y comparten una versión activa por idioma. Para la demo móvil, mantén el backend en 127.0.0.1:8766 e inicia Streamlit con --server.address 0.0.0.0 --server.port 8501; el móvil usa la IP privada. Es acceso temporal a una LAN de confianza, no Internet, y la web no tiene autenticación multiusuario.")
+    _para(
+        doc,
+        "El montaje es cliente-servidor. El navegador usa Streamlit como capa de presentación y Streamlit envía peticiones HTTP/JSON al backend central. La extensión y el monitor también consumen esa API. Solo el servidor parsea, analiza, entrena y guarda los modelos; Gmail y Telegram son integraciones externas. La web comparte una interfaz adaptable con navegación de marca, estados homogéneos y un flujo de detección ordenado en tres pasos.",
+    )
+    _callout(
+        doc,
+        "Frase para la defensa",
+        "Aunque cliente y servidor estén en el mismo ordenador, son procesos separados con un contrato HTTP y comparten una versión activa por idioma. Para la demo móvil, mantén el backend en 127.0.0.1:8766 e inicia Streamlit con --server.address 0.0.0.0 --server.port 8501; el móvil usa la IP privada. Es acceso temporal a una LAN de confianza, no Internet, y la web no tiene autenticación multiusuario.",
+    )
     _heading(doc, "2. Flujo completo", 1)
     for text in [
         "Entrada de cliente: la web, la extensión o el monitor envían texto, campos JSON o un EML Base64 al backend; /analyze limita la petición a 16 MiB.",
@@ -276,17 +324,60 @@ def flujo():
     ]:
         _number(doc, text)
     _heading(doc, "3. Piezas y responsabilidades", 1)
-    _table(doc, ["Capa", "Módulo", "Responsabilidad", "Resultado"], [
-        ("Entrada", "analizador_email.py", "Parseo MIME seguro y extracción de partes", "Correo normalizado"),
-        ("Dominio", "correo.py", "Contrato común para texto, diccionario o EML", "CorreoAnalizado"),
-        ("Señales", "header_signals, url_utils, html_signals, content_signals", "Reglas pequeñas y comprobables", "Diccionario de señales"),
-        ("Cliente", "backend_client.py", "Contrato HTTP común sin lógica de detección", "Petición/respuesta JSON"),
-        ("Servidor", "backend_service.py", "Casos de uso, idioma, versiones y administración", "Resultado central"),
-        ("ML", "modelo_neural.py", "TF-IDF, MLP, entrenamiento y persistencia del servidor", "Probabilidad phishing"),
-        ("Presentación", "Streamlit, monitor, extensión", "Recoger entrada y mostrar o alertar", "UI o alerta"),
-    ], [1500, 2350, 3150, 2360])
+    _table(
+        doc,
+        ["Capa", "Módulo", "Responsabilidad", "Resultado"],
+        [
+            (
+                "Entrada",
+                "analizador_email.py",
+                "Parseo MIME seguro y extracción de partes",
+                "Correo normalizado",
+            ),
+            (
+                "Dominio",
+                "correo.py",
+                "Contrato común para texto, diccionario o EML",
+                "CorreoAnalizado",
+            ),
+            (
+                "Señales",
+                "header_signals, url_utils, html_signals, content_signals",
+                "Reglas pequeñas y comprobables",
+                "Diccionario de señales",
+            ),
+            (
+                "Cliente",
+                "backend_client.py",
+                "Contrato HTTP común sin lógica de detección",
+                "Petición/respuesta JSON",
+            ),
+            (
+                "Servidor",
+                "backend_service.py",
+                "Casos de uso, idioma, versiones y administración",
+                "Resultado central",
+            ),
+            (
+                "ML",
+                "modelo_neural.py",
+                "TF-IDF, MLP, entrenamiento y persistencia del servidor",
+                "Probabilidad phishing",
+            ),
+            (
+                "Presentación",
+                "Streamlit, monitor, extensión",
+                "Recoger entrada y mostrar o alertar",
+                "UI o alerta",
+            ),
+        ],
+        [1500, 2350, 3150, 2360],
+    )
     _heading(doc, "4. Cómo se analiza un EML", 1)
-    _para(doc, "El parser usa email.parser.BytesParser con una política MIME estándar. Conserva todas las cabeceras repetidas, no solo la última, y serializa las cabeceras originales junto al cuerpo para que SPF, DKIM, DMARC, Received, Return-Path y Message-ID sean visibles a las reglas.")
+    _para(
+        doc,
+        "El parser usa email.parser.BytesParser con una política MIME estándar. Conserva todas las cabeceras repetidas, no solo la última, y serializa las cabeceras originales junto al cuerpo. SPF, DKIM y DMARC se interpretan únicamente desde Received-SPF, Authentication-Results, ARC-Authentication-Results y DKIM-Signature: el prototipo no consulta DNS, no recupera claves públicas y no realiza una validación criptográfica completa.",
+    )
     for text in [
         "Texto plano: se decodifica respetando el charset declarado y se conserva como cuerpo analizable.",
         "HTML: se guarda separado para revisar formularios, meta refresh, iframes, base href y javascript/data URLs.",
@@ -295,67 +386,200 @@ def flujo():
     ]:
         _bullet(doc, text)
     _heading(doc, "5. Monitor y persistencia", 1)
-    _para(doc, "El monitor consulta Gmail, carga los IDs vistos y procesa solo mensajes nuevos. Cada correo normalizado se envía al backend con RemoteAnalysisService; el monitor no carga modelos. El estado se escribe después de cada mensaje completado mediante fichero temporal y os.replace.")
-    _para(doc, "Si un EML está corrupto o falla una alerta de Telegram, ese mensaje queda reportado con error y el resto del lote continúa. Un fallo de entrada no se convierte en una caída global del proceso.")
+    _para(
+        doc,
+        "El monitor consulta Gmail, carga los IDs vistos y procesa solo mensajes nuevos. Cada correo normalizado se envía al backend con RemoteAnalysisService; el monitor no carga modelos. El estado se escribe después de cada mensaje completado mediante fichero temporal y os.replace.",
+    )
+    _para(
+        doc,
+        "Si un EML está corrupto o falla una alerta de Telegram, ese mensaje queda reportado con error y el resto del lote continúa. Un fallo de entrada no se convierte en una caída global del proceso.",
+    )
     _heading(doc, "6. API y extensión", 1)
-    _table(doc, ["Endpoint", "Entrada", "Respuesta", "Controles"], [
-        ("GET /health y /models", "Sin cuerpo", "Estado y versiones sin rutas locales", "No-store; sin artefactos"),
-        ("POST /analyze", "JSON hasta 16 MiB", "Riesgo, explicación, idioma y versión", "Tipos, tamaño y CORS"),
-        ("POST /train y /evaluate", "CSV serializado hasta 256 MiB", "Versión y métricas", "Token admin opcional en local"),
-        ("POST /compare y /models/delete", "Configuraciones o idioma", "Comparación o confirmación", "Token y límites"),
-    ], [1800, 2500, 2800, 2260])
-    _para(doc, "La extensión de Gmail no ejecuta Python: recoge el correo visible y lo envía directamente al backend central, por defecto en 127.0.0.1:8766. El proceso del puerto 8765 se conserva únicamente como proxy de compatibilidad y tampoco carga modelos.")
+    _table(
+        doc,
+        ["Endpoint", "Entrada", "Respuesta", "Controles"],
+        [
+            (
+                "GET /health y /models",
+                "Sin cuerpo",
+                "Estado y versiones sin rutas locales",
+                "No-store; sin artefactos",
+            ),
+            (
+                "POST /analyze",
+                "JSON hasta 16 MiB",
+                "Riesgo, explicación, idioma y versión",
+                "Tipos, tamaño y CORS",
+            ),
+            (
+                "POST /train y /evaluate",
+                "CSV serializado hasta 256 MiB",
+                "Versión y métricas",
+                "Token admin opcional en local",
+            ),
+            (
+                "POST /compare y /models/delete",
+                "Configuraciones o idioma",
+                "Comparación o confirmación",
+                "Token y límites",
+            ),
+        ],
+        [1800, 2500, 2800, 2260],
+    )
+    _para(
+        doc,
+        "La extensión de Gmail no ejecuta Python: recoge el correo visible y lo envía directamente al backend central, por defecto en 127.0.0.1:8766. El proceso del puerto 8765 se conserva únicamente como proxy de compatibilidad y tampoco carga modelos.",
+    )
     _heading(doc, "7. Ejemplo de extremo a extremo", 1)
-    for index, text in enumerate([
-        "El usuario abre un correo con asunto urgente y un enlace que aparenta ser de una marca conocida.",
-        "El adaptador extrae From, Subject, cuerpo, anclas y URL.",
-        "Las reglas detectan urgencia, dominio externo, anchor distinto y posible incoherencia de cabeceras.",
-        "El modelo neuronal calcula una probabilidad sobre el texto completo.",
-        "El modo combinado aplica la fusión calibrada 35/65 y el umbral 26; si una evidencia alcanza 70 no se diluye, y la explicación muestra qué señales activaron el riesgo.",
-        "La UI pinta la tarjeta, la extensión la inserta en Gmail y el monitor podría notificar por Telegram.",
-    ], 1):
+    for index, text in enumerate(
+        [
+            "El usuario abre un correo con asunto urgente y un enlace que aparenta ser de una marca conocida.",
+            "El adaptador extrae From, Subject, cuerpo, anclas y URL.",
+            "Las reglas detectan urgencia, dominio externo, anchor distinto y posible incoherencia de cabeceras.",
+            "El modelo neuronal calcula una probabilidad sobre el texto completo.",
+            "El modo combinado aplica la fusión calibrada 35/65 y el umbral 26; si una evidencia alcanza 70 no se diluye, y la explicación muestra qué señales activaron el riesgo.",
+            "La UI pinta la tarjeta, la extensión la inserta en Gmail y el monitor podría notificar por Telegram.",
+        ],
+        1,
+    ):
         _para(doc, f"{index}. {text}")
     _heading(doc, "8. Límites que conviene decir", 1)
-    _bullet(doc, "La lista de dominios y señales es local; no se afirma que exista reputación online en tiempo real.")
-    _bullet(doc, "El análisis es apoyo a la decisión, no sustituto de una pasarela antispam ni garantía absoluta.")
     _bullet(
         doc,
-        "El MLP necesita datos representativos y evaluación separada; una accuracy de entrenamiento no demuestra generalización. "
-        "La evidencia funcional suma 87 pruebas Python y 2 recorridos reales (web-backend y Gmail-HTTP-Telegram): verifican "
-        "arquitectura y comportamiento, no eficacia estadística en producción.",
+        "La lista de dominios y señales es local; no se afirma que exista reputación online en tiempo real.",
+    )
+    _bullet(
+        doc,
+        "El análisis apoya decisiones y las 87 pruebas más 2 recorridos validan el flujo, no la eficacia en producción; "
+        "el MLP requiere datos representativos y evaluación separada.",
     )
     doc.save(ROOT / "Guia_01_Flujo_y_funcionamiento.docx")
 
 
 def tecnologias():
     doc = _setup_document("Tecnologías y decisiones · TFG Phishing")
-    _cover(doc, "Guía 02 · decisiones técnicas", "Tecnologías y decisiones", "Cómo funciona cada elección y cómo justificarla frente a alternativas")
+    _cover(
+        doc,
+        "Guía 02 · decisiones técnicas",
+        "Tecnologías y decisiones",
+        "Cómo funciona cada elección y cómo justificarla frente a alternativas",
+    )
     _heading(doc, "1. Criterio de selección", 1)
-    _para(doc, "La arquitectura prioriza reproducibilidad local, facilidad de defensa, separación de responsabilidades y coste operativo bajo. Las decisiones no intentan convertir el TFG en un servicio de producción multiusuario: delimitan un detector demostrable, auditable y extensible.")
+    _para(
+        doc,
+        "La arquitectura prioriza reproducibilidad local, facilidad de defensa, separación de responsabilidades y coste operativo bajo. Las decisiones no intentan convertir el TFG en un servicio de producción multiusuario: delimitan un detector demostrable, auditable y extensible.",
+    )
     _heading(doc, "2. Comparativa de tecnologías", 1)
-    _table(doc, ["Tecnología", "Cómo se usa", "Por qué se elige", "Alternativa y límite"], [
-        ("Python", "Integra parser, reglas, ML, API y automatizaciones", "Ecosistema científico, lectura clara y buena trazabilidad", "Java/Node serían válidos; añadirían complejidad para este alcance"),
-        ("Streamlit", "Cliente web con sistema visual compartido y adaptable", "Permite validar el flujo cliente-servidor con una interfaz coherente y poco código", "React daría comunicación navegador-API directa, pero exigiría otro stack"),
-        ("scikit-learn", "TF-IDF vectoriza y MLPClassifier clasifica", "Pipeline reproducible, API madura y métricas estándar", "TensorFlow sería más flexible para deep learning, pero sobredimensionado para texto tabular"),
-        ("TF-IDF", "Convierte palabras y bigramas en variables", "Explicable, rápido y adecuado para corpus moderados", "Transformers mejorarían contexto, con más coste y menor explicabilidad local"),
-        ("email estándar", "Parsea MIME y cabeceras EML", "No añade dependencia para la parte esencial del formato", "Librerías externas pueden aportar atajos, pero no son necesarias"),
-        ("BeautifulSoup", "Inspecciona HTML y formularios", "Tolera HTML imperfecto de correos", "Parser regex puro sería frágil; un navegador sería inseguro e innecesario"),
-        ("Gmail API + OAuth", "Obtiene mensajes con consentimiento del usuario", "Permisos oficiales y flujo revocable", "IMAP sería más genérico, pero no aporta el mismo control API"),
-        ("HTTP stdlib", "Expone análisis y administración central", "Cero framework extra, contrato pequeño y fácil de auditar", "FastAPI facilitaría OpenAPI y escalado; no es necesario para el prototipo"),
-        ("joblib", "Persiste pipeline TF-IDF + MLP", "Guarda vectorizador y modelo como una unidad", "ONNX sería más portable; exige conversión y no elimina el requisito de confiar en artefactos"),
-        ("unittest + Ruff", "Prueba comportamiento y calidad estática", "Incluidos en Python y rápidos en CI/local", "pytest aporta fixtures más ricas; el conjunto actual es suficiente y directo"),
-    ], [1500, 2500, 2800, 2560])
+    _table(
+        doc,
+        ["Tecnología", "Cómo se usa", "Por qué se elige", "Alternativa y límite"],
+        [
+            (
+                "Python",
+                "Integra parser, reglas, ML, API y automatizaciones",
+                "Ecosistema científico, lectura clara y buena trazabilidad",
+                "Java/Node serían válidos; añadirían complejidad para este alcance",
+            ),
+            (
+                "Streamlit",
+                "Cliente web con sistema visual compartido y adaptable",
+                "Permite validar el flujo cliente-servidor con una interfaz coherente y poco código",
+                "React daría comunicación navegador-API directa, pero exigiría otro stack",
+            ),
+            (
+                "scikit-learn",
+                "TF-IDF vectoriza y MLPClassifier clasifica",
+                "Pipeline reproducible, API madura y métricas estándar",
+                "TensorFlow sería más flexible para deep learning, pero sobredimensionado para texto tabular",
+            ),
+            (
+                "TF-IDF",
+                "Convierte palabras y bigramas en variables",
+                "Explicable, rápido y adecuado para corpus moderados",
+                "Transformers mejorarían contexto, con más coste y menor explicabilidad local",
+            ),
+            (
+                "email estándar",
+                "Parsea MIME y cabeceras EML",
+                "No añade dependencia para la parte esencial del formato",
+                "Librerías externas pueden aportar atajos, pero no son necesarias",
+            ),
+            (
+                "BeautifulSoup",
+                "Inspecciona HTML y formularios",
+                "Tolera HTML imperfecto de correos",
+                "Parser regex puro sería frágil; un navegador sería inseguro e innecesario",
+            ),
+            (
+                "Gmail API + OAuth",
+                "Obtiene mensajes con consentimiento del usuario",
+                "Permisos oficiales y flujo revocable",
+                "IMAP sería más genérico, pero no aporta el mismo control API",
+            ),
+            (
+                "HTTP stdlib",
+                "Expone análisis y administración central",
+                "Cero framework extra, contrato pequeño y fácil de auditar",
+                "FastAPI facilitaría OpenAPI y escalado; no es necesario para el prototipo",
+            ),
+            (
+                "joblib",
+                "Persiste pipeline TF-IDF + MLP",
+                "Guarda vectorizador y modelo como una unidad",
+                "ONNX sería más portable; exige conversión y no elimina el requisito de confiar en artefactos",
+            ),
+            (
+                "unittest + Ruff",
+                "Prueba comportamiento y calidad estática",
+                "Incluidos en Python y rápidos en CI/local",
+                "pytest aporta fixtures más ricas; el conjunto actual es suficiente y directo",
+            ),
+        ],
+        [1500, 2500, 2800, 2560],
+    )
     _heading(doc, "3. Por qué dos modelos lingüísticos", 1)
-    _para(doc, "El detector identifica idioma por mensaje, no por sesión. Mantiene un modelo español y otro inglés porque las palabras, stopwords y corpus tienen distribuciones distintas. EmailAnalysisService cachea un detector por idioma para combinar corrección con rendimiento.")
-    _callout(doc, "Respuesta breve", "La alternativa de un único modelo multilingüe simplificaría ficheros, pero mezclaría vocabularios y haría más difícil justificar qué datos explican cada predicción.")
+    _para(
+        doc,
+        "El detector identifica idioma por mensaje, no por sesión. Mantiene un modelo español y otro inglés porque las palabras, stopwords y corpus tienen distribuciones distintas. EmailAnalysisService cachea un detector por idioma para combinar corrección con rendimiento.",
+    )
+    _callout(
+        doc,
+        "Respuesta breve",
+        "La alternativa de un único modelo multilingüe simplificaría ficheros, pero mezclaría vocabularios y haría más difícil justificar qué datos explican cada predicción.",
+    )
     _heading(doc, "4. SOLID aplicado", 1)
-    _table(doc, ["Principio", "Aplicación en el código", "Beneficio demostrable"], [
-        ("Responsabilidad única", "Parser, señales, scorer, explicaciones, ML, monitor y transporte están separados", "Un cambio en URLs no obliga a tocar Gmail o Streamlit"),
-        ("Abierto/cerrado", "EmailAnalysisService recibe analyzer, detector loader y detector de idioma inyectables", "Se prueban estrategias y se añaden modelos sin reescribir el coordinador"),
-        ("Sustitución", "Los consumidores dependen de BackendClient o su protocolo mínimo", "Web, extensión y monitor consumen el mismo contrato HTTP"),
-        ("Segregación", "El almacenamiento, el análisis y el transporte tienen superficies pequeñas", "Cada prueba necesita solo la interfaz que utiliza"),
-        ("Inversión", "NeuralModelTrainer depende de ModelStorage, no de una ruta fija", "Facilita memoria, disco y dobles de prueba"),
-    ], [1700, 4300, 3360])
+    _table(
+        doc,
+        ["Principio", "Aplicación en el código", "Beneficio demostrable"],
+        [
+            (
+                "Responsabilidad única",
+                "Parser, señales, scorer, explicaciones, ML, monitor y transporte están separados",
+                "Un cambio en URLs no obliga a tocar Gmail o Streamlit",
+            ),
+            (
+                "Abierto/cerrado",
+                "EmailAnalysisService recibe analyzer, detector loader y detector de idioma inyectables",
+                "Se prueban estrategias y se añaden modelos sin reescribir el coordinador",
+            ),
+            (
+                "Sustitución",
+                "Los consumidores dependen de BackendClient o su protocolo mínimo",
+                "Web, extensión y monitor consumen el mismo contrato HTTP",
+            ),
+            (
+                "Segregación",
+                "El almacenamiento, el análisis y el transporte tienen superficies pequeñas",
+                "Cada prueba necesita solo la interfaz que utiliza",
+            ),
+            (
+                "Inversión",
+                "NeuralModelTrainer depende de ModelStorage, no de una ruta fija",
+                "Facilita memoria, disco y dobles de prueba",
+            ),
+        ],
+        [1700, 4300, 3360],
+    )
     _heading(doc, "5. Decisiones de seguridad", 1)
     for text in [
         "El parser limita EML a 10 MiB; /analyze admite 16 MiB y las rutas de datasets 256 MiB con Content-Length obligatorio.",
@@ -367,44 +591,133 @@ def tecnologias():
     ]:
         _bullet(doc, text)
     _heading(doc, "6. Reproducibilidad y evaluación", 1)
-    _para(doc, "Los hiperparámetros se concentran en HiperparametrosModelo. El cliente los envía con los CSV y el backend entrena desde cero, registra procedencia, guarda atómicamente e invalida la versión cacheada. Cuarenta casos controlados calibran la fusión y 16 EML distintos, con cabeceras y MIME completos, quedan reservados para la evaluación final; ambos conjuntos son sintéticos. Un diagnóstico adicional usa 1.528 textos DIFrauD con licencia MIT, revisión y hash fijados, pero se etiqueta con riesgo de solapamiento de fuentes. Ninguna cifra estima producción.")
-    _para(doc, "El benchmark reproducible separa arranque e inferencia. La carga diferida redujo la importación fría de heurísticas de 1098,5 ms a 37,0 ms y el arranque de la aplicación de 1326,6 ms a 315,1 ms, mientras que la inferencia se mantuvo estable dentro de una variación de ±3 %.")
-    _para(doc, "La validación automatizada reúne 87 pruebas Python y 2 pruebas con Chromium. Incluye idioma determinista y el recorrido local Gmail EML -> JSON -> HTTP -> backend -> Telegram. GitHub Actions instala versiones fijadas, ejecuta Ruff, verifica calibración, regenera la evaluación, comprueba el respaldo de defensa y recorre web-backend. OAuth real usa una lista E2E separada porque sus credenciales no pueden entrar en CI.")
+    _para(
+        doc,
+        "Los hiperparámetros se concentran en HiperparametrosModelo. Los artefactos activos declaran 1.298 muestras de entrenamiento ES (686 phishing y 612 legítimas) y 164.971 EN (85.781 phishing y 79.190 legítimas). El cliente envía los CSV al backend, que entrena desde cero, registra procedencia, guarda atómicamente e invalida la versión cacheada. Cuarenta casos controlados calibran la fusión y 16 EML distintos quedan reservados para la evaluación final; ambos conjuntos son sintéticos. DIFrauD añade 1.528 textos con riesgo de solapamiento. Ninguna cifra estima producción.",
+    )
+    _para(
+        doc,
+        "El benchmark reproducible separa arranque e inferencia. La carga diferida redujo la importación fría de heurísticas de 1098,5 ms a 37,0 ms y el arranque de la aplicación de 1326,6 ms a 315,1 ms, mientras que la inferencia se mantuvo estable dentro de una variación de ±3 %.",
+    )
+    _para(
+        doc,
+        "La validación automatizada reúne 87 pruebas Python y 2 pruebas con Chromium. Incluye idioma determinista y el recorrido local Gmail EML -> JSON -> HTTP -> backend -> Telegram. GitHub Actions instala versiones fijadas, ejecuta Ruff, verifica calibración, regenera la evaluación, comprueba el respaldo de defensa y recorre web-backend. OAuth real usa una lista E2E separada porque sus credenciales no pueden entrar en CI.",
+    )
     _heading(doc, "7. Diferencias con la propuesta inicial", 1)
-    _table(doc, ["Propuesta", "Implementación actual", "Cómo explicarlo"], [
-        ("TensorFlow", "scikit-learn MLP", "Se eligió una red suficiente para el corpus y más reproducible/ligera en el entorno académico"),
-        ("Blacklists/reputación", "Señales locales de dominio, URL, punycode y acortadores", "Se evita depender de red externa y se mantiene privacidad; reputación online queda como extensión"),
-        ("Certificados", "No se inspecciona TLS desde el correo", "El EML no prueba por sí mismo el certificado del destino; se prioriza análisis estático seguro"),
-        ("Interfaz simple", "Streamlit como cliente de una API central obligatoria", "La interfaz sigue siendo simple y todos los canales comparten los modelos del servidor"),
-    ], [2400, 3000, 3960])
+    _table(
+        doc,
+        ["Propuesta", "Implementación actual", "Cómo explicarlo"],
+        [
+            (
+                "TensorFlow",
+                "scikit-learn MLP",
+                "Se eligió una red suficiente para el corpus y más reproducible/ligera en el entorno académico",
+            ),
+            (
+                "Blacklists/reputación",
+                "Señales locales de dominio, URL, punycode y acortadores",
+                "Se evita depender de red externa y se mantiene privacidad; reputación online queda como extensión",
+            ),
+            (
+                "Certificados",
+                "No se inspecciona TLS desde el correo",
+                "El EML no prueba por sí mismo el certificado del destino; se prioriza análisis estático seguro",
+            ),
+            (
+                "Interfaz simple",
+                "Streamlit como cliente de una API central obligatoria",
+                "La interfaz sigue siendo simple y todos los canales comparten los modelos del servidor",
+            ),
+        ],
+        [2400, 3000, 3960],
+    )
     _heading(doc, "8. Qué no prometer", 1)
-    _bullet(doc, "No decir que se consulta una blacklist online si no se ha configurado una fuente externa.")
-    _bullet(doc, "No presentar el accuracy de entrenamiento como precisión en producción.")
-    _bullet(doc, "No llamar a la extensión un producto publicado: se carga en modo desarrollador y consume el backend central configurado.")
+    _bullet(
+        doc,
+        "No decir que se consulta una blacklist online si no se ha configurado una fuente externa.",
+    )
+    _bullet(
+        doc, "No presentar el accuracy de entrenamiento como precisión en producción."
+    )
+    _bullet(
+        doc,
+        "No llamar a la extensión un producto publicado: se carga en modo desarrollador y consume el backend central configurado.",
+    )
     doc.save(ROOT / "Guia_02_Tecnologias_y_decisiones.docx")
 
 
 def guion():
     doc = _setup_document("Guion de defensa · TFG Phishing")
-    _cover(doc, "Guía 03 · exposición oral", "Guion de defensa", "Qué decir, qué enseñar y cómo responder preguntas sin sobreprometer")
+    _cover(
+        doc,
+        "Guía 03 · exposición oral",
+        "Guion de defensa",
+        "Qué decir, qué enseñar y cómo responder preguntas sin sobreprometer",
+    )
     _heading(doc, "1. Marco de tiempo", 1)
-    _callout(doc, "Regla práctica", "La regulación pública UEMC del TFG contempla una exposición de hasta 20 minutos y un turno posterior de preguntas; confirma siempre el tiempo exacto indicado por tu centro y convocatoria.")
-    _para(doc, "Referencia para preparar la defensa: Reglamento UEMC 5/2024, de 13 de septiembre, de Trabajo Fin de Grado/Fin de Máster, y la ficha pública de la asignatura. El reglamento permite que el centro limite excepcionalmente la exposición a menos de 20 minutos; confirma la convocatoria concreta. La memoria y la defensa deben contar la misma historia: problema, objetivos, método, evidencia y límites.")
+    _callout(
+        doc,
+        "Regla práctica",
+        "La regulación pública UEMC del TFG contempla una exposición de hasta 20 minutos y un turno posterior de preguntas; confirma siempre el tiempo exacto indicado por tu centro y convocatoria.",
+    )
+    _para(
+        doc,
+        "Referencia para preparar la defensa: Reglamento UEMC 5/2024, de 13 de septiembre, de Trabajo Fin de Grado/Fin de Máster, y la ficha pública de la asignatura. El reglamento permite que el centro limite excepcionalmente la exposición a menos de 20 minutos; confirma la convocatoria concreta. La memoria y la defensa deben contar la misma historia: problema, objetivos, método, evidencia y límites.",
+    )
     _heading(doc, "2. Estructura recomendada de 20 minutos", 1)
-    _table(doc, ["Tiempo", "Bloque", "Mensaje que debe quedar"], [
-        ("0:00–1:00", "Apertura", "Qué problema resuelvo y qué entrego"),
-        ("1:00–3:00", "Motivación y objetivos", "El phishing combina señales técnicas y lingüísticas; se necesita apoyo explicable"),
-        ("3:00–5:00", "Alcance y requisitos", "Texto/EML, heurística, ML, explicación, Gmail, evaluación y límites"),
-        ("5:00–9:00", "Arquitectura y flujo", "Entradas -> normalización -> señales/modelo -> decisión -> explicación"),
-        ("9:00–12:00", "Tecnologías", "Por qué Python, Streamlit, scikit-learn, Gmail API y backend central"),
-        ("12:00–15:00", "Demostración", "Un correo sospechoso, señales activas y resultado combinado"),
-        ("15:00–17:00", "Pruebas y resultados", "87 pruebas Python, 2 de navegador, calibración, 16 EML y diagnóstico externo"),
-        ("17:00–19:00", "Limitaciones y futuro", "Qué no hace hoy y qué ampliaría con evidencia"),
-        ("19:00–20:00", "Cierre", "Aportación, mantenibilidad y conclusión"),
-    ], [1500, 2500, 5360])
+    _table(
+        doc,
+        ["Tiempo", "Bloque", "Mensaje que debe quedar"],
+        [
+            ("0:00–1:00", "Apertura", "Qué problema resuelvo y qué entrego"),
+            (
+                "1:00–3:00",
+                "Motivación y objetivos",
+                "El phishing combina señales técnicas y lingüísticas; se necesita apoyo explicable",
+            ),
+            (
+                "3:00–5:00",
+                "Alcance y requisitos",
+                "Texto/EML, heurística, ML, explicación, Gmail, evaluación y límites",
+            ),
+            (
+                "5:00–9:00",
+                "Arquitectura y flujo",
+                "Entradas -> normalización -> señales/modelo -> decisión -> explicación",
+            ),
+            (
+                "9:00–12:00",
+                "Tecnologías",
+                "Por qué Python, Streamlit, scikit-learn, Gmail API y backend central",
+            ),
+            (
+                "12:00–15:00",
+                "Demostración",
+                "Un correo sospechoso, señales activas y resultado combinado",
+            ),
+            (
+                "15:00–17:00",
+                "Pruebas y resultados",
+                "87 pruebas Python, 2 de navegador, calibración, 16 EML y diagnóstico externo",
+            ),
+            (
+                "17:00–19:00",
+                "Limitaciones y futuro",
+                "Qué no hace hoy y qué ampliaría con evidencia",
+            ),
+            ("19:00–20:00", "Cierre", "Aportación, mantenibilidad y conclusión"),
+        ],
+        [1500, 2500, 5360],
+    )
     _heading(doc, "3. Texto de apertura", 1)
-    _para(doc, "Buenos días. Mi TFG presenta un sistema cliente-servidor de apoyo a la detección de phishing. Combina señales inspeccionables —cabeceras, autenticación, dominios, URLs, HTML y lenguaje— con un clasificador TF-IDF más MLP. Devuelve una puntuación y una explicación, no solo una etiqueta.")
-    _para(doc, "He separado los clientes del núcleo de análisis. Streamlit, la extensión y el monitor envían el correo a un backend central que mantiene una versión por idioma. Así, al cambiar un modelo, todos los clientes usan la nueva versión sin distribuir copias.")
+    _para(
+        doc,
+        "Buenos días. Mi TFG presenta un sistema cliente-servidor de apoyo a la detección de phishing. Combina señales inspeccionables —cabeceras, autenticación, dominios, URLs, HTML y lenguaje— con un clasificador TF-IDF más MLP. Devuelve una puntuación y una explicación, no solo una etiqueta.",
+    )
+    _para(
+        doc,
+        "He separado los clientes del núcleo de análisis. Streamlit, la extensión y el monitor envían el correo a un backend central que mantiene una versión por idioma. Así, al cambiar un modelo, todos los clientes usan la nueva versión sin distribuir copias.",
+    )
     _heading(doc, "4. Qué enseñar en la demo", 1)
     for text in [
         "Arrancar el backend, mostrar /health con las versiones y después abrir el cliente web.",
@@ -416,23 +729,68 @@ def guion():
         "Opcionalmente, abrir la web desde un móvil de la misma red privada para explicar que el navegador es un cliente; mantener el backend en loopback y cerrar el acceso LAN al terminar.",
     ]:
         _number(doc, text)
-    _callout(doc, "Plan B", "Lleva las capturas enumeradas en docs/DEFENSE_SCREENSHOTS.md y defense_demo/expected_results.json. Si Gmail u OAuth fallan, usa los EML sintéticos; si el backend no arranca, enseña el bloque health y los dos resultados guardados.")
+    _callout(
+        doc,
+        "Plan B",
+        "Lleva las capturas enumeradas en docs/DEFENSE_SCREENSHOTS.md y defense_demo/expected_results.json. Si Gmail u OAuth fallan, usa los EML sintéticos; si el backend no arranca, enseña el bloque health y los dos resultados guardados.",
+    )
     _heading(doc, "5. Cómo explicar los resultados", 1)
-    _para(doc, "La calibración usa 40 casos distintos de los 16 EML finales. Tras añadir tres señales BEC bilingües, la rejilla selecciona 35 % heurística, 65 % neuronal, umbral 26 y alta confianza 70. En los EML, el heurístico obtiene 100,0 % de accuracy/recall/F1; el combinado, 93,8 % de accuracy, 88,9 % de precisión, 100,0 % de recall y 94,1 % de F1; y el neuronal, 75,0 % en las cuatro métricas. DIFrauD añade 1.528 textos externos y el combinado alcanza 90,8 % de accuracy y 96,4 % de recall, pero existe riesgo de solapamiento de fuentes. Ninguna cifra debe presentarse como producción.")
-    _para(doc, "En rendimiento, presenta solo mejoras medidas: la importación fría de heurísticas bajó un 96,6 % y el arranque de la aplicación un 76,2 %. Las rutas de inferencia variaron menos de un 3 %, por lo que no se atribuye una mejora que no esté respaldada por la medición.")
+    _para(
+        doc,
+        "La calibración usa 40 casos distintos de los 16 EML finales. Tras añadir tres señales BEC bilingües, la rejilla selecciona 35 % heurística, 65 % neuronal, umbral 26 y alta confianza 70. En los EML, el heurístico obtiene 100,0 % de accuracy/recall/F1; el combinado, 93,8 % de accuracy, 88,9 % de precisión, 100,0 % de recall y 94,1 % de F1; y el neuronal, 75,0 % en las cuatro métricas. DIFrauD añade 1.528 textos externos y el combinado alcanza 90,8 % de accuracy y 96,4 % de recall, pero existe riesgo de solapamiento de fuentes. Ninguna cifra debe presentarse como producción.",
+    )
+    _para(
+        doc,
+        "En rendimiento, presenta solo mejoras medidas: la importación fría de heurísticas bajó un 96,6 % y el arranque de la aplicación un 76,2 %. Las rutas de inferencia variaron menos de un 3 %, por lo que no se atribuye una mejora que no esté respaldada por la medición.",
+    )
     _heading(doc, "6. Preguntas previsibles y respuestas", 1)
-    _table(doc, ["Pregunta", "Respuesta breve y defendible"], [
-        ("¿Por qué no usar deep learning más grande?", "El corpus y el alcance no lo justificaban. TF-IDF + MLP ofrece rapidez, reproducibilidad y una línea base explicable; la arquitectura permite sustituir el modelo."),
-        ("¿Qué ocurre con un correo en inglés?", "El idioma se detecta por mensaje y se cachea un modelo específico por idioma; no se fija el idioma para toda la sesión."),
-        ("¿Es cliente-servidor?", "Sí. Streamlit, extensión y monitor son clientes HTTP; backend_server analiza y mantiene una versión activa por idioma. En local ambos lados están en el mismo equipo, pero siguen siendo procesos y responsabilidades separadas."),
-        ("¿Puede entrar un móvil?", "Sí, si comparte una LAN privada y Streamlit se inicia en 0.0.0.0:8501. El móvil abre la IP del equipo; el backend sigue en 127.0.0.1:8766. No es un despliegue público y la web no tiene autenticación multiusuario."),
-        ("¿Cómo evitas falsos positivos?", "La fusión 35/65 y el umbral 26 se calibraron separadamente; conserva evidencias sobre 70, muestra FP/FN y mantiene la explicación para revisar cada caso."),
-        ("¿Consulta una blacklist externa?", "No en la versión actual. Hay comprobaciones locales de dominios, URLs, punycode y acortadores; una reputación online sería una ampliación con dependencia y privacidad adicionales."),
-        ("¿Es seguro cargar joblib?", "Solo se cargan artefactos propios y verificados, porque joblib usa deserialización Python. No se deben aceptar modelos arbitrarios."),
-        ("¿Qué pasa si Gmail está caído?", "La detección por texto o EML sigue funcionando contra el backend; Gmail es solo una fuente externa y muestra un error controlado."),
-        ("¿Por qué no guardas todos los correos de entrenamiento?", "Para reducir exposición de datos y hacer el artefacto más limpio. Se conservan procedencia y estadísticas, no el texto bruto."),
-        ("¿Qué falta para producción?", "TLS, autenticación de inferencia, rate limiting, registro compartido si hay réplicas, monitorización y confirmación sobre un corpus real reciente, bilingüe e independiente."),
-    ], [3300, 6060])
+    _table(
+        doc,
+        ["Pregunta", "Respuesta breve y defendible"],
+        [
+            (
+                "¿Por qué no usar deep learning más grande?",
+                "El corpus y el alcance no lo justificaban. TF-IDF + MLP ofrece rapidez, reproducibilidad y una línea base explicable; la arquitectura permite sustituir el modelo.",
+            ),
+            (
+                "¿Qué ocurre con un correo en inglés?",
+                "El idioma se detecta por mensaje y se cachea un modelo específico por idioma; no se fija el idioma para toda la sesión.",
+            ),
+            (
+                "¿Es cliente-servidor?",
+                "Sí. Streamlit, extensión y monitor son clientes HTTP; backend_server analiza y mantiene una versión activa por idioma. En local ambos lados están en el mismo equipo, pero siguen siendo procesos y responsabilidades separadas.",
+            ),
+            (
+                "¿Puede entrar un móvil?",
+                "Sí, si comparte una LAN privada y Streamlit se inicia en 0.0.0.0:8501. El móvil abre la IP del equipo; el backend sigue en 127.0.0.1:8766. No es un despliegue público y la web no tiene autenticación multiusuario.",
+            ),
+            (
+                "¿Cómo evitas falsos positivos?",
+                "La fusión 35/65 y el umbral 26 se calibraron separadamente; conserva evidencias sobre 70, muestra FP/FN y mantiene la explicación para revisar cada caso.",
+            ),
+            (
+                "¿Consulta una blacklist externa?",
+                "No en la versión actual. Hay comprobaciones locales de dominios, URLs, punycode y acortadores; una reputación online sería una ampliación con dependencia y privacidad adicionales.",
+            ),
+            (
+                "¿Es seguro cargar joblib?",
+                "Solo se cargan artefactos propios y verificados, porque joblib usa deserialización Python. No se deben aceptar modelos arbitrarios.",
+            ),
+            (
+                "¿Qué pasa si Gmail está caído?",
+                "La detección por texto o EML sigue funcionando contra el backend; Gmail es solo una fuente externa y muestra un error controlado.",
+            ),
+            (
+                "¿Por qué no guardas todos los correos de entrenamiento?",
+                "Para reducir exposición de datos y hacer el artefacto más limpio. Se conservan procedencia y estadísticas, no el texto bruto.",
+            ),
+            (
+                "¿Qué falta para producción?",
+                "TLS, autenticación de inferencia, rate limiting, registro compartido si hay réplicas, monitorización y confirmación sobre un corpus real reciente, bilingüe e independiente.",
+            ),
+        ],
+        [3300, 6060],
+    )
     _heading(doc, "7. Cierre", 1)
     _para(
         doc,
