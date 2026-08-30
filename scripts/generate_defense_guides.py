@@ -263,7 +263,7 @@ def flujo():
     _cover(doc, "Guía 01 · mapa del sistema", "Flujo y funcionamiento", "Qué ocurre desde que entra un correo hasta que se explica el riesgo")
     _heading(doc, "1. Idea general", 1)
     _para(doc, "El montaje es cliente-servidor. El navegador usa Streamlit como capa de presentación y Streamlit envía peticiones HTTP/JSON al backend central. La extensión y el monitor también consumen esa API. Solo el servidor parsea, analiza, entrena y guarda los modelos; Gmail y Telegram son integraciones externas. La web comparte una interfaz adaptable con navegación de marca, estados homogéneos y un flujo de detección ordenado en tres pasos.")
-    _callout(doc, "Frase para la defensa", "Aunque cliente y servidor estén en el mismo ordenador, son procesos separados con un contrato HTTP. Hay una sola versión activa por idioma y todos los clientes la comparten.")
+    _callout(doc, "Frase para la defensa", "Aunque cliente y servidor estén en el mismo ordenador, son procesos separados con un contrato HTTP y comparten una versión activa por idioma. Para la demo móvil, mantén el backend en 127.0.0.1:8766 e inicia Streamlit con --server.address 0.0.0.0 --server.port 8501; el móvil usa la IP privada. Es acceso temporal a una LAN de confianza, no Internet, y la web no tiene autenticación multiusuario.")
     _heading(doc, "2. Flujo completo", 1)
     for text in [
         "Entrada de cliente: la web, la extensión o el monitor envían texto, campos JSON o un EML Base64 al backend; /analyze limita la petición a 16 MiB.",
@@ -360,7 +360,7 @@ def tecnologias():
     for text in [
         "El parser limita EML a 10 MiB; /analyze admite 16 MiB y las rutas de datasets 256 MiB con Content-Length obligatorio.",
         "La API no acepta CORS *; permite Gmail y orígenes chrome-extension://, y no devuelve trazas internas.",
-        "Streamlit y el backend escuchan en loopback; --allow-remote exige un token administrativo de al menos 24 caracteres y los clientes exigen HTTPS para destinos remotos.",
+        "Por defecto Streamlit y el backend escuchan en loopback. Para una demo móvil puede abrirse solo Streamlit en 0.0.0.0:8501 y mantener el backend en 127.0.0.1:8766; no requiere --allow-remote, no es Internet y debe limitarse a una LAN privada de confianza. Un backend remoto sí exige HTTPS y controles adicionales.",
         "El modelo no ejecuta archivos adjuntos; solo registra metadatos y señales.",
         "Los nuevos joblib no conservan textos brutos de entrenamiento. Los modelos antiguos se sanean al cargarse y guardarse con el formato actual.",
         "Credenciales, tokens, estados y artefactos temporales de QA se mantienen fuera del índice Git mediante .gitignore.",
@@ -413,6 +413,7 @@ def guion():
         "Cambiar a modo heurístico para demostrar que el resultado puede auditarse sin modelo.",
         "Mostrar EVALUATION_REPORT.md y EXTERNAL_EVALUATION_REPORT.md: 16 EML, 1.528 textos, hashes, métricas y las advertencias de representatividad/solapamiento.",
         "Si el tiempo lo permite, enseñar la extensión llamando a la misma URL del backend.",
+        "Opcionalmente, abrir la web desde un móvil de la misma red privada para explicar que el navegador es un cliente; mantener el backend en loopback y cerrar el acceso LAN al terminar.",
     ]:
         _number(doc, text)
     _callout(doc, "Plan B", "Lleva las capturas enumeradas en docs/DEFENSE_SCREENSHOTS.md y defense_demo/expected_results.json. Si Gmail u OAuth fallan, usa los EML sintéticos; si el backend no arranca, enseña el bloque health y los dos resultados guardados.")
@@ -424,6 +425,7 @@ def guion():
         ("¿Por qué no usar deep learning más grande?", "El corpus y el alcance no lo justificaban. TF-IDF + MLP ofrece rapidez, reproducibilidad y una línea base explicable; la arquitectura permite sustituir el modelo."),
         ("¿Qué ocurre con un correo en inglés?", "El idioma se detecta por mensaje y se cachea un modelo específico por idioma; no se fija el idioma para toda la sesión."),
         ("¿Es cliente-servidor?", "Sí. Streamlit, extensión y monitor son clientes HTTP; backend_server analiza y mantiene una versión activa por idioma. En local ambos lados están en el mismo equipo, pero siguen siendo procesos y responsabilidades separadas."),
+        ("¿Puede entrar un móvil?", "Sí, si comparte una LAN privada y Streamlit se inicia en 0.0.0.0:8501. El móvil abre la IP del equipo; el backend sigue en 127.0.0.1:8766. No es un despliegue público y la web no tiene autenticación multiusuario."),
         ("¿Cómo evitas falsos positivos?", "La fusión 35/65 y el umbral 26 se calibraron separadamente; conserva evidencias sobre 70, muestra FP/FN y mantiene la explicación para revisar cada caso."),
         ("¿Consulta una blacklist externa?", "No en la versión actual. Hay comprobaciones locales de dominios, URLs, punycode y acortadores; una reputación online sería una ampliación con dependencia y privacidad adicionales."),
         ("¿Es seguro cargar joblib?", "Solo se cargan artefactos propios y verificados, porque joblib usa deserialización Python. No se deben aceptar modelos arbitrarios."),
@@ -443,6 +445,7 @@ def guion():
     for text in [
         "Ejecutar la suite automatizada completa y guardar la salida.",
         "Comprobar que backend y web arrancan por separado y que /health muestra las versiones.",
+        "Si se enseña el acceso móvil, probar antes la misma Wi-Fi, la IP privada y el firewall; cerrar Streamlit al terminar.",
         "Regenerar EVALUATION_REPORT.md y explicar sus errores sin confundir el desafío sintético con producción.",
         "Ensayar el guion con cronómetro y dejar dos minutos de margen.",
         "Memorizar tres límites: sin reputación online, extensión local y necesidad de datos representativos.",

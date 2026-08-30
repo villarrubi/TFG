@@ -31,6 +31,21 @@ La aplicación se abre en `http://127.0.0.1:8501` y consume por defecto el backe
 
 La interfaz comparte un diseño visual adaptable a escritorio y móvil: cabecera de marca, navegación compacta, estados de conexión y tarjetas coherentes en las cinco vistas. Detección guía el recorrido en tres pasos —fuente, configuración y resultado— y Configuración agrupa conexiones, monitor, backend y red neuronal mediante pestañas. La capa web se limita a recoger datos y mostrar la respuesta del servidor; tampoco expone rutas locales completas de credenciales.
 
+### Acceso temporal desde otro dispositivo de la red local
+
+La configuración predeterminada solo acepta conexiones desde el propio equipo. Para una demostración desde un móvil o portátil conectado a la misma red Wi-Fi, mantén el backend en `127.0.0.1:8766` y cambia únicamente la escucha de Streamlit:
+
+```powershell
+$env:PYTHONPATH = "src"
+streamlit run src/app.py --server.address 0.0.0.0 --server.port 8501
+```
+
+Consulta la IPv4 del equipo con `ipconfig` y abre desde el otro dispositivo `http://IP_DEL_EQUIPO:8501`; por ejemplo, `http://192.168.1.75:8501`. Si Windows lo solicita, permite Python o el puerto 8501 solo en **redes privadas**. Ambos dispositivos deben compartir una red que permita comunicación entre clientes; algunas redes de invitados aplican aislamiento. La dirección puede cambiar si el router asigna otra IP mediante DHCP.
+
+Este modo mantiene la arquitectura cliente-servidor: el navegador móvil envía la interacción a Streamlit, el proceso Streamlit consulta localmente el backend central y devuelve la respuesta ya calculada para mostrarla. No hay que iniciar el backend con `--allow-remote`, abrir el puerto 8766 ni cambiar `PHISHING_BACKEND_URL`.
+
+Escuchar en `0.0.0.0` no publica por sí solo la aplicación en Internet, pero permite entrar a cualquier dispositivo con acceso a esa LAN. Como la web no incorpora autenticación multiusuario, úsalo solo de forma temporal en una red privada y de confianza, sin redirección de puertos en el router. Detén Streamlit con `Ctrl+C` al terminar y vuelve al comando normal para recuperar el acceso exclusivo desde el equipo.
+
 Validación automática:
 
 ```powershell
@@ -88,7 +103,7 @@ Gmail y Telegram son servicios externos: Gmail aporta mensajes y Telegram recibe
 | Monitor | `python src/monitor_gmail.py` | Obtener Gmail, pedir análisis al backend y alertar por Telegram |
 | Proxy antiguo opcional | `python src/gmail_extension_server.py` | Reenviar del puerto histórico 8765 al backend; no carga modelos |
 
-La extensión actual debe apuntar en **Opciones** a `http://127.0.0.1:8766`; no necesita el proxy histórico.
+La extensión actual debe apuntar en **Opciones** a `http://127.0.0.1:8766`; no necesita el proxy histórico. El acceso móvil descrito anteriormente expone solo Streamlit en el puerto 8501 y no hace accesible esta API.
 
 ## Contrato del backend
 

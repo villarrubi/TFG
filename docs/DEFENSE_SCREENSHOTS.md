@@ -56,12 +56,18 @@ chat, tokens, rutas de usuario y cualquier correo real. No captures nunca
 
 ## Capturas de reserva
 
-18. `18_demo_backup_health.png`: bloque `health` de
+18. `18_web_movil_lan.png`: captura opcional de la interfaz abierta desde un
+    móvil conectado a la misma red privada mediante
+    `http://IP_DEL_EQUIPO:8501`. Debe explicarse que solo Streamlit escucha
+    temporalmente en `0.0.0.0:8501`, mientras el backend sigue en
+    `127.0.0.1:8766`; oculta la IP si la presentación se va a publicar.
+19. `19_demo_backup_health.png`: bloque `health` de
     `defense_demo/expected_results.json`.
-19. `19_demo_backup_casos.png`: los dos resúmenes de respuesta del mismo JSON.
-20. `20_limitaciones.png`: diapositiva o sección de la guía con límites reales:
+20. `20_demo_backup_casos.png`: los dos resúmenes de respuesta del mismo JSON.
+21. `21_limitaciones.png`: diapositiva o sección de la guía con límites reales:
     corpus local sintético, diagnóstico DIFrauD con riesgo de fuga, OAuth no
-    automatizable sin credenciales y ausencia de despliegue público.
+    automatizable sin credenciales, acceso LAN sin autenticación y ausencia de
+    despliegue público.
 
 Comprueba después que ninguna imagen contenga secretos y conserva también una
 copia PDF de la guía y los EML sintéticos en el equipo de la presentación.

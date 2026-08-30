@@ -702,7 +702,7 @@ No obstante, la arquitectura queda preparada para ampliaciones futuras. Podrían
 
 Arquitectura general
 
-La solución adopta una arquitectura cliente-servidor. El navegador se comunica con Streamlit, que actúa como capa de presentación y cliente HTTP del backend central; la extensión y el monitor consumen esa misma API. Solo backend_server.py normaliza, analiza, entrena y mantiene los modelos activos. En la configuración académica ambos lados se ejecutan en el mismo equipo y sobre loopback, pero son procesos y responsabilidades independientes.
+La solución adopta una arquitectura cliente-servidor. El navegador se comunica con Streamlit, que actúa como capa de presentación y cliente HTTP del backend central; la extensión y el monitor consumen esa misma API. Solo backend_server.py normaliza, analiza, entrena y mantiene los modelos activos. En la configuración académica ambos lados se ejecutan en el mismo equipo y sobre loopback, pero son procesos y responsabilidades independientes. Para una demostración en la red local puede exponerse temporalmente solo Streamlit en 0.0.0.0:8501; el backend permanece en 127.0.0.1:8766 y no se publica.
 
 A nivel interno, backend_client.py implementa el transporte común de los clientes y http_api.py define las rutas. backend_service.py concentra análisis, datasets, evaluación, entrenamiento, metadatos y activación de versiones. Dentro del servidor, analysis_service.py coordina los modos y la caché lingüística; analizador_email.py normaliza EML; signal_builder.py, scorer.py y explanations.py construyen el resultado; modelo_neural.py encapsula TF-IDF + MLP. Las vistas Streamlit no importan almacenamiento ni ejecutan inferencia.
 
@@ -1254,7 +1254,7 @@ class NeuralPhishingDetector:
 
 Anexo C: Guía resumida de instalación y uso
 
-Este anexo resume la ejecución cliente-servidor local. Primero se inicia el backend obligatorio en 127.0.0.1:8766 y después Streamlit en 127.0.0.1:8501. La extensión apunta directamente al backend desde Opciones y el monitor usa PHISHING_BACKEND_URL. El puerto 8765 queda como proxy antiguo opcional. Fuera de loopback los clientes exigen HTTPS y --allow-remote exige un token administrativo de al menos 24 caracteres; todavía hacen falta autenticación de inferencia, rate limiting y controles operativos.
+Este anexo resume la ejecución cliente-servidor local. Primero se inicia el backend obligatorio en 127.0.0.1:8766 y después Streamlit en 127.0.0.1:8501. Para una demostración desde un móvil de la misma red privada se mantiene la API en loopback y se inicia solo la web con streamlit run src/app.py --server.address 0.0.0.0 --server.port 8501; se accede mediante http://IP_DEL_EQUIPO:8501 y puede ser necesario permitir el puerto 8501 en el perfil privado del firewall. No requiere --allow-remote ni abrir 8766. Como Streamlit no incorpora autenticación multiusuario, este acceso LAN debe ser temporal, en una red de confianza y sin redirección de puertos. La extensión apunta directamente al backend desde Opciones y el monitor usa PHISHING_BACKEND_URL. El puerto 8765 queda como proxy antiguo opcional. Un despliegue remoto real exige HTTPS y controles operativos adicionales.
 
 Comandos de instalación y uso
 

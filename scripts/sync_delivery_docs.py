@@ -178,7 +178,7 @@ def sync_memory() -> None:
     replacements = [
         (
             "La solución adopta una arquitectura",
-            "La solución adopta una arquitectura cliente-servidor. El navegador se comunica con Streamlit, que actúa como capa de presentación y cliente HTTP del backend central; la extensión y el monitor consumen esa misma API. Solo backend_server.py normaliza, analiza, entrena y mantiene los modelos activos. En la configuración académica ambos lados se ejecutan en el mismo equipo y sobre loopback, pero son procesos y responsabilidades independientes.",
+            "La solución adopta una arquitectura cliente-servidor. El navegador se comunica con Streamlit, que actúa como capa de presentación y cliente HTTP del backend central; la extensión y el monitor consumen esa misma API. Solo backend_server.py normaliza, analiza, entrena y mantiene los modelos activos. En la configuración académica ambos lados se ejecutan en el mismo equipo y sobre loopback, pero son procesos y responsabilidades independientes. Para una demostración en la red local puede exponerse temporalmente solo Streamlit en 0.0.0.0:8501; el backend permanece en 127.0.0.1:8766 y no se publica.",
         ),
         (
             "La validación del sistema",
@@ -262,7 +262,7 @@ def sync_memory() -> None:
         ),
         (
             "Este anexo resume",
-            "Este anexo resume la ejecución cliente-servidor local. Primero se inicia el backend obligatorio en 127.0.0.1:8766 y después Streamlit en 127.0.0.1:8501. La extensión apunta directamente al backend desde Opciones y el monitor usa PHISHING_BACKEND_URL. El puerto 8765 queda como proxy antiguo opcional. Fuera de loopback los clientes exigen HTTPS y --allow-remote exige un token administrativo de al menos 24 caracteres; todavía hacen falta autenticación de inferencia, rate limiting y controles operativos.",
+            "Este anexo resume la ejecución cliente-servidor local. Primero se inicia el backend obligatorio en 127.0.0.1:8766 y después Streamlit en 127.0.0.1:8501. Para una demostración desde un móvil de la misma red privada se mantiene la API en loopback y se inicia solo la web con streamlit run src/app.py --server.address 0.0.0.0 --server.port 8501; se accede mediante http://IP_DEL_EQUIPO:8501 y puede ser necesario permitir el puerto 8501 en el perfil privado del firewall. No requiere --allow-remote ni abrir 8766. Como Streamlit no incorpora autenticación multiusuario, este acceso LAN debe ser temporal, en una red de confianza y sin redirección de puertos. La extensión apunta directamente al backend desde Opciones y el monitor usa PHISHING_BACKEND_URL. El puerto 8765 queda como proxy antiguo opcional. Un despliegue remoto real exige HTTPS y controles operativos adicionales.",
         ),
         (
             "Verificado: 87 pruebas Python",
@@ -465,7 +465,7 @@ def sync_full_guide() -> None:
         ("Rama de referencia:", "Rama de referencia: main"),
         (
             "Idea clave:",
-            "Idea clave: el sistema es cliente-servidor. El navegador usa Streamlit como presentación; Streamlit, la extensión y el monitor son clientes HTTP de backend_server.py. Solo el backend analiza, entrena y mantiene una versión activa por idioma. En local los procesos comparten equipo y loopback, pero no responsabilidades ni memoria.",
+            "Idea clave: el sistema es cliente-servidor. El navegador usa Streamlit como presentación; Streamlit, la extensión y el monitor son clientes HTTP de backend_server.py. Solo el backend analiza, entrena y mantiene una versión activa por idioma. En local los procesos comparten equipo y loopback, pero no responsabilidades ni memoria. Para enseñar la web desde un móvil puede abrirse temporalmente Streamlit a la LAN, sin exponer el backend ni convertir el prototipo en un servicio público.",
         ),
         (
             "Estos resultados proceden del holdout controlado",
@@ -583,12 +583,12 @@ def sync_full_guide() -> None:
                 "Centraliza decisiones y modelos: los clientes solo transportan entradas y presentan salidas. Cambiar una versión en el backend cambia a todos. El coste es operar un proceso obligatorio y, si se despliega, añadir TLS, autenticación, rate limiting y un registro compartido para réplicas.",
             ),
             (
-                "Sí. Streamlit sirve una interfaz web",
-                "Sí. Streamlit sirve la interfaz web y actúa como cliente del backend. 'Local' describe que ambos procesos están en el mismo equipo; no elimina la separación cliente-servidor.",
+                "Sí. Streamlit sirve la interfaz web",
+                "Sí. Streamlit sirve la interfaz web y actúa como cliente del backend. 'Local' describe que ambos procesos están en el mismo equipo; no elimina la separación cliente-servidor. Un móvil de la misma LAN puede actuar como navegador cliente si Streamlit se inicia con --server.address 0.0.0.0; el backend puede y debe seguir limitado a 127.0.0.1.",
             ),
             (
-                "Internamente Streamlit usa HTTP",
-                "Sí, Streamlit usa HTTP con el navegador. Además, en este proyecto su proceso Python llama por HTTP al backend central obligatorio. Es un recorrido de dos saltos: navegador -> Streamlit -> backend.",
+                "Sí, Streamlit usa HTTP con el navegador",
+                "Sí, Streamlit usa HTTP con el navegador. Además, en este proyecto su proceso Python llama por HTTP al backend central obligatorio. Es un recorrido de dos saltos: navegador -> Streamlit -> backend. El primer salto puede atravesar la LAN durante una demostración; el segundo permanece dentro del equipo.",
             ),
             (
                 "EmailAnalysisService detecta español",
@@ -608,11 +608,11 @@ def sync_full_guide() -> None:
             ),
             (
                 "La documentación, el README y las guías",
-                "La documentación, el README y las guías se han alineado con la rama main. El flujo es cliente-servidor: Streamlit, extensión y monitor consumen un backend central que mantiene las versiones ES/EN.",
+                "La documentación, el README y las guías se han alineado con la rama main. El flujo es cliente-servidor: Streamlit, extensión y monitor consumen un backend central que mantiene las versiones ES/EN. También se distingue el acceso predeterminado por loopback, la demostración temporal de la web en una LAN privada y un despliegue público, que no forma parte del alcance.",
             ),
             (
                 "README.md documenta",
-                "README.md documenta el arranque en dos terminales, el contrato HTTP, la extensión directa al puerto 8766, el proxy 8765 opcional y el monitor. Para un destino remoto exige HTTPS; --allow-remote requiere un token administrativo de al menos 24 caracteres y aún se delimitan los controles de producción pendientes.",
+                "README.md documenta el arranque en dos terminales, el contrato HTTP, la extensión directa al puerto 8766, el proxy 8765 opcional y el monitor. Para probar desde otro dispositivo de la misma red indica mantener el backend en 127.0.0.1:8766 e iniciar Streamlit con --server.address 0.0.0.0 --server.port 8501. Este acceso no requiere --allow-remote: solo abre la web a una LAN privada y de confianza, sin autenticación ni publicación en Internet. Para un destino remoto real se exige HTTPS y se delimitan los controles de producción pendientes.",
             ),
             (
                 "La vista Inicio refleja",
@@ -623,8 +623,8 @@ def sync_full_guide() -> None:
                 "Entrenamiento y evaluación presentan las métricas devueltas por el backend. Cada /train comienza con los CSV recibidos, registra procedencia, activa la versión de forma atómica y no serializa textos crudos.",
             ),
             (
-                "Existe una API HTTP local opcional",
-                "Existe un backend HTTP central obligatorio para web, extensión y monitor; en la configuración académica escucha en loopback.",
+                "Existe un backend HTTP central obligatorio",
+                "Existe un backend HTTP central obligatorio para web, extensión y monitor; en la configuración académica escucha en loopback incluso cuando Streamlit se abre temporalmente a otro dispositivo de la LAN.",
             ),
             (
                 "Cierre final:",
