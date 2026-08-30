@@ -1,0 +1,444 @@
+{
+  "schema_version": 1,
+  "configuration": {
+    "threshold": 21.0,
+    "heuristic_weight": 45,
+    "neural_weight": 55,
+    "high_confidence_threshold": 70.0,
+    "random_state": 42
+  },
+  "spanish": {
+    "protocol": {
+      "protocol_id": "tfg-reproducible-v1",
+      "random_state": 42,
+      "normalization": "Unicode NFKC, espacios colapsados y casefold solo para detectar igualdad exacta.",
+      "conflicts": "Se retira el grupo entero cuando un mismo texto tiene etiquetas opuestas.",
+      "split_method": "Prueba oficial de Hugging Face; sus coincidencias se retiran del entrenamiento.",
+      "training": {
+        "rows": 1148,
+        "phishing": 613,
+        "legitimate": 535
+      },
+      "test": {
+        "rows": 209,
+        "phishing": 100,
+        "legitimate": 109
+      },
+      "training_fingerprint": "58d178452437ea49ed32661a8d60d815474ac31572838d0a46aa8b5fc2608e0a",
+      "test_fingerprint": "a103032eff16d343c3c0899d904c2ab57540984099af365a93c0e5de8c2582ff",
+      "cleaning": {
+        "raw_rows": 1298,
+        "clean_rows": 1148,
+        "removed_duplicate_rows": 147,
+        "removed_conflicting_rows": 2,
+        "conflicting_groups": 1,
+        "removed_overlap_rows": 1,
+        "phishing_rows": 613,
+        "legitimate_rows": 535
+      },
+      "sources": {
+        "es_hf_train": {
+          "sha256": "e20d11338778bb40498552317081cf207f5060c8c0e0bc1fe7ab8b19d27fb011",
+          "repository": "https://huggingface.co/datasets/softecapps/spam_ham_spanish"
+        },
+        "es_kaggle_train": {
+          "sha256": "adc52111076a655520585c14e28a924cdbdbb90fbfa549b5697a4f67da420524",
+          "repository": "https://www.kaggle.com/datasets/aldoivan/sms-spam-mexico-dataset-en-espaol-mexicano"
+        }
+      }
+    },
+    "model": {
+      "sha256": "165e7c2bf292adf1d7bc88d936b3c14f4c7fe8f1caa3d2615718ca1190aaefb0",
+      "format_version": 3,
+      "trained_at_utc": "2026-08-30T15:54:13+00:00",
+      "hyperparameters": {
+        "tfidf_ngram_range": [
+          1,
+          2
+        ],
+        "tfidf_max_features": 3000,
+        "tfidf_min_df": 1,
+        "mlp_hidden_layer_sizes": [
+          64,
+          32
+        ],
+        "mlp_activation": "relu",
+        "mlp_alpha": 0.0001,
+        "mlp_learning_rate_init": 0.001,
+        "mlp_max_iter": 500,
+        "mlp_early_stopping": false,
+        "mlp_random_state": 42
+      },
+      "training_accuracy_descriptive": 0.999129,
+      "raw_training_texts_stored": 0
+    },
+    "heldout_results": {
+      "heuristico": {
+        "n": 209,
+        "tp": 0,
+        "tn": 109,
+        "fp": 0,
+        "fn": 100,
+        "confusion_matrix": [
+          [
+            109,
+            0
+          ],
+          [
+            100,
+            0
+          ]
+        ],
+        "accuracy": 0.521531,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "balanced_accuracy": 0.5
+      },
+      "neural": {
+        "n": 209,
+        "tp": 92,
+        "tn": 90,
+        "fp": 19,
+        "fn": 8,
+        "confusion_matrix": [
+          [
+            90,
+            19
+          ],
+          [
+            8,
+            92
+          ]
+        ],
+        "accuracy": 0.870813,
+        "precision": 0.828829,
+        "recall": 0.92,
+        "f1": 0.872038,
+        "balanced_accuracy": 0.872844
+      },
+      "combinado": {
+        "n": 209,
+        "tp": 91,
+        "tn": 96,
+        "fp": 13,
+        "fn": 9,
+        "confusion_matrix": [
+          [
+            96,
+            13
+          ],
+          [
+            9,
+            91
+          ]
+        ],
+        "accuracy": 0.894737,
+        "precision": 0.875,
+        "recall": 0.91,
+        "f1": 0.892157,
+        "balanced_accuracy": 0.895367
+      }
+    },
+    "limitation": "Los dos corpus son SMS spam/ham en español; se usan como aproximación textual a smishing/phishing y no como correo MIME completo."
+  },
+  "english": {
+    "protocol": {
+      "protocol_id": "tfg-reproducible-v1",
+      "random_state": 42,
+      "normalization": "Unicode NFKC, espacios colapsados y casefold solo para detectar igualdad exacta.",
+      "conflicts": "Se retira el grupo entero cuando un mismo texto tiene etiquetas opuestas.",
+      "split_method": "División estratificada 80/20 después de deduplicar.",
+      "training": {
+        "rows": 65661,
+        "phishing": 34275,
+        "legitimate": 31386
+      },
+      "test": {
+        "rows": 16416,
+        "phishing": 8569,
+        "legitimate": 7847
+      },
+      "training_fingerprint": "c08cd6575cf6c5b4a5320860aa3c76077bd1994195717d00aec2902c5fb5ea34",
+      "test_fingerprint": "2ee6f2a9841a0406f122238fd97e18ea980fb3de5e2ca54e48f6184ed9a7f5d8",
+      "cleaning": {
+        "raw_rows": 82485,
+        "clean_rows": 82077,
+        "removed_duplicate_rows": 408,
+        "removed_conflicting_rows": 0,
+        "conflicting_groups": 0,
+        "removed_overlap_rows": 0,
+        "phishing_rows": 42844,
+        "legitimate_rows": 39233
+      },
+      "sources": {
+        "en_kaggle_merged": {
+          "sha256": "73a5c5410baf46ed69517fedfd37910f2e93777dc504b73ea483bc16be3a69d1",
+          "repository": "https://www.kaggle.com/datasets/naserabdullahalam/phishing-email-dataset"
+        }
+      }
+    },
+    "model": {
+      "sha256": "a3dd9dc3216445c70574982ad7b2515e02830e1a8c0f2ad841cf2c2eb2c56d69",
+      "format_version": 3,
+      "trained_at_utc": "2026-08-30T15:55:21+00:00",
+      "hyperparameters": {
+        "tfidf_ngram_range": [
+          1,
+          2
+        ],
+        "tfidf_max_features": 3000,
+        "tfidf_min_df": 1,
+        "mlp_hidden_layer_sizes": [
+          64,
+          32
+        ],
+        "mlp_activation": "relu",
+        "mlp_alpha": 0.0001,
+        "mlp_learning_rate_init": 0.001,
+        "mlp_max_iter": 500,
+        "mlp_early_stopping": false,
+        "mlp_random_state": 42
+      },
+      "training_accuracy_descriptive": 0.999817,
+      "raw_training_texts_stored": 0
+    },
+    "heldout_results": {
+      "heuristico": {
+        "n": 16416,
+        "tp": 38,
+        "tn": 7844,
+        "fp": 3,
+        "fn": 8531,
+        "confusion_matrix": [
+          [
+            7844,
+            3
+          ],
+          [
+            8531,
+            38
+          ]
+        ],
+        "accuracy": 0.480141,
+        "precision": 0.926829,
+        "recall": 0.004435,
+        "f1": 0.008827,
+        "balanced_accuracy": 0.502026
+      },
+      "neural": {
+        "n": 16416,
+        "tp": 8470,
+        "tn": 7673,
+        "fp": 174,
+        "fn": 99,
+        "confusion_matrix": [
+          [
+            7673,
+            174
+          ],
+          [
+            99,
+            8470
+          ]
+        ],
+        "accuracy": 0.98337,
+        "precision": 0.97987,
+        "recall": 0.988447,
+        "f1": 0.98414,
+        "balanced_accuracy": 0.983136
+      },
+      "combinado": {
+        "n": 16416,
+        "tp": 8460,
+        "tn": 7689,
+        "fp": 158,
+        "fn": 109,
+        "confusion_matrix": [
+          [
+            7689,
+            158
+          ],
+          [
+            109,
+            8460
+          ]
+        ],
+        "accuracy": 0.983735,
+        "precision": 0.981666,
+        "recall": 0.98728,
+        "f1": 0.984465,
+        "balanced_accuracy": 0.983572
+      }
+    },
+    "secondary_external_validation": {
+      "raw": {
+        "rows": 2000,
+        "phishing": 1000,
+        "legitimate": 1000
+      },
+      "unique": {
+        "rows": 100,
+        "phishing": 23,
+        "legitimate": 77
+      },
+      "cleaning": {
+        "raw_rows": 2000,
+        "clean_rows": 100,
+        "removed_duplicate_rows": 1900,
+        "removed_conflicting_rows": 0,
+        "conflicting_groups": 0,
+        "removed_overlap_rows": 0,
+        "phishing_rows": 23,
+        "legitimate_rows": 77
+      },
+      "unique_results": {
+        "heuristico": {
+          "n": 100,
+          "tp": 0,
+          "tn": 77,
+          "fp": 0,
+          "fn": 23,
+          "confusion_matrix": [
+            [
+              77,
+              0
+            ],
+            [
+              23,
+              0
+            ]
+          ],
+          "accuracy": 0.77,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "balanced_accuracy": 0.5
+        },
+        "neural": {
+          "n": 100,
+          "tp": 22,
+          "tn": 47,
+          "fp": 30,
+          "fn": 1,
+          "confusion_matrix": [
+            [
+              47,
+              30
+            ],
+            [
+              1,
+              22
+            ]
+          ],
+          "accuracy": 0.69,
+          "precision": 0.423077,
+          "recall": 0.956522,
+          "f1": 0.586667,
+          "balanced_accuracy": 0.783456
+        },
+        "combinado": {
+          "n": 100,
+          "tp": 22,
+          "tn": 48,
+          "fp": 29,
+          "fn": 1,
+          "confusion_matrix": [
+            [
+              48,
+              29
+            ],
+            [
+              1,
+              22
+            ]
+          ],
+          "accuracy": 0.7,
+          "precision": 0.431373,
+          "recall": 0.956522,
+          "f1": 0.594595,
+          "balanced_accuracy": 0.789949
+        }
+      },
+      "row_weighted_results": {
+        "heuristico": {
+          "n": 2000,
+          "tp": 0,
+          "tn": 1000,
+          "fp": 0,
+          "fn": 1000,
+          "confusion_matrix": [
+            [
+              1000,
+              0
+            ],
+            [
+              1000,
+              0
+            ]
+          ],
+          "accuracy": 0.5,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "balanced_accuracy": 0.5
+        },
+        "neural": {
+          "n": 2000,
+          "tp": 888,
+          "tn": 619,
+          "fp": 381,
+          "fn": 112,
+          "confusion_matrix": [
+            [
+              619,
+              381
+            ],
+            [
+              112,
+              888
+            ]
+          ],
+          "accuracy": 0.7535,
+          "precision": 0.699764,
+          "recall": 0.888,
+          "f1": 0.782724,
+          "balanced_accuracy": 0.7535
+        },
+        "combinado": {
+          "n": 2000,
+          "tp": 888,
+          "tn": 626,
+          "fp": 374,
+          "fn": 112,
+          "confusion_matrix": [
+            [
+              626,
+              374
+            ],
+            [
+              112,
+              888
+            ]
+          ],
+          "accuracy": 0.757,
+          "precision": 0.703645,
+          "recall": 0.888,
+          "f1": 0.785146,
+          "balanced_accuracy": 0.757
+        }
+      },
+      "source": {
+        "file": "test.csv",
+        "language_directory_prefix": "ingl",
+        "sha256": "ad15f63cb8db2caaee33c442f1ff4488b9444530a4c42ab63bb580016b160bd3",
+        "repository": "https://zenodo.org/records/13474746",
+        "citation": "Miltchev, Rangelov y Genchev (2024), DOI 10.5281/zenodo.13474746",
+        "license": "No indicada en la ficha pública de Zenodo consultada el 31-08-2026",
+        "role": "secondary_external_validation"
+      }
+    },
+    "limitation": "La clase positiva agrega phishing y spam de varios corpus históricos; la partición mide generalización interna, no producción."
+  },
+  "interpretation": "Los holdouts de texto no contienen cabeceras ni estructura MIME completa. Por ello infravaloran el modo heurístico; la comparación funcional con EML completos se publica por separado."
+}

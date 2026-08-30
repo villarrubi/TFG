@@ -241,6 +241,8 @@ def model_payload(path: Path) -> dict[str, object]:
         "sha256": sha256(path),
         "training_stats": stats,
         "training_sources": list(model.training_sources),
+        "training_protocol": getattr(model, "training_protocol", {}),
+        "model_format_version": getattr(model, "model_format_version", None),
         "training_datetime": model.last_training_datetime,
         "raw_training_texts_stored": len(model.training_texts),
     }
@@ -264,7 +266,7 @@ def render_report(payload: dict[str, object]) -> str:
         "",
         "## Artefactos de entrenamiento",
         "",
-        "Los modelos conservan el tamaño, la distribución y las fuentes declaradas, pero no los textos originales. Por ello se describe el entrenamiento histórico sin atribuirle una partición 70/30 inexistente ni prometer su reconstrucción exacta.",
+        "Los modelos conservan el tamaño, la distribución, las fuentes y las huellas del protocolo, pero no los textos originales. El entrenamiento entregado se puede reconstruir con los CSV verificados externamente, semilla 42 y `scripts/retrain_reproducible.py`; los holdouts no se usan para ajustar los modelos.",
         "",
         "| Modelo | Muestras | Phishing | Legítimas | Fuentes declaradas | Textos brutos guardados |",
         "| --- | ---: | ---: | ---: | --- | ---: |",

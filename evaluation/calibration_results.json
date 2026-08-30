@@ -21,137 +21,137 @@
     "selection": "min fold balanced accuracy, mean fold balanced accuracy, overall metrics"
   },
   "recommendation": {
-    "heur_weight": 35,
-    "neural_weight": 65,
-    "threshold": 26,
+    "heur_weight": 45,
+    "neural_weight": 55,
+    "threshold": 21,
     "high_confidence_threshold": 70,
-    "min_fold_balanced_accuracy": 0.75,
-    "mean_fold_balanced_accuracy": 0.9,
-    "overall_balanced_accuracy": 0.9,
-    "overall_f1": 0.8947,
+    "min_fold_balanced_accuracy": 0.625,
+    "mean_fold_balanced_accuracy": 0.825,
+    "overall_balanced_accuracy": 0.825,
+    "overall_f1": 0.8293,
     "overall_recall": 0.85,
-    "overall_precision": 0.9444
+    "overall_precision": 0.8095
   },
   "top_candidates": [
     {
-      "heur_weight": 35,
-      "neural_weight": 65,
-      "threshold": 26,
-      "high_confidence_threshold": 70,
-      "min_fold_balanced_accuracy": 0.75,
-      "mean_fold_balanced_accuracy": 0.9,
-      "overall_balanced_accuracy": 0.9,
-      "overall_f1": 0.8947,
-      "overall_recall": 0.85,
-      "overall_precision": 0.9444
-    },
-    {
-      "heur_weight": 35,
-      "neural_weight": 65,
-      "threshold": 26,
-      "high_confidence_threshold": 65,
-      "min_fold_balanced_accuracy": 0.75,
-      "mean_fold_balanced_accuracy": 0.9,
-      "overall_balanced_accuracy": 0.9,
-      "overall_f1": 0.8947,
-      "overall_recall": 0.85,
-      "overall_precision": 0.9444
-    },
-    {
-      "heur_weight": 35,
-      "neural_weight": 65,
-      "threshold": 26,
-      "high_confidence_threshold": 75,
-      "min_fold_balanced_accuracy": 0.75,
-      "mean_fold_balanced_accuracy": 0.9,
-      "overall_balanced_accuracy": 0.9,
-      "overall_f1": 0.8947,
-      "overall_recall": 0.85,
-      "overall_precision": 0.9444
-    },
-    {
-      "heur_weight": 35,
-      "neural_weight": 65,
-      "threshold": 26,
-      "high_confidence_threshold": 80,
-      "min_fold_balanced_accuracy": 0.75,
-      "mean_fold_balanced_accuracy": 0.9,
-      "overall_balanced_accuracy": 0.9,
-      "overall_f1": 0.8947,
-      "overall_recall": 0.85,
-      "overall_precision": 0.9444
-    },
-    {
-      "heur_weight": 35,
-      "neural_weight": 65,
-      "threshold": 26,
-      "high_confidence_threshold": 85,
-      "min_fold_balanced_accuracy": 0.75,
-      "mean_fold_balanced_accuracy": 0.9,
-      "overall_balanced_accuracy": 0.9,
-      "overall_f1": 0.8947,
-      "overall_recall": 0.85,
-      "overall_precision": 0.9444
-    },
-    {
-      "heur_weight": 35,
-      "neural_weight": 65,
-      "threshold": 25,
-      "high_confidence_threshold": 70,
-      "min_fold_balanced_accuracy": 0.75,
-      "mean_fold_balanced_accuracy": 0.9,
-      "overall_balanced_accuracy": 0.9,
-      "overall_f1": 0.8947,
-      "overall_recall": 0.85,
-      "overall_precision": 0.9444
-    },
-    {
-      "heur_weight": 40,
-      "neural_weight": 60,
-      "threshold": 25,
-      "high_confidence_threshold": 70,
-      "min_fold_balanced_accuracy": 0.75,
-      "mean_fold_balanced_accuracy": 0.9,
-      "overall_balanced_accuracy": 0.9,
-      "overall_f1": 0.8947,
-      "overall_recall": 0.85,
-      "overall_precision": 0.9444
-    },
-    {
       "heur_weight": 45,
       "neural_weight": 55,
-      "threshold": 25,
+      "threshold": 21,
       "high_confidence_threshold": 70,
-      "min_fold_balanced_accuracy": 0.75,
-      "mean_fold_balanced_accuracy": 0.9,
-      "overall_balanced_accuracy": 0.9,
-      "overall_f1": 0.8947,
+      "min_fold_balanced_accuracy": 0.625,
+      "mean_fold_balanced_accuracy": 0.825,
+      "overall_balanced_accuracy": 0.825,
+      "overall_f1": 0.8293,
       "overall_recall": 0.85,
-      "overall_precision": 0.9444
+      "overall_precision": 0.8095
     },
     {
       "heur_weight": 50,
       "neural_weight": 50,
-      "threshold": 25,
+      "threshold": 21,
       "high_confidence_threshold": 70,
-      "min_fold_balanced_accuracy": 0.75,
-      "mean_fold_balanced_accuracy": 0.9,
-      "overall_balanced_accuracy": 0.9,
-      "overall_f1": 0.8947,
+      "min_fold_balanced_accuracy": 0.625,
+      "mean_fold_balanced_accuracy": 0.825,
+      "overall_balanced_accuracy": 0.825,
+      "overall_f1": 0.8293,
       "overall_recall": 0.85,
-      "overall_precision": 0.9444
+      "overall_precision": 0.8095
     },
     {
-      "heur_weight": 35,
-      "neural_weight": 65,
-      "threshold": 25,
+      "heur_weight": 45,
+      "neural_weight": 55,
+      "threshold": 21,
       "high_confidence_threshold": 65,
-      "min_fold_balanced_accuracy": 0.75,
-      "mean_fold_balanced_accuracy": 0.9,
-      "overall_balanced_accuracy": 0.9,
-      "overall_f1": 0.8947,
+      "min_fold_balanced_accuracy": 0.625,
+      "mean_fold_balanced_accuracy": 0.825,
+      "overall_balanced_accuracy": 0.825,
+      "overall_f1": 0.8293,
       "overall_recall": 0.85,
-      "overall_precision": 0.9444
+      "overall_precision": 0.8095
+    },
+    {
+      "heur_weight": 45,
+      "neural_weight": 55,
+      "threshold": 21,
+      "high_confidence_threshold": 75,
+      "min_fold_balanced_accuracy": 0.625,
+      "mean_fold_balanced_accuracy": 0.825,
+      "overall_balanced_accuracy": 0.825,
+      "overall_f1": 0.8293,
+      "overall_recall": 0.85,
+      "overall_precision": 0.8095
+    },
+    {
+      "heur_weight": 50,
+      "neural_weight": 50,
+      "threshold": 21,
+      "high_confidence_threshold": 65,
+      "min_fold_balanced_accuracy": 0.625,
+      "mean_fold_balanced_accuracy": 0.825,
+      "overall_balanced_accuracy": 0.825,
+      "overall_f1": 0.8293,
+      "overall_recall": 0.85,
+      "overall_precision": 0.8095
+    },
+    {
+      "heur_weight": 50,
+      "neural_weight": 50,
+      "threshold": 21,
+      "high_confidence_threshold": 75,
+      "min_fold_balanced_accuracy": 0.625,
+      "mean_fold_balanced_accuracy": 0.825,
+      "overall_balanced_accuracy": 0.825,
+      "overall_f1": 0.8293,
+      "overall_recall": 0.85,
+      "overall_precision": 0.8095
+    },
+    {
+      "heur_weight": 45,
+      "neural_weight": 55,
+      "threshold": 21,
+      "high_confidence_threshold": 80,
+      "min_fold_balanced_accuracy": 0.625,
+      "mean_fold_balanced_accuracy": 0.825,
+      "overall_balanced_accuracy": 0.825,
+      "overall_f1": 0.8293,
+      "overall_recall": 0.85,
+      "overall_precision": 0.8095
+    },
+    {
+      "heur_weight": 50,
+      "neural_weight": 50,
+      "threshold": 21,
+      "high_confidence_threshold": 80,
+      "min_fold_balanced_accuracy": 0.625,
+      "mean_fold_balanced_accuracy": 0.825,
+      "overall_balanced_accuracy": 0.825,
+      "overall_f1": 0.8293,
+      "overall_recall": 0.85,
+      "overall_precision": 0.8095
+    },
+    {
+      "heur_weight": 45,
+      "neural_weight": 55,
+      "threshold": 21,
+      "high_confidence_threshold": 85,
+      "min_fold_balanced_accuracy": 0.625,
+      "mean_fold_balanced_accuracy": 0.825,
+      "overall_balanced_accuracy": 0.825,
+      "overall_f1": 0.8293,
+      "overall_recall": 0.85,
+      "overall_precision": 0.8095
+    },
+    {
+      "heur_weight": 50,
+      "neural_weight": 50,
+      "threshold": 21,
+      "high_confidence_threshold": 85,
+      "min_fold_balanced_accuracy": 0.625,
+      "mean_fold_balanced_accuracy": 0.825,
+      "overall_balanced_accuracy": 0.825,
+      "overall_f1": 0.8293,
+      "overall_recall": 0.85,
+      "overall_precision": 0.8095
     }
   ],
   "scores": [
@@ -160,14 +160,14 @@
       "language": "es",
       "label": 1,
       "heuristic_score": 22.0,
-      "neural_score": 87.4
+      "neural_score": 98.0
     },
     {
       "id": "es-p-02",
       "language": "es",
       "label": 1,
       "heuristic_score": 16.0,
-      "neural_score": 67.4
+      "neural_score": 41.7
     },
     {
       "id": "es-p-03",
@@ -181,56 +181,56 @@
       "language": "es",
       "label": 1,
       "heuristic_score": 0.0,
-      "neural_score": 93.7
+      "neural_score": 96.0
     },
     {
       "id": "es-p-05",
       "language": "es",
       "label": 1,
       "heuristic_score": 16.0,
-      "neural_score": 0.5
+      "neural_score": 0.8
     },
     {
       "id": "es-p-06",
       "language": "es",
       "label": 1,
       "heuristic_score": 10.0,
-      "neural_score": 83.8
+      "neural_score": 64.5
     },
     {
       "id": "es-p-07",
       "language": "es",
       "label": 1,
       "heuristic_score": 22.0,
-      "neural_score": 28.6
+      "neural_score": 20.4
     },
     {
       "id": "es-p-08",
       "language": "es",
       "label": 1,
       "heuristic_score": 12.0,
-      "neural_score": 90.4
+      "neural_score": 96.8
     },
     {
       "id": "es-p-09",
       "language": "es",
       "label": 1,
       "heuristic_score": 6.0,
-      "neural_score": 94.4
+      "neural_score": 94.8
     },
     {
       "id": "es-p-10",
       "language": "es",
       "label": 1,
       "heuristic_score": 6.0,
-      "neural_score": 98.3
+      "neural_score": 97.6
     },
     {
       "id": "es-l-01",
       "language": "es",
       "label": 0,
       "heuristic_score": 4.0,
-      "neural_score": 4.0
+      "neural_score": 5.3
     },
     {
       "id": "es-l-02",
@@ -244,35 +244,35 @@
       "language": "es",
       "label": 0,
       "heuristic_score": 12.0,
-      "neural_score": 1.0
+      "neural_score": 3.2
     },
     {
       "id": "es-l-04",
       "language": "es",
       "label": 0,
       "heuristic_score": 0.0,
-      "neural_score": 36.2
+      "neural_score": 27.9
     },
     {
       "id": "es-l-05",
       "language": "es",
       "label": 0,
       "heuristic_score": 0.0,
-      "neural_score": 0.0
+      "neural_score": 0.1
     },
     {
       "id": "es-l-06",
       "language": "es",
       "label": 0,
       "heuristic_score": 0.0,
-      "neural_score": 0.1
+      "neural_score": 0.3
     },
     {
       "id": "es-l-07",
       "language": "es",
       "label": 0,
       "heuristic_score": 10.0,
-      "neural_score": 1.2
+      "neural_score": 1.7
     },
     {
       "id": "es-l-08",
@@ -286,14 +286,14 @@
       "language": "es",
       "label": 0,
       "heuristic_score": 0.0,
-      "neural_score": 0.1
+      "neural_score": 0.0
     },
     {
       "id": "es-l-10",
       "language": "es",
       "label": 0,
       "heuristic_score": 0.0,
-      "neural_score": 37.2
+      "neural_score": 37.3
     },
     {
       "id": "en-p-01",
@@ -314,56 +314,56 @@
       "language": "en",
       "label": 1,
       "heuristic_score": 0.0,
-      "neural_score": 0.4
+      "neural_score": 3.6
     },
     {
       "id": "en-p-04",
       "language": "en",
       "label": 1,
       "heuristic_score": 0.0,
-      "neural_score": 98.1
+      "neural_score": 100.0
     },
     {
       "id": "en-p-05",
       "language": "en",
       "label": 1,
       "heuristic_score": 0.0,
-      "neural_score": 56.3
+      "neural_score": 100.0
     },
     {
       "id": "en-p-06",
       "language": "en",
       "label": 1,
       "heuristic_score": 0.0,
-      "neural_score": 99.1
+      "neural_score": 99.9
     },
     {
       "id": "en-p-07",
       "language": "en",
       "label": 1,
       "heuristic_score": 8.0,
-      "neural_score": 100.0
+      "neural_score": 87.0
     },
     {
       "id": "en-p-08",
       "language": "en",
       "label": 1,
       "heuristic_score": 0.0,
-      "neural_score": 98.5
+      "neural_score": 100.0
     },
     {
       "id": "en-p-09",
       "language": "en",
       "label": 1,
       "heuristic_score": 0.0,
-      "neural_score": 57.5
+      "neural_score": 100.0
     },
     {
       "id": "en-p-10",
       "language": "en",
       "label": 1,
       "heuristic_score": 0.0,
-      "neural_score": 97.1
+      "neural_score": 97.9
     },
     {
       "id": "en-l-01",
@@ -405,35 +405,35 @@
       "language": "en",
       "label": 0,
       "heuristic_score": 0.0,
-      "neural_score": 0.0
+      "neural_score": 89.4
     },
     {
       "id": "en-l-07",
       "language": "en",
       "label": 0,
       "heuristic_score": 0.0,
-      "neural_score": 5.2
+      "neural_score": 7.8
     },
     {
       "id": "en-l-08",
       "language": "en",
       "label": 0,
       "heuristic_score": 0.0,
-      "neural_score": 0.6
+      "neural_score": 100.0
     },
     {
       "id": "en-l-09",
       "language": "en",
       "label": 0,
       "heuristic_score": 0.0,
-      "neural_score": 31.7
+      "neural_score": 54.4
     },
     {
       "id": "en-l-10",
       "language": "en",
       "label": 0,
       "heuristic_score": 0.0,
-      "neural_score": 0.2
+      "neural_score": 33.3
     }
   ]
 }

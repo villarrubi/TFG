@@ -28,7 +28,7 @@ from .model_config import (
     cargar_hiperparametros_desde_env,
 )
 
-MODEL_FORMAT_VERSION = 2
+MODEL_FORMAT_VERSION = 3
 
 
 def get_stop_words(language: str) -> str | list[str] | None:
@@ -128,6 +128,9 @@ class NeuralPhishingClassifier:
             "subject": "subject",
             "body": "body",
         }
+        # Registra limpieza, partición y hashes sin incluir rutas absolutas ni
+        # mensajes del corpus en el artefacto serializado.
+        self.training_protocol: dict[str, object] = {}
         self.last_training_datetime: str | None = None
         self.trained_with_default = False
         self.model_format_version = MODEL_FORMAT_VERSION
@@ -164,6 +167,7 @@ class NeuralPhishingClassifier:
         self.training_texts = []
         self.training_labels = []
         self.training_sources_info = getattr(self, "training_sources_info", [])
+        self.training_protocol = getattr(self, "training_protocol", {})
         self.model_format_version = MODEL_FORMAT_VERSION
 
     def _update_training_stats(self, texts: list[str], labels: list[int]) -> None:

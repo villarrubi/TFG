@@ -3,18 +3,17 @@
 `calibration_controlled_v1.csv` contiene 40 casos bilingües equilibrados que no
 se usan para entrenar los modelos. `scripts/calibrate_combined.py` recorre una
 rejilla determinista con cinco particiones estratificadas y recomienda la
-configuración combinada actual: 35 % heurístico, 65 % neuronal, umbral de
-decisión 26 % y conservación de evidencia individual a partir del 70 %.
+configuración combinada actual: 45 % heurístico, 55 % neuronal, umbral de
+decisión 21 % y conservación de evidencia individual a partir del 70 %.
 
-Los modelos versionados conservan metadatos descriptivos del entrenamiento,
-pero no los textos originales. El artefacto ES declara 1.298 muestras (686
-phishing y 612 legítimas) de `train.csv` y `dataset_renombrado.csv`; el EN,
-164.971 (85.781 phishing y 79.190 legítimas) de CEAS, Enron, Ling, Nazario,
-Nigerian Fraud, Phishing Email y SpamAssassin. Como los CSV históricos no se
-distribuyen, no puede reconstruirse de forma exacta ese entrenamiento ni
-afirmarse una división 70/30 que no consta en los artefactos. Esta limitación se
-separa de la calibración y de las evaluaciones siguientes, que sí se versionan y
-son reproducibles.
+Los modelos versionados conservan estadísticas, fuentes y huellas del protocolo,
+pero no los textos originales. El ES usa 1.148 muestras limpias y 209 de prueba
+oficial; el EN deduplica el CSV agregado a 82.077 textos y aplica una división
+estratificada 80/20 con semilla 42: 65.661 entrenamiento y 16.416 prueba. Los
+componentes del agregado no se añaden de nuevo. Las fuentes, licencias y
+SHA-256 están en `training_sources.json`; `scripts/retrain_reproducible.py`
+reconstruye modelos, particiones y `training_results.json` desde los CSV
+externos verificados.
 
 La evaluación final no reutiliza esos mensajes. `local_emails_v1/` contiene 16
 archivos EML reservados, cuatro por idioma y clase, con cabeceras Received,
@@ -42,6 +41,7 @@ Reproducción:
 ```powershell
 $env:PYTHONPATH = "src"
 python scripts/calibrate_combined.py --check
+python scripts/retrain_reproducible.py --data-root "C:\ruta\datos_entrenamiento" --evaluate-only --check
 python scripts/evaluate_models.py
 python scripts/evaluate_external.py --download
 python scripts/evaluate_external.py --check

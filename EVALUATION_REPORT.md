@@ -7,27 +7,27 @@ Esta ejecución usa un corpus local de archivos EML reservado después de calibr
 - Dataset: `evaluation/local_emails_v1/manifest.json` (16 EML; SHA-256 de manifiesto + mensajes `e4cca95dd15a28229451138c063ae591c00961b0c5b275c58dada5dd0a6bb89d`).
 - Composición: ES clase 0: 4, ES clase 1: 4, EN clase 0: 4, EN clase 1: 4.
 - Calibración separada: `evaluation/calibration_results.json` (40 casos; SHA-256 `61d86417de980c747c277d9a9fb9ae97829a8a7762d5ed20eaa20bcd51ef47d9`).
-- Umbral común: 26.0 %; combinado 35 % heurístico + 65 % neuronal.
+- Umbral común: 21.0 %; combinado 45 % heurístico + 55 % neuronal.
 - Evidencia de alta confianza: si cualquier detector alcanza 70.0 %, su puntuación no se diluye en la media.
-- Modelo ES SHA-256: `432905694ee1db6ba1ef7c33dfb8e2540ee94efbbbc09c952837fd786482dbad`.
-- Modelo EN SHA-256: `f414b707d7aa35c6fff11851a047f0ef4df997139f9a949eff50c4c451d7bde4`.
+- Modelo ES SHA-256: `165e7c2bf292adf1d7bc88d936b3c14f4c7fe8f1caa3d2615718ca1190aaefb0`.
+- Modelo EN SHA-256: `a3dd9dc3216445c70574982ad7b2515e02830e1a8c0f2ad841cf2c2eb2c56d69`.
 
 ## Artefactos de entrenamiento
 
-Los modelos conservan el tamaño, la distribución y las fuentes declaradas, pero no los textos originales. Por ello se describe el entrenamiento histórico sin atribuirle una partición 70/30 inexistente ni prometer su reconstrucción exacta.
+Los modelos conservan el tamaño, la distribución, las fuentes y las huellas del protocolo, pero no los textos originales. El entrenamiento entregado se puede reconstruir con los CSV verificados externamente, semilla 42 y `scripts/retrain_reproducible.py`; los holdouts no se usan para ajustar los modelos.
 
 | Modelo | Muestras | Phishing | Legítimas | Fuentes declaradas | Textos brutos guardados |
 | --- | ---: | ---: | ---: | --- | ---: |
-| ES | 1298 | 686 | 612 | train.csv, dataset_renombrado.csv | 0 |
-| EN | 164971 | 85781 | 79190 | CEAS_08.csv, Enron.csv, Ling.csv, Nazario.csv, Nigerian_Fraud.csv, phishing_email.csv, SpamAssasin.csv | 0 |
+| ES | 1148 | 613 | 535 | softecapps/spam_ham_spanish, DOI 10.57967/hf/2264, Aldo Iván, SMS Spam Mexico - Dataset en Español Mexicano | 0 |
+| EN | 65661 | 34275 | 31386 | Naser Abdullah Alam et al., Phishing Email Dataset | 0 |
 
 ## Resultados globales
 
 | Modo | Accuracy | Precisión | Recall | F1 | Accuracy balanceada | VP | VN | FP | FN |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | heuristico | 100.0 % | 100.0 % | 100.0 % | 100.0 % | 100.0 % | 8 | 8 | 0 | 0 |
-| neural | 75.0 % | 75.0 % | 75.0 % | 75.0 % | 75.0 % | 6 | 6 | 2 | 2 |
-| combinado | 93.8 % | 88.9 % | 100.0 % | 94.1 % | 93.8 % | 8 | 7 | 1 | 0 |
+| neural | 81.2 % | 77.8 % | 87.5 % | 82.3 % | 81.2 % | 7 | 6 | 2 | 1 |
+| combinado | 87.5 % | 80.0 % | 100.0 % | 88.9 % | 87.5 % | 8 | 6 | 2 | 0 |
 
 ## Desglose por idioma
 
@@ -36,8 +36,8 @@ Los modelos conservan el tamaño, la distribución y las fuentes declaradas, per
 | heuristico | ES | 8 | 100.0 % | 100.0 % | 100.0 % | 0 | 0 |
 | heuristico | EN | 8 | 100.0 % | 100.0 % | 100.0 % | 0 | 0 |
 | neural | ES | 8 | 62.5 % | 75.0 % | 66.7 % | 2 | 1 |
-| neural | EN | 8 | 87.5 % | 75.0 % | 85.7 % | 0 | 1 |
-| combinado | ES | 8 | 87.5 % | 100.0 % | 88.9 % | 1 | 0 |
+| neural | EN | 8 | 100.0 % | 100.0 % | 100.0 % | 0 | 0 |
+| combinado | ES | 8 | 75.0 % | 100.0 % | 80.0 % | 2 | 0 |
 | combinado | EN | 8 | 100.0 % | 100.0 % | 100.0 % | 0 | 0 |
 
 ## Interpretación responsable

@@ -143,6 +143,7 @@ def training_metadata() -> dict[str, object]:
         models[language] = {
             "model_sha256": file_sha256(path),
             "training_sources": list(getattr(model, "training_sources", []) or []),
+            "training_protocol": getattr(model, "training_protocol", {}),
             "embedded_training_texts": len(snapshots),
         }
     return models
@@ -237,9 +238,9 @@ def build_result(dataset: Path) -> dict[str, object]:
         "independence": {
             "confirmed": False,
             "reason": (
-                "Los artefactos no conservan los textos de entrenamiento y la ficha identifica "
-                "el origen como un benchmark de correo de 2020. No puede descartarse solapamiento "
-                "con Nazario u otras fuentes declaradas por el modelo EN."
+                "El protocolo inglés ya fija y deduplica el CSV agregado usado para entrenar, "
+                "pero DIFrauD remite a un benchmark histórico de 2020. No puede descartarse "
+                "que alguna de sus fuentes originales aparezca también en aquel agregado."
             ),
         },
         "results": evaluate(rows),
@@ -286,7 +287,7 @@ def render_report(payload: dict[str, object]) -> str:
             "## Límite de independencia",
             "",
             payload["independence"]["reason"],
-            "La ficha de DIFrauD describe ataques y correos benignos de usuarios reales, limpiados y etiquetados, pero remite a un benchmark de 2020. El modelo inglés declara entre sus fuentes Nazario, CEAS, Enron, Ling, Nigerian Fraud y SpamAssassin; como los artefactos no incorporan instantáneas de sus filas de entrenamiento, no es posible hacer una deduplicación exacta contra ellas. Por ello estas cifras se etiquetan como diagnóstico con riesgo de fuga, no como validación externa concluyente.",
+            "La ficha de DIFrauD describe ataques y correos benignos de usuarios reales, limpiados y etiquetados, pero remite a un benchmark de 2020. El entrenamiento inglés procede del agregado Phishing Email Dataset, cuyos componentes históricos incluyen CEAS, Enron, Ling, Nazario, Nigerian Fraud y SpamAssassin. Aunque la división interna del nuevo protocolo sí está deduplicada, no se ha demostrado la independencia entre las fuentes primarias de DIFrauD y ese agregado. Por ello estas cifras se etiquetan como diagnóstico con riesgo de fuga, no como validación externa concluyente.",
             "",
             "## Reproducción",
             "",

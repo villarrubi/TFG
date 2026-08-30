@@ -363,13 +363,16 @@ def _build_experiment(doc: DocumentObject) -> None:
     _insert_paragraph_before(
         doc,
         anchor,
-        "Los artefactos neuronales activos declaran las estadísticas del entrenamiento. "
-        "El modelo español se ajustó con 1.298 textos (686 phishing y 612 legítimos) "
-        "procedentes de train.csv y dataset_renombrado.csv. El modelo inglés se ajustó "
-        "con 164.971 textos (85.781 phishing y 79.190 legítimos) procedentes de CEAS_08, "
-        "Enron, Ling, Nazario, Nigerian Fraud, phishing_email y SpamAssassin. Los modelos "
-        "versionados no conservan los textos brutos, solo procedencia, estadísticas y el "
-        "pipeline entrenado.",
+        "El protocolo reproducible fija las fuentes, licencias y SHA-256 sin versionar "
+        "los mensajes. En español se combinan el split de entrenamiento de "
+        "softecapps/spam_ham_spanish (Hugging Face, DOI 10.57967/hf/2264) y SMS Spam "
+        "Mexico (Kaggle). Tras retirar 147 copias, dos filas contradictorias y una "
+        "coincidencia con la prueba quedan 1.148 textos. Las 209 filas del split oficial "
+        "se reservan para probar. En inglés se utiliza únicamente phishing_email.csv "
+        "(Kaggle), porque ya agrega CEAS, Enron, Ling, Nazario, Nigerian Fraud y "
+        "SpamAssassin: añadir también esos seis CSV duplicaba el corpus. Tras retirar "
+        "408 copias quedan 82.077 textos, divididos de forma estratificada 80/20 con "
+        "semilla 42. Los joblib guardan el pipeline y estos metadatos, nunca el texto bruto.",
     )
     _insert_caption(
         doc, anchor, "Tabla 6.1: Conjuntos empleados y separación experimental."
@@ -381,19 +384,35 @@ def _build_experiment(doc: DocumentObject) -> None:
         [
             [
                 "Entrenamiento ES",
-                "1.298",
-                "686",
-                "612",
-                "Dos CSV locales declarados por el artefacto",
+                "1.148",
+                "613",
+                "535",
+                "Hugging Face + SMS Spam Mexico",
                 "Ajuste del modelo español",
             ],
             [
+                "Prueba ES",
+                "209",
+                "100",
+                "109",
+                "Split oficial softecapps",
+                "Holdout español",
+            ],
+            [
                 "Entrenamiento EN",
-                "164.971",
-                "85.781",
-                "79.190",
-                "CEAS, Enron, Ling, Nazario, Nigerian Fraud, phishing_email y SpamAssassin",
+                "65.661",
+                "34.275",
+                "31.386",
+                "80 % del agregado deduplicado",
                 "Ajuste del modelo inglés",
+            ],
+            [
+                "Prueba EN",
+                "16.416",
+                "8.569",
+                "7.847",
+                "20 % estratificado del agregado",
+                "Holdout inglés",
             ],
             [
                 "Calibración",
@@ -412,6 +431,14 @@ def _build_experiment(doc: DocumentObject) -> None:
                 "Comparación final de los tres modos",
             ],
             [
+                "Validación Zenodo",
+                "100",
+                "23",
+                "77",
+                "100 textos únicos de 2.000 filas",
+                "Diagnóstico secundario",
+            ],
+            [
                 "DIFrauD",
                 "1.528",
                 "608",
@@ -420,52 +447,75 @@ def _build_experiment(doc: DocumentObject) -> None:
                 "Diagnóstico externo con riesgo de solapamiento",
             ],
         ],
-        [1220, 620, 780, 790, 3090, 1884],
+        [1200, 850, 850, 1000, 2600, 1884],
     )
     _insert_paragraph_before(
         doc,
         anchor,
-        "No se aplicó una división aleatoria 70/30 a los artefactos ya entrenados. La "
-        "separación experimental se realizó por función: los corpus de entrenamiento "
-        "ajustan el MLP; 40 casos distintos calibran la fusión mediante cinco particiones "
-        "estratificadas; y 16 EML no usados en entrenamiento ni calibración constituyen "
-        "la prueba final común. El split de prueba de DIFrauD añade escala, pero no se "
-        "considera independiente por posible solapamiento con fuentes del modelo inglés "
-        "(Boumber et al., 2024).",
+        "La separación se realiza antes del ajuste. Español conserva el test oficial y "
+        "elimina del entrenamiento cualquier coincidencia exacta; inglés deduplica primero "
+        "y después divide 80/20 de forma estratificada y determinista. Otros 40 casos "
+        "calibran la fusión mediante cinco particiones y 16 EML distintos comprueban los "
+        "tres modos con MIME y cabeceras. Zenodo y DIFrauD añaden diagnósticos externos; "
+        "DIFrauD no se considera independiente por posible solapamiento de fuentes "
+        "históricas con el agregado inglés (Boumber et al., 2024).",
     )
     _insert_paragraph_before(
         doc,
         anchor,
-        "La evaluación local es reproducible desde los ficheros versionados y conserva "
-        "hashes de corpus y modelos. La repetición exacta del entrenamiento histórico "
-        "requiere los CSV originales, que no se distribuyen en el repositorio; esta "
-        "carencia de trazabilidad de las filas de entrenamiento se mantiene como una "
-        "limitación explícita y justifica no presentar las métricas como estimación de "
-        "producción.",
+        "evaluation/training_sources.json fija las URLs y huellas de los CSV externos. "
+        "scripts/retrain_reproducible.py verifica esos archivos, reconstruye las mismas "
+        "particiones, entrena y genera métricas y matrices de confusión. Los SMS españoles "
+        "son una aproximación a smishing y la clase positiva inglesa también agrega spam; "
+        "además, los holdouts de texto carecen de MIME. Estas limitaciones de validez de "
+        "constructo impiden extrapolar las cifras a producción.",
     )
     _insert_paragraph_before(doc, anchor, "Resultados comparados", style="Heading 2")
     _insert_paragraph_before(
         doc,
         anchor,
-        "Tras fijar 35 % de peso heurístico, 65 % neuronal, umbral 26 y conservación "
-        "de evidencia individual a partir de 70, los 16 EML reservados se procesaron sin "
+        "Tras fijar 45 % de peso heurístico, 55 % neuronal, umbral 21 y conservación "
+        "de evidencia individual a partir de 70, los holdouts y los 16 EML se procesaron sin "
         "reajustar parámetros. Accuracy mide el acierto total, precisión la fiabilidad de "
         "las alertas, recall la cobertura del phishing real y F1 su equilibrio.",
     )
-    _insert_caption(doc, anchor, "Tabla 6.2: Métricas sobre los 16 EML reservados.")
+    _insert_caption(doc, anchor, "Tabla 6.2: Métricas sobre los holdouts de texto.")
+    _insert_table_before(
+        doc,
+        anchor,
+        ["Idioma/modo", "N", "Accuracy", "Precisión", "Recall", "F1"],
+        [
+            ["ES heurístico", "209", "52,2 %", "0,0 %", "0,0 %", "0,0 %"],
+            ["ES neuronal", "209", "87,1 %", "82,9 %", "92,0 %", "87,2 %"],
+            ["ES combinado", "209", "89,5 %", "87,5 %", "91,0 %", "89,2 %"],
+            ["EN heurístico", "16.416", "48,0 %", "92,7 %", "0,4 %", "0,9 %"],
+            ["EN neuronal", "16.416", "98,3 %", "98,0 %", "98,8 %", "98,4 %"],
+            ["EN combinado", "16.416", "98,4 %", "98,2 %", "98,7 %", "98,4 %"],
+        ],
+        [1700, 800, 1471, 1471, 1471, 1471],
+    )
+    _insert_paragraph_before(
+        doc,
+        anchor,
+        "El heurístico apenas activa señales en texto plano porque no recibe cabeceras, "
+        "HTML estructurado ni autenticación. Estas filas miden principalmente el modelo "
+        "léxico y la fusión; la prueba EML posterior es la comparación funcional del "
+        "sistema completo.",
+    )
+    _insert_caption(doc, anchor, "Tabla 6.3: Métricas sobre los 16 EML reservados.")
     _insert_table_before(
         doc,
         anchor,
         ["Modo", "Accuracy", "Precisión", "Recall", "F1", "Accuracy balanceada"],
         [
             ["Heurístico", "100,0 %", "100,0 %", "100,0 %", "100,0 %", "100,0 %"],
-            ["Neuronal", "75,0 %", "75,0 %", "75,0 %", "75,0 %", "75,0 %"],
-            ["Combinado 35/65", "93,8 %", "88,9 %", "100,0 %", "94,1 %", "93,8 %"],
+            ["Neuronal", "81,2 %", "77,8 %", "87,5 %", "82,3 %", "81,2 %"],
+            ["Combinado 45/55", "87,5 %", "80,0 %", "100,0 %", "88,9 %", "87,5 %"],
         ],
         [1800, 1280, 1280, 1160, 1160, 1704],
     )
     _insert_caption(
-        doc, anchor, "Tabla 6.3: Matrices de confusión sobre los 16 EML reservados."
+        doc, anchor, "Tabla 6.4: Matrices de confusión sobre los 16 EML reservados."
     )
     _insert_table_before(
         doc,
@@ -484,17 +534,17 @@ def _build_experiment(doc: DocumentObject) -> None:
                 "Neuronal",
                 "6",
                 "2",
-                "2",
-                "6",
-                "Dos falsas alarmas y dos phishing omitidos",
+                "1",
+                "7",
+                "Dos falsas alarmas y un phishing omitido",
             ],
             [
-                "Combinado 35/65",
-                "7",
-                "1",
+                "Combinado 45/55",
+                "6",
+                "2",
                 "0",
                 "8",
-                "Detecta los 8 phishing y genera una falsa alarma",
+                "Detecta los 8 phishing y genera dos falsas alarmas",
             ],
         ],
         [1800, 700, 700, 700, 700, 3784],
@@ -505,10 +555,12 @@ def _build_experiment(doc: DocumentObject) -> None:
         "El heurístico obtiene el mejor resultado en este conjunto pequeño porque los "
         "EML contienen las cabeceras, enlaces y escenarios para los que se diseñaron las "
         "reglas. El combinado conserva los ocho verdaderos positivos y reduce el riesgo "
-        "de depender solo del texto, a costa de un falso positivo. El neuronal muestra "
-        "la mayor sensibilidad a la distribución del corpus: dos falsos positivos y dos "
-        "falsos negativos. Por ello no se selecciona un ganador universal; se documenta "
-        "el comportamiento observado y el coste de cada error.",
+        "de depender solo del texto, a costa de dos falsos positivos. El neuronal genera "
+        "dos falsas alarmas y omite un phishing. En los diagnósticos externos, el combinado "
+        "alcanza 70,0 % de accuracy y 95,7 % de recall sobre los 100 textos únicos de "
+        "Zenodo, y 89,0 % de accuracy y 93,4 % de recall sobre DIFrauD. La diferencia frente "
+        "al 98,4 % del holdout inglés revela cambio de distribución y refuerza que no existe "
+        "un ganador universal ni una métrica extrapolable a producción.",
     )
 
 
@@ -742,13 +794,12 @@ def apply_full_guide(path: Path) -> None:
     _replace_prefix(
         doc,
         "El repositorio separa 40 casos de calibración",
-        "Los modelos activos declaran 1.298 muestras de entrenamiento ES (686 phishing "
-        "y 612 legítimas) y 164.971 EN (85.781 phishing y 79.190 legítimas). El "
-        "repositorio separa después 40 casos de calibración y 16 EML finales, cuatro por "
-        "idioma y clase. El evaluador genera accuracy, precisión, recall, F1, accuracy "
-        "balanceada, VP/VN/FP/FN, hashes y detalle por caso. En los EML, el heurístico "
-        "obtiene 100,0 %; el combinado, 93,8 % de accuracy y 100,0 % de recall; y el "
-        "neuronal, 75,0 %. DIFrauD añade 1.528 textos con riesgo de fuga documentado.",
+        "El protocolo reproducible usa 1.148 textos ES para entrenar y 209 para probar; "
+        "el inglés usa 65.661 para entrenar y 16.416 para probar tras deduplicar y dividir "
+        "el agregado con semilla 42. Otros 40 casos calibran y 16 EML finales comparan los "
+        "tres modos con cabeceras. En los EML, el heurístico obtiene 100,0 % de accuracy; "
+        "el combinado, 87,5 % de accuracy y 100,0 % de recall; y el neuronal, 81,2 % de "
+        "accuracy. DIFrauD añade 1.528 textos con riesgo de solapamiento documentado.",
     )
     doc.save(path)
 

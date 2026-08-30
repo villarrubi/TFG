@@ -13,6 +13,14 @@ confusión de los modos heurístico, neuronal y combinado. También he añadido 
 discusión de resultados y sus límites, unas conclusiones generales vinculadas
 al cumplimiento de los objetivos y capturas reales del prototipo.
 
+En concreto, he rehecho el entrenamiento para que sea reproducible y evitar
+fuga de datos. El modelo español usa 1.148 textos limpios y 209 del split
+oficial de prueba. El inglés ya no suma el CSV agregado y sus seis componentes:
+deduplica el agregado a 82.077 textos y lo divide 80/20 con semilla 42 en
+65.661 para entrenamiento y 16.416 para prueba. El repositorio fija las URLs,
+licencias y SHA-256 de las fuentes, verifica los CSV externos y permite
+reentrenar y regenerar las métricas sin versionar mensajes brutos.
+
 Además, he documentado los cambios respecto a la propuesta inicial, en
 particular la sustitución de TensorFlow por el MLP de scikit-learn y la decisión
 de mantener un análisis local y estático sin reputación online ni validación de

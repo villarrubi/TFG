@@ -18,52 +18,120 @@
     "exact_overlap_with_local_evaluation": 0
   },
   "configuration": {
-    "threshold": 26.0,
-    "heur_weight": 35,
-    "neural_weight": 65,
+    "threshold": 21.0,
+    "heur_weight": 45,
+    "neural_weight": 55,
     "high_confidence_threshold": 70.0,
     "forced_model_language": "en"
   },
   "training_audit": {
     "es": {
-      "model_sha256": "432905694ee1db6ba1ef7c33dfb8e2540ee94efbbbc09c952837fd786482dbad",
+      "model_sha256": "165e7c2bf292adf1d7bc88d936b3c14f4c7fe8f1caa3d2615718ca1190aaefb0",
       "training_sources": [
-        "train.csv",
-        "dataset_renombrado.csv"
+        "softecapps/spam_ham_spanish, DOI 10.57967/hf/2264",
+        "Aldo Iván, SMS Spam Mexico - Dataset en Español Mexicano"
       ],
+      "training_protocol": {
+        "protocol_id": "tfg-reproducible-v1",
+        "random_state": 42,
+        "normalization": "Unicode NFKC, espacios colapsados y casefold solo para detectar igualdad exacta.",
+        "conflicts": "Se retira el grupo entero cuando un mismo texto tiene etiquetas opuestas.",
+        "split_method": "Prueba oficial de Hugging Face; sus coincidencias se retiran del entrenamiento.",
+        "training": {
+          "rows": 1148,
+          "phishing": 613,
+          "legitimate": 535
+        },
+        "test": {
+          "rows": 209,
+          "phishing": 100,
+          "legitimate": 109
+        },
+        "training_fingerprint": "58d178452437ea49ed32661a8d60d815474ac31572838d0a46aa8b5fc2608e0a",
+        "test_fingerprint": "a103032eff16d343c3c0899d904c2ab57540984099af365a93c0e5de8c2582ff",
+        "cleaning": {
+          "raw_rows": 1298,
+          "clean_rows": 1148,
+          "removed_duplicate_rows": 147,
+          "removed_conflicting_rows": 2,
+          "conflicting_groups": 1,
+          "removed_overlap_rows": 1,
+          "phishing_rows": 613,
+          "legitimate_rows": 535
+        },
+        "sources": {
+          "es_hf_train": {
+            "sha256": "e20d11338778bb40498552317081cf207f5060c8c0e0bc1fe7ab8b19d27fb011",
+            "repository": "https://huggingface.co/datasets/softecapps/spam_ham_spanish"
+          },
+          "es_kaggle_train": {
+            "sha256": "adc52111076a655520585c14e28a924cdbdbb90fbfa549b5697a4f67da420524",
+            "repository": "https://www.kaggle.com/datasets/aldoivan/sms-spam-mexico-dataset-en-espaol-mexicano"
+          }
+        }
+      },
       "embedded_training_texts": 0
     },
     "en": {
-      "model_sha256": "f414b707d7aa35c6fff11851a047f0ef4df997139f9a949eff50c4c451d7bde4",
+      "model_sha256": "a3dd9dc3216445c70574982ad7b2515e02830e1a8c0f2ad841cf2c2eb2c56d69",
       "training_sources": [
-        "CEAS_08.csv",
-        "Enron.csv",
-        "Ling.csv",
-        "Nazario.csv",
-        "Nigerian_Fraud.csv",
-        "phishing_email.csv",
-        "SpamAssasin.csv"
+        "Naser Abdullah Alam et al., Phishing Email Dataset"
       ],
+      "training_protocol": {
+        "protocol_id": "tfg-reproducible-v1",
+        "random_state": 42,
+        "normalization": "Unicode NFKC, espacios colapsados y casefold solo para detectar igualdad exacta.",
+        "conflicts": "Se retira el grupo entero cuando un mismo texto tiene etiquetas opuestas.",
+        "split_method": "División estratificada 80/20 después de deduplicar.",
+        "training": {
+          "rows": 65661,
+          "phishing": 34275,
+          "legitimate": 31386
+        },
+        "test": {
+          "rows": 16416,
+          "phishing": 8569,
+          "legitimate": 7847
+        },
+        "training_fingerprint": "c08cd6575cf6c5b4a5320860aa3c76077bd1994195717d00aec2902c5fb5ea34",
+        "test_fingerprint": "2ee6f2a9841a0406f122238fd97e18ea980fb3de5e2ca54e48f6184ed9a7f5d8",
+        "cleaning": {
+          "raw_rows": 82485,
+          "clean_rows": 82077,
+          "removed_duplicate_rows": 408,
+          "removed_conflicting_rows": 0,
+          "conflicting_groups": 0,
+          "removed_overlap_rows": 0,
+          "phishing_rows": 42844,
+          "legitimate_rows": 39233
+        },
+        "sources": {
+          "en_kaggle_merged": {
+            "sha256": "73a5c5410baf46ed69517fedfd37910f2e93777dc504b73ea483bc16be3a69d1",
+            "repository": "https://www.kaggle.com/datasets/naserabdullahalam/phishing-email-dataset"
+          }
+        }
+      },
       "embedded_training_texts": 0
     }
   },
   "independence": {
     "confirmed": false,
-    "reason": "Los artefactos no conservan los textos de entrenamiento y la ficha identifica el origen como un benchmark de correo de 2020. No puede descartarse solapamiento con Nazario u otras fuentes declaradas por el modelo EN."
+    "reason": "El protocolo inglés ya fija y deduplica el CSV agregado usado para entrenar, pero DIFrauD remite a un benchmark histórico de 2020. No puede descartarse que alguna de sus fuentes originales aparezca también en aquel agregado."
   },
   "results": {
     "heuristico": {
       "metrics": {
         "n": 1528,
         "tp": 0,
-        "tn": 919,
-        "fp": 1,
+        "tn": 918,
+        "fp": 2,
         "fn": 608,
-        "accuracy": 0.6014,
+        "accuracy": 0.6008,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "balanced_accuracy": 0.4995
+        "balanced_accuracy": 0.4989
       },
       "misclassified": [
         {
@@ -227,6 +295,12 @@
           "label": 1,
           "prediction": 0,
           "risk_score": 0.0
+        },
+        {
+          "id": "difraud-8353076dbe2fc940",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 22.0
         },
         {
           "id": "difraud-ccf852fc6e71b251",
@@ -3725,31 +3799,43 @@
     "neural": {
       "metrics": {
         "n": 1528,
-        "tp": 589,
-        "tn": 797,
-        "fp": 123,
-        "fn": 19,
-        "accuracy": 0.9071,
-        "precision": 0.8272,
-        "recall": 0.9688,
-        "f1": 0.8924,
-        "balanced_accuracy": 0.9175
+        "tp": 570,
+        "tn": 781,
+        "fp": 139,
+        "fn": 38,
+        "accuracy": 0.8842,
+        "precision": 0.8039,
+        "recall": 0.9375,
+        "f1": 0.8656,
+        "balanced_accuracy": 0.8932
       },
       "misclassified": [
         {
           "id": "difraud-fe0de296726c3966",
           "label": 0,
           "prediction": 1,
-          "risk_score": 98.5
+          "risk_score": 99.7
+        },
+        {
+          "id": "difraud-6e89a0bca6c2aede",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 66.7
+        },
+        {
+          "id": "difraud-c7442fad700a6ce2",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.1
         },
         {
           "id": "difraud-ec371f6a01551988",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.9
         },
         {
-          "id": "difraud-171f1d84f723d665",
+          "id": "difraud-063efe86cfba023b",
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
@@ -3758,37 +3844,37 @@
           "id": "difraud-a4c17435064e3bcc",
           "label": 0,
           "prediction": 1,
-          "risk_score": 98.7
+          "risk_score": 99.6
         },
         {
           "id": "difraud-06431fd9fe593f20",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 92.0
+        },
+        {
+          "id": "difraud-b98d13deee618843",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 26.0
         },
         {
           "id": "difraud-efc123f31ddde4f8",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
-        },
-        {
-          "id": "difraud-9ddd61effdc86bdb",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 77.2
         },
         {
           "id": "difraud-cc9143cdeb107ab9",
           "label": 1,
           "prediction": 0,
-          "risk_score": 0.6
+          "risk_score": 0.0
         },
         {
-          "id": "difraud-9c006f0c43e3bea7",
+          "id": "difraud-62c0b8c198af0d2f",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 29.4
         },
         {
           "id": "difraud-f63ef573256bc699",
@@ -3800,13 +3886,13 @@
           "id": "difraud-20902406aac10971",
           "label": 1,
           "prediction": 0,
-          "risk_score": 23.2
+          "risk_score": 0.1
         },
         {
           "id": "difraud-e0909edde60bcee0",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.9
+          "risk_score": 100.0
         },
         {
           "id": "difraud-1238dd1698e04375",
@@ -3815,10 +3901,22 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-80f99224323b869f",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.5
+          "id": "difraud-89a4294fc522c76e",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "difraud-12e33a6a053e8ffb",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 12.8
+        },
+        {
+          "id": "difraud-6170f2060db9f3f3",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.1
         },
         {
           "id": "difraud-9d7257f74546c350",
@@ -3830,7 +3928,7 @@
           "id": "difraud-bc8f7f90d4bfc24d",
           "label": 1,
           "prediction": 0,
-          "risk_score": 0.4
+          "risk_score": 14.0
         },
         {
           "id": "difraud-0234be6ca8eac0c1",
@@ -3842,22 +3940,16 @@
           "id": "difraud-b4138051bfc7c5a0",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.8
         },
         {
           "id": "difraud-dcdd004c683971e4",
           "label": 0,
           "prediction": 1,
-          "risk_score": 98.8
+          "risk_score": 100.0
         },
         {
           "id": "difraud-4fa99f77d7b589dc",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.9
-        },
-        {
-          "id": "difraud-4fec17be22423142",
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
@@ -3869,16 +3961,40 @@
           "risk_score": 100.0
         },
         {
+          "id": "difraud-b4fdc4beeb279ef3",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 98.5
+        },
+        {
+          "id": "difraud-89820d332e35ebd1",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.7
+        },
+        {
+          "id": "difraud-d3903943bf557f72",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 88.2
+        },
+        {
           "id": "difraud-3556e2e42c98e0ec",
           "label": 1,
           "prediction": 0,
-          "risk_score": 0.4
+          "risk_score": 0.5
+        },
+        {
+          "id": "difraud-1d244835e950cd96",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 26.6
         },
         {
           "id": "difraud-6583a050d562c6b3",
           "label": 0,
           "prediction": 1,
-          "risk_score": 34.6
+          "risk_score": 33.0
         },
         {
           "id": "difraud-c9dc1307224e0730",
@@ -3890,19 +4006,31 @@
           "id": "difraud-71013bf610938744",
           "label": 0,
           "prediction": 1,
-          "risk_score": 43.9
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-cb0d4c1df1dee5cf",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 40.6
         },
         {
           "id": "difraud-c852f9bfb6664d05",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 65.6
         },
         {
           "id": "difraud-7d439f70bce677ae",
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
+        },
+        {
+          "id": "difraud-bdd117f0658d8b60",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 67.8
         },
         {
           "id": "difraud-6b4e8872cf6199a5",
@@ -3926,19 +4054,19 @@
           "id": "difraud-03251c30e0873a10",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.8
-        },
-        {
-          "id": "difraud-3edd62148b932b64",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 76.4
+          "risk_score": 99.5
         },
         {
           "id": "difraud-120bb285542bee42",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.0
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-7b0218f311e3bbdd",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 96.3
         },
         {
           "id": "difraud-0c102bcaf94deec6",
@@ -3947,22 +4075,22 @@
           "risk_score": 99.9
         },
         {
+          "id": "difraud-c74f3b61adf74955",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 50.2
+        },
+        {
           "id": "difraud-15f0de1db2d40818",
           "label": 0,
           "prediction": 1,
-          "risk_score": 81.8
-        },
-        {
-          "id": "difraud-234dca5945a7e9dd",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.2
+          "risk_score": 100.0
         },
         {
           "id": "difraud-cb9371c24a6b6e39",
           "label": 0,
           "prediction": 1,
-          "risk_score": 41.8
+          "risk_score": 92.1
         },
         {
           "id": "difraud-68fb1d5a9503817b",
@@ -3971,16 +4099,10 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-593c52c0e877e848",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 65.1
-        },
-        {
           "id": "difraud-e6494283d5cb812f",
           "label": 0,
           "prediction": 1,
-          "risk_score": 54.0
+          "risk_score": 99.3
         },
         {
           "id": "difraud-a6d5ef50592f4308",
@@ -3989,16 +4111,10 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-2baeb6f099d79f5e",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 83.8
-        },
-        {
           "id": "difraud-1a16c39f44e66a0e",
           "label": 0,
           "prediction": 1,
-          "risk_score": 93.5
+          "risk_score": 99.9
         },
         {
           "id": "difraud-3dbc2d9c410a9f02",
@@ -4013,16 +4129,28 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-466555f41893a0ea",
+          "id": "difraud-632b2222321a8459",
           "label": 0,
           "prediction": 1,
-          "risk_score": 35.0
+          "risk_score": 100.0
         },
         {
           "id": "difraud-fe03c86e153316cc",
           "label": 0,
           "prediction": 1,
-          "risk_score": 32.3
+          "risk_score": 26.3
+        },
+        {
+          "id": "difraud-69f60744dbc557c1",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "difraud-29829938ee66016d",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 1.5
         },
         {
           "id": "difraud-688e400f164a10ed",
@@ -4031,10 +4159,10 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-409edc6ea10883a0",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 98.3
+          "id": "difraud-ed38074f5fc09fb8",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 2.1
         },
         {
           "id": "difraud-853303f6d0805a73",
@@ -4043,16 +4171,34 @@
           "risk_score": 0.1
         },
         {
-          "id": "difraud-45b0282498597a05",
+          "id": "difraud-52565276f882d913",
           "label": 0,
           "prediction": 1,
-          "risk_score": 80.5
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-7e4f3e0d0f4f9e93",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.9
         },
         {
           "id": "difraud-c53cda82b7b984d3",
           "label": 0,
           "prediction": 1,
-          "risk_score": 38.6
+          "risk_score": 94.6
+        },
+        {
+          "id": "difraud-031a3cfb225740f6",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 44.0
+        },
+        {
+          "id": "difraud-7c86b42bde57e3f9",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 100.0
         },
         {
           "id": "difraud-d4590f8aff5351a8",
@@ -4061,28 +4207,22 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-9841d8b9c6affcfb",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 100.0
+          "id": "difraud-0ee36291ab1a3208",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.3
         },
         {
           "id": "difraud-0ab18d369bbfe01e",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.7
         },
         {
           "id": "difraud-c200ecc6e9da1557",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
-        },
-        {
-          "id": "difraud-4f71236a89cc51cc",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 98.1
+          "risk_score": 99.7
         },
         {
           "id": "difraud-9dae5b7cb24a73b9",
@@ -4097,7 +4237,25 @@
           "risk_score": 100.0
         },
         {
+          "id": "difraud-33f80dbfc406134f",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 98.9
+        },
+        {
           "id": "difraud-81b4a341659f765e",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-c354786d229e13e4",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 24.1
+        },
+        {
+          "id": "difraud-6dc92b9256477e16",
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
@@ -4106,19 +4264,19 @@
           "id": "difraud-192da971e912c78c",
           "label": 0,
           "prediction": 1,
-          "risk_score": 72.3
+          "risk_score": 99.5
         },
         {
           "id": "difraud-f09737c3f1fdb048",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 95.6
         },
         {
-          "id": "difraud-0d99f7e10ecb590f",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 1.4
+          "id": "difraud-bd06ce64bc04c5d2",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.9
         },
         {
           "id": "difraud-231a40322c289972",
@@ -4130,73 +4288,85 @@
           "id": "difraud-f5525d26c8150689",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.4
-        },
-        {
-          "id": "difraud-d4ecaac386280a51",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.0
         },
         {
           "id": "difraud-e24c0bed6cf200b4",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.3
+          "risk_score": 96.4
         },
         {
-          "id": "difraud-fb3947499860c85a",
+          "id": "difraud-2d4502ff43b61a81",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.4
+        },
+        {
+          "id": "difraud-01e680f06e487f8f",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.9
+          "risk_score": 54.7
         },
         {
           "id": "difraud-765201793b75b03b",
           "label": 0,
           "prediction": 1,
-          "risk_score": 70.7
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-297be1fab22f1e53",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 14.5
         },
         {
           "id": "difraud-6e844796f1092fdc",
           "label": 0,
           "prediction": 1,
-          "risk_score": 97.1
+          "risk_score": 100.0
         },
         {
-          "id": "difraud-7fe397595a65e2cb",
+          "id": "difraud-23eb10e029360bb0",
           "label": 0,
           "prediction": 1,
-          "risk_score": 60.9
+          "risk_score": 100.0
         },
         {
-          "id": "difraud-84eb695bb8b4d460",
+          "id": "difraud-d48993b476769bd1",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.9
+        },
+        {
+          "id": "difraud-6a1efecbe8829ff3",
           "label": 1,
           "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 11.4
         },
         {
-          "id": "difraud-a28901f28ae0e000",
+          "id": "difraud-b18da75cd97c7cf2",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.7
+          "risk_score": 98.9
         },
         {
           "id": "difraud-211e55e0a95fda5e",
           "label": 0,
           "prediction": 1,
-          "risk_score": 88.9
+          "risk_score": 99.8
         },
         {
           "id": "difraud-528b5443f276f3fc",
           "label": 0,
           "prediction": 1,
-          "risk_score": 95.1
+          "risk_score": 100.0
         },
         {
           "id": "difraud-53be38b2a3eec434",
           "label": 0,
           "prediction": 1,
-          "risk_score": 79.3
+          "risk_score": 41.7
         },
         {
           "id": "difraud-443b7e7fca2ffc13",
@@ -4205,22 +4375,34 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-b57df77f6ecd807f",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.3
+          "id": "difraud-b1735fbbdd241914",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "difraud-68211a6cabb35ed4",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.1
         },
         {
           "id": "difraud-f954f073e02d1993",
           "label": 1,
           "prediction": 0,
-          "risk_score": 12.1
+          "risk_score": 0.0
         },
         {
           "id": "difraud-be7c32eec2ce61ee",
           "label": 0,
           "prediction": 1,
-          "risk_score": 40.7
+          "risk_score": 93.0
+        },
+        {
+          "id": "difraud-13826b33b238b067",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.9
         },
         {
           "id": "difraud-8611a3445ea7eab3",
@@ -4229,16 +4411,34 @@
           "risk_score": 100.0
         },
         {
+          "id": "difraud-70db6ab98fc8eb01",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 92.7
+        },
+        {
           "id": "difraud-c83772923aa054fd",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.9
+          "risk_score": 100.0
         },
         {
-          "id": "difraud-491f0751bcbe636e",
+          "id": "difraud-17cc9f8359d5ce0d",
           "label": 1,
           "prediction": 0,
-          "risk_score": 2.4
+          "risk_score": 10.8
+        },
+        {
+          "id": "difraud-29ca0f6ec9686c80",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.9
+        },
+        {
+          "id": "difraud-8f4488b1e73fa5aa",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 54.5
         },
         {
           "id": "difraud-0a45dfc71a7d31a0",
@@ -4250,19 +4450,43 @@
           "id": "difraud-bb4d9173fb188040",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 98.1
         },
         {
           "id": "difraud-6dd8c4acbc9553d1",
           "label": 0,
           "prediction": 1,
-          "risk_score": 54.2
+          "risk_score": 84.8
+        },
+        {
+          "id": "difraud-3d44fff3b9529929",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.5
         },
         {
           "id": "difraud-699c4fc1eb5c3849",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.1
+          "risk_score": 98.9
+        },
+        {
+          "id": "difraud-29e4a902fce33d75",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.2
+        },
+        {
+          "id": "difraud-5c6b07d99c0f7627",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 40.7
+        },
+        {
+          "id": "difraud-58c17edcb55933b8",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 98.8
         },
         {
           "id": "difraud-22f37eeaa0fc01c7",
@@ -4274,25 +4498,25 @@
           "id": "difraud-ad96c687e0c1bf18",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.7
+          "risk_score": 98.8
         },
         {
           "id": "difraud-1149d6bca9308b01",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 34.3
         },
         {
-          "id": "difraud-93ae3fdf4baf47db",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.9
+          "id": "difraud-d3d468cb1980d7db",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 16.3
         },
         {
           "id": "difraud-66c639528546bc6c",
           "label": 0,
           "prediction": 1,
-          "risk_score": 57.6
+          "risk_score": 94.8
         },
         {
           "id": "difraud-1dd79382f421ee74",
@@ -4304,13 +4528,13 @@
           "id": "difraud-cd022c14ee8e90fb",
           "label": 0,
           "prediction": 1,
-          "risk_score": 98.1
+          "risk_score": 100.0
         },
         {
           "id": "difraud-a11c509d7a132688",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.7
         },
         {
           "id": "difraud-3575efea6044b885",
@@ -4322,13 +4546,19 @@
           "id": "difraud-fd375f061f319f86",
           "label": 0,
           "prediction": 1,
-          "risk_score": 76.4
+          "risk_score": 54.1
+        },
+        {
+          "id": "difraud-d80f3aca32894dce",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 1.7
         },
         {
           "id": "difraud-2aa93fa9930e6010",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.9
         },
         {
           "id": "difraud-8a75649df1961c26",
@@ -4340,49 +4570,37 @@
           "id": "difraud-9c17946f114d20b8",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.2
         },
         {
           "id": "difraud-91bbe01c689d9b2c",
           "label": 0,
           "prediction": 1,
-          "risk_score": 71.7
+          "risk_score": 99.9
         },
         {
-          "id": "difraud-bb53acbe804fd8a3",
+          "id": "difraud-e182febb9ffbf758",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.9
         },
         {
-          "id": "difraud-19b357402b1656af",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 90.2
+          "id": "difraud-5a2248f81246179e",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 2.2
         },
         {
           "id": "difraud-5597330ffb599f46",
           "label": 0,
           "prediction": 1,
-          "risk_score": 66.2
-        },
-        {
-          "id": "difraud-ed34b6a85d0378b1",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 35.1
+          "risk_score": 34.0
         },
         {
           "id": "difraud-0b431ce1fb65f2fb",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
-        },
-        {
-          "id": "difraud-d74133268fd21a42",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.6
+          "risk_score": 99.9
         },
         {
           "id": "difraud-77bdb8330ef5cbdf",
@@ -4391,34 +4609,52 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-79deaeac5acaf3e6",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.5
+          "id": "difraud-71067264f6d63161",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 15.2
         },
         {
           "id": "difraud-bc3cb8c71418caf0",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.1
+          "risk_score": 100.0
         },
         {
           "id": "difraud-60793d84b28a6326",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.5
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-59a3a5ce3948843a",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 63.9
         },
         {
           "id": "difraud-ecc14a41165baa27",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.8
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-df727fcba6fe2aca",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.1
         },
         {
           "id": "difraud-d42f47b5099f9526",
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
+        },
+        {
+          "id": "difraud-153c67a72924fa5d",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 38.3
         },
         {
           "id": "difraud-2561a7b46f592a57",
@@ -4430,7 +4666,7 @@
           "id": "difraud-ec0276c0cb4170b5",
           "label": 0,
           "prediction": 1,
-          "risk_score": 90.9
+          "risk_score": 95.3
         },
         {
           "id": "difraud-a6e37fb400e77897",
@@ -4442,49 +4678,103 @@
           "id": "difraud-094baf1b8315c3e4",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.9
+          "risk_score": 100.0
         },
         {
-          "id": "difraud-cd6be0df351f3018",
+          "id": "difraud-2b7a94ccd596abf3",
           "label": 0,
           "prediction": 1,
-          "risk_score": 50.6
+          "risk_score": 57.1
         },
         {
-          "id": "difraud-46f6fe1c35b7a724",
+          "id": "difraud-e908ff2c25527af7",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 21.5
+        },
+        {
+          "id": "difraud-ce6f759fa603c2bb",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.8
+        },
+        {
+          "id": "difraud-c5aacee1a1db2eb4",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 44.3
+        },
+        {
+          "id": "difraud-37d658b02f7df36e",
           "label": 1,
           "prediction": 0,
-          "risk_score": 7.5
+          "risk_score": 0.0
         },
         {
-          "id": "difraud-c610d7feb6781a11",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.7
+          "id": "difraud-964175611e1dc8b9",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 5.0
         },
         {
-          "id": "difraud-a0caa65c1c0b4df8",
+          "id": "difraud-e04980aac22154d2",
           "label": 0,
           "prediction": 1,
-          "risk_score": 94.1
+          "risk_score": 99.6
+        },
+        {
+          "id": "difraud-a164e9739076f2c0",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 1.5
+        },
+        {
+          "id": "difraud-62788fd9dbe9901b",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 9.2
+        },
+        {
+          "id": "difraud-ef98a40771c74806",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 24.8
+        },
+        {
+          "id": "difraud-c0ac238130829aa7",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 100.0
         },
         {
           "id": "difraud-68e0e7b815d0c6ae",
           "label": 0,
           "prediction": 1,
-          "risk_score": 48.2
+          "risk_score": 92.8
         },
         {
           "id": "difraud-cc30b76fbdbf1ecd",
           "label": 1,
           "prediction": 0,
-          "risk_score": 0.3
+          "risk_score": 0.0
+        },
+        {
+          "id": "difraud-679bc24ff247de25",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 83.1
+        },
+        {
+          "id": "difraud-a3c821a9d1852c90",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.5
         },
         {
           "id": "difraud-e38761f198ba2db1",
           "label": 0,
           "prediction": 1,
-          "risk_score": 80.0
+          "risk_score": 100.0
         },
         {
           "id": "difraud-d87dbb49b30538f3",
@@ -4496,25 +4786,13 @@
           "id": "difraud-c7525533611a7546",
           "label": 0,
           "prediction": 1,
-          "risk_score": 86.2
-        },
-        {
-          "id": "difraud-91f343588e334670",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 65.4
+          "risk_score": 97.0
         },
         {
           "id": "difraud-78a2ba1dcd874259",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.5
-        },
-        {
-          "id": "difraud-d5f155a85f35f39d",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 5.0
+          "risk_score": 100.0
         },
         {
           "id": "difraud-e50dc64b7f280614",
@@ -4526,28 +4804,28 @@
           "id": "difraud-f05d9e6b34a659e4",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.9
         },
         {
           "id": "difraud-b4abf967853608f0",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 92.0
         },
         {
           "id": "difraud-c9b1370db45f2d3d",
           "label": 0,
           "prediction": 1,
-          "risk_score": 97.4
-        },
-        {
-          "id": "difraud-e4d3760a5d1fabe9",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 67.8
+          "risk_score": 100.0
         },
         {
           "id": "difraud-d0e928477bfd7c48",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.9
+        },
+        {
+          "id": "difraud-a16b41be81dbd67b",
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
@@ -4562,62 +4840,80 @@
           "id": "difraud-ece411cb5ec6cf17",
           "label": 0,
           "prediction": 1,
-          "risk_score": 44.5
+          "risk_score": 68.0
+        },
+        {
+          "id": "difraud-fa83a18e0e0bd51b",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
         },
         {
           "id": "difraud-b87bf99b1e387c16",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 27.1
         },
         {
-          "id": "difraud-428fac69dc248964",
+          "id": "difraud-7a550f2dab7b36ab",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 95.7
         },
         {
           "id": "difraud-be63bc5f52e4ed97",
           "label": 1,
           "prediction": 0,
-          "risk_score": 0.8
+          "risk_score": 0.3
         },
         {
-          "id": "difraud-c3a20882d1a6772a",
+          "id": "difraud-63ccfe90fb13a4e4",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.3
+          "risk_score": 100.0
         }
       ]
     },
     "combinado": {
       "metrics": {
         "n": 1528,
-        "tp": 586,
-        "tn": 801,
-        "fp": 119,
-        "fn": 22,
-        "accuracy": 0.9077,
-        "precision": 0.8312,
-        "recall": 0.9638,
-        "f1": 0.8926,
-        "balanced_accuracy": 0.9172
+        "tp": 568,
+        "tn": 792,
+        "fp": 128,
+        "fn": 40,
+        "accuracy": 0.8901,
+        "precision": 0.8161,
+        "recall": 0.9342,
+        "f1": 0.8712,
+        "balanced_accuracy": 0.8975
       },
       "misclassified": [
         {
           "id": "difraud-fe0de296726c3966",
           "label": 0,
           "prediction": 1,
-          "risk_score": 98.5
+          "risk_score": 99.7
+        },
+        {
+          "id": "difraud-6e89a0bca6c2aede",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 36.7
+        },
+        {
+          "id": "difraud-c7442fad700a6ce2",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.1
         },
         {
           "id": "difraud-ec371f6a01551988",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.9
         },
         {
-          "id": "difraud-171f1d84f723d665",
+          "id": "difraud-063efe86cfba023b",
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
@@ -4626,37 +4922,25 @@
           "id": "difraud-a4c17435064e3bcc",
           "label": 0,
           "prediction": 1,
-          "risk_score": 98.7
+          "risk_score": 99.6
         },
         {
           "id": "difraud-06431fd9fe593f20",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 92.0
         },
         {
           "id": "difraud-efc123f31ddde4f8",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
-        },
-        {
-          "id": "difraud-9ddd61effdc86bdb",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.0
+          "risk_score": 77.2
         },
         {
           "id": "difraud-cc9143cdeb107ab9",
           "label": 1,
           "prediction": 0,
-          "risk_score": 0.4
-        },
-        {
-          "id": "difraud-9c006f0c43e3bea7",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 0.0
         },
         {
           "id": "difraud-f63ef573256bc699",
@@ -4668,13 +4952,13 @@
           "id": "difraud-20902406aac10971",
           "label": 1,
           "prediction": 0,
-          "risk_score": 17.2
+          "risk_score": 2.8
         },
         {
           "id": "difraud-e0909edde60bcee0",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.9
+          "risk_score": 100.0
         },
         {
           "id": "difraud-1238dd1698e04375",
@@ -4683,10 +4967,22 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-80f99224323b869f",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.5
+          "id": "difraud-89a4294fc522c76e",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.0
+        },
+        {
+          "id": "difraud-12e33a6a053e8ffb",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 7.0
+        },
+        {
+          "id": "difraud-6170f2060db9f3f3",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 3.7
         },
         {
           "id": "difraud-9d7257f74546c350",
@@ -4698,7 +4994,7 @@
           "id": "difraud-bc8f7f90d4bfc24d",
           "label": 1,
           "prediction": 0,
-          "risk_score": 0.3
+          "risk_score": 7.7
         },
         {
           "id": "difraud-0234be6ca8eac0c1",
@@ -4710,22 +5006,16 @@
           "id": "difraud-b4138051bfc7c5a0",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.8
         },
         {
           "id": "difraud-dcdd004c683971e4",
           "label": 0,
           "prediction": 1,
-          "risk_score": 98.8
+          "risk_score": 100.0
         },
         {
           "id": "difraud-4fa99f77d7b589dc",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.9
-        },
-        {
-          "id": "difraud-4fec17be22423142",
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
@@ -4735,6 +5025,24 @@
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
+        },
+        {
+          "id": "difraud-b4fdc4beeb279ef3",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 98.5
+        },
+        {
+          "id": "difraud-89820d332e35ebd1",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.7
+        },
+        {
+          "id": "difraud-d3903943bf557f72",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 88.2
         },
         {
           "id": "difraud-3556e2e42c98e0ec",
@@ -4752,19 +5060,31 @@
           "id": "difraud-71013bf610938744",
           "label": 0,
           "prediction": 1,
-          "risk_score": 28.5
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-cb0d4c1df1dee5cf",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 22.3
         },
         {
           "id": "difraud-c852f9bfb6664d05",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 36.1
         },
         {
           "id": "difraud-7d439f70bce677ae",
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
+        },
+        {
+          "id": "difraud-bdd117f0658d8b60",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 45.4
         },
         {
           "id": "difraud-6b4e8872cf6199a5",
@@ -4788,25 +5108,19 @@
           "id": "difraud-03251c30e0873a10",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.8
-        },
-        {
-          "id": "difraud-3edd62148b932b64",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 76.4
+          "risk_score": 99.5
         },
         {
           "id": "difraud-120bb285542bee42",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.0
+          "risk_score": 100.0
         },
         {
-          "id": "difraud-7ed646694cc19dfb",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 17.7
+          "id": "difraud-7b0218f311e3bbdd",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 96.3
         },
         {
           "id": "difraud-0c102bcaf94deec6",
@@ -4815,22 +5129,22 @@
           "risk_score": 99.9
         },
         {
+          "id": "difraud-c74f3b61adf74955",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 27.6
+        },
+        {
           "id": "difraud-15f0de1db2d40818",
           "label": 0,
           "prediction": 1,
-          "risk_score": 81.8
-        },
-        {
-          "id": "difraud-234dca5945a7e9dd",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.1
+          "risk_score": 100.0
         },
         {
           "id": "difraud-cb9371c24a6b6e39",
           "label": 0,
           "prediction": 1,
-          "risk_score": 27.2
+          "risk_score": 92.1
         },
         {
           "id": "difraud-68fb1d5a9503817b",
@@ -4839,16 +5153,10 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-593c52c0e877e848",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 47.9
-        },
-        {
           "id": "difraud-e6494283d5cb812f",
           "label": 0,
           "prediction": 1,
-          "risk_score": 35.1
+          "risk_score": 99.3
         },
         {
           "id": "difraud-a6d5ef50592f4308",
@@ -4857,16 +5165,10 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-2baeb6f099d79f5e",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 83.8
-        },
-        {
           "id": "difraud-1a16c39f44e66a0e",
           "label": 0,
           "prediction": 1,
-          "risk_score": 93.5
+          "risk_score": 99.9
         },
         {
           "id": "difraud-3dbc2d9c410a9f02",
@@ -4876,6 +5178,12 @@
         },
         {
           "id": "difraud-9b20c305ae1bb8de",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-632b2222321a8459",
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
@@ -4884,7 +5192,13 @@
           "id": "difraud-69f60744dbc557c1",
           "label": 1,
           "prediction": 0,
-          "risk_score": 17.0
+          "risk_score": 0.0
+        },
+        {
+          "id": "difraud-29829938ee66016d",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 3.5
         },
         {
           "id": "difraud-688e400f164a10ed",
@@ -4893,16 +5207,10 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-b71730e0349f4993",
+          "id": "difraud-ed38074f5fc09fb8",
           "label": 1,
           "prediction": 0,
-          "risk_score": 24.6
-        },
-        {
-          "id": "difraud-409edc6ea10883a0",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 98.3
+          "risk_score": 1.2
         },
         {
           "id": "difraud-853303f6d0805a73",
@@ -4911,10 +5219,34 @@
           "risk_score": 0.1
         },
         {
-          "id": "difraud-45b0282498597a05",
+          "id": "difraud-52565276f882d913",
           "label": 0,
           "prediction": 1,
-          "risk_score": 80.5
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-7e4f3e0d0f4f9e93",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.9
+        },
+        {
+          "id": "difraud-c53cda82b7b984d3",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 94.6
+        },
+        {
+          "id": "difraud-031a3cfb225740f6",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 24.2
+        },
+        {
+          "id": "difraud-7c86b42bde57e3f9",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 100.0
         },
         {
           "id": "difraud-d4590f8aff5351a8",
@@ -4923,28 +5255,22 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-9841d8b9c6affcfb",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 100.0
+          "id": "difraud-0ee36291ab1a3208",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.2
         },
         {
           "id": "difraud-0ab18d369bbfe01e",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.7
         },
         {
           "id": "difraud-c200ecc6e9da1557",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
-        },
-        {
-          "id": "difraud-4f71236a89cc51cc",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 98.1
+          "risk_score": 99.7
         },
         {
           "id": "difraud-9dae5b7cb24a73b9",
@@ -4959,7 +5285,19 @@
           "risk_score": 100.0
         },
         {
+          "id": "difraud-33f80dbfc406134f",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 98.9
+        },
+        {
           "id": "difraud-81b4a341659f765e",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-6dc92b9256477e16",
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
@@ -4968,19 +5306,19 @@
           "id": "difraud-192da971e912c78c",
           "label": 0,
           "prediction": 1,
-          "risk_score": 72.3
+          "risk_score": 99.5
         },
         {
           "id": "difraud-f09737c3f1fdb048",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 95.6
         },
         {
-          "id": "difraud-0d99f7e10ecb590f",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 0.9
+          "id": "difraud-bd06ce64bc04c5d2",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.9
         },
         {
           "id": "difraud-231a40322c289972",
@@ -4992,79 +5330,85 @@
           "id": "difraud-f5525d26c8150689",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.4
-        },
-        {
-          "id": "difraud-d4ecaac386280a51",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.0
         },
         {
           "id": "difraud-e24c0bed6cf200b4",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.3
+          "risk_score": 96.4
         },
         {
-          "id": "difraud-fb3947499860c85a",
+          "id": "difraud-2d4502ff43b61a81",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 2.9
+        },
+        {
+          "id": "difraud-01e680f06e487f8f",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.9
+          "risk_score": 33.7
         },
         {
           "id": "difraud-765201793b75b03b",
           "label": 0,
           "prediction": 1,
-          "risk_score": 70.7
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-297be1fab22f1e53",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 8.0
         },
         {
           "id": "difraud-6e844796f1092fdc",
           "label": 0,
           "prediction": 1,
-          "risk_score": 97.1
+          "risk_score": 100.0
         },
         {
-          "id": "difraud-7fe397595a65e2cb",
+          "id": "difraud-23eb10e029360bb0",
           "label": 0,
           "prediction": 1,
-          "risk_score": 39.6
+          "risk_score": 100.0
         },
         {
-          "id": "difraud-84eb695bb8b4d460",
+          "id": "difraud-d48993b476769bd1",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.9
+        },
+        {
+          "id": "difraud-6a1efecbe8829ff3",
           "label": 1,
           "prediction": 0,
-          "risk_score": 0.0
-        },
-        {
-          "id": "difraud-a28901f28ae0e000",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.7
+          "risk_score": 6.3
         },
         {
           "id": "difraud-b18da75cd97c7cf2",
           "label": 0,
           "prediction": 1,
-          "risk_score": 70.0
+          "risk_score": 98.9
         },
         {
           "id": "difraud-211e55e0a95fda5e",
           "label": 0,
           "prediction": 1,
-          "risk_score": 88.9
+          "risk_score": 99.8
         },
         {
           "id": "difraud-528b5443f276f3fc",
           "label": 0,
           "prediction": 1,
-          "risk_score": 95.1
+          "risk_score": 100.0
         },
         {
           "id": "difraud-53be38b2a3eec434",
           "label": 0,
           "prediction": 1,
-          "risk_score": 79.3
+          "risk_score": 22.9
         },
         {
           "id": "difraud-443b7e7fca2ffc13",
@@ -5073,22 +5417,34 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-b57df77f6ecd807f",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.3
+          "id": "difraud-b1735fbbdd241914",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 3.6
+        },
+        {
+          "id": "difraud-68211a6cabb35ed4",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.1
         },
         {
           "id": "difraud-f954f073e02d1993",
           "label": 1,
           "prediction": 0,
-          "risk_score": 10.7
+          "risk_score": 3.6
         },
         {
           "id": "difraud-be7c32eec2ce61ee",
           "label": 0,
           "prediction": 1,
-          "risk_score": 26.5
+          "risk_score": 93.0
+        },
+        {
+          "id": "difraud-13826b33b238b067",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.9
         },
         {
           "id": "difraud-8611a3445ea7eab3",
@@ -5097,16 +5453,34 @@
           "risk_score": 100.0
         },
         {
+          "id": "difraud-70db6ab98fc8eb01",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 92.7
+        },
+        {
           "id": "difraud-c83772923aa054fd",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.9
+          "risk_score": 100.0
         },
         {
-          "id": "difraud-491f0751bcbe636e",
+          "id": "difraud-17cc9f8359d5ce0d",
           "label": 1,
           "prediction": 0,
-          "risk_score": 1.6
+          "risk_score": 5.9
+        },
+        {
+          "id": "difraud-29ca0f6ec9686c80",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 3.2
+        },
+        {
+          "id": "difraud-8f4488b1e73fa5aa",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 30.0
         },
         {
           "id": "difraud-0a45dfc71a7d31a0",
@@ -5118,19 +5492,43 @@
           "id": "difraud-bb4d9173fb188040",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 98.1
         },
         {
           "id": "difraud-6dd8c4acbc9553d1",
           "label": 0,
           "prediction": 1,
-          "risk_score": 35.2
+          "risk_score": 84.8
+        },
+        {
+          "id": "difraud-3d44fff3b9529929",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.5
         },
         {
           "id": "difraud-699c4fc1eb5c3849",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.1
+          "risk_score": 98.9
+        },
+        {
+          "id": "difraud-29e4a902fce33d75",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 2.8
+        },
+        {
+          "id": "difraud-5c6b07d99c0f7627",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 22.4
+        },
+        {
+          "id": "difraud-58c17edcb55933b8",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 98.8
         },
         {
           "id": "difraud-22f37eeaa0fc01c7",
@@ -5142,25 +5540,19 @@
           "id": "difraud-ad96c687e0c1bf18",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.7
+          "risk_score": 98.8
         },
         {
-          "id": "difraud-1149d6bca9308b01",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 100.0
-        },
-        {
-          "id": "difraud-93ae3fdf4baf47db",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.9
+          "id": "difraud-d3d468cb1980d7db",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 9.0
         },
         {
           "id": "difraud-66c639528546bc6c",
           "label": 0,
           "prediction": 1,
-          "risk_score": 37.4
+          "risk_score": 94.8
         },
         {
           "id": "difraud-1dd79382f421ee74",
@@ -5172,13 +5564,13 @@
           "id": "difraud-cd022c14ee8e90fb",
           "label": 0,
           "prediction": 1,
-          "risk_score": 98.1
+          "risk_score": 100.0
         },
         {
           "id": "difraud-a11c509d7a132688",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.7
         },
         {
           "id": "difraud-3575efea6044b885",
@@ -5190,13 +5582,19 @@
           "id": "difraud-fd375f061f319f86",
           "label": 0,
           "prediction": 1,
-          "risk_score": 76.4
+          "risk_score": 29.8
+        },
+        {
+          "id": "difraud-d80f3aca32894dce",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 3.6
         },
         {
           "id": "difraud-2aa93fa9930e6010",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.9
         },
         {
           "id": "difraud-8a75649df1961c26",
@@ -5208,43 +5606,31 @@
           "id": "difraud-9c17946f114d20b8",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.2
         },
         {
           "id": "difraud-91bbe01c689d9b2c",
           "label": 0,
           "prediction": 1,
-          "risk_score": 71.7
+          "risk_score": 99.9
         },
         {
-          "id": "difraud-bb53acbe804fd8a3",
+          "id": "difraud-e182febb9ffbf758",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.9
         },
         {
-          "id": "difraud-19b357402b1656af",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 90.2
-        },
-        {
-          "id": "difraud-5597330ffb599f46",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 44.4
+          "id": "difraud-5a2248f81246179e",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 1.2
         },
         {
           "id": "difraud-0b431ce1fb65f2fb",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
-        },
-        {
-          "id": "difraud-d74133268fd21a42",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.6
+          "risk_score": 99.9
         },
         {
           "id": "difraud-77bdb8330ef5cbdf",
@@ -5253,34 +5639,52 @@
           "risk_score": 100.0
         },
         {
-          "id": "difraud-79deaeac5acaf3e6",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.5
+          "id": "difraud-71067264f6d63161",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 11.1
         },
         {
           "id": "difraud-bc3cb8c71418caf0",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.1
+          "risk_score": 100.0
         },
         {
           "id": "difraud-60793d84b28a6326",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.5
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-59a3a5ce3948843a",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 35.1
         },
         {
           "id": "difraud-ecc14a41165baa27",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.8
+          "risk_score": 100.0
+        },
+        {
+          "id": "difraud-df727fcba6fe2aca",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.1
         },
         {
           "id": "difraud-d42f47b5099f9526",
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
+        },
+        {
+          "id": "difraud-153c67a72924fa5d",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 21.1
         },
         {
           "id": "difraud-2561a7b46f592a57",
@@ -5292,7 +5696,7 @@
           "id": "difraud-ec0276c0cb4170b5",
           "label": 0,
           "prediction": 1,
-          "risk_score": 90.9
+          "risk_score": 95.3
         },
         {
           "id": "difraud-a6e37fb400e77897",
@@ -5304,49 +5708,103 @@
           "id": "difraud-094baf1b8315c3e4",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.9
+          "risk_score": 100.0
         },
         {
-          "id": "difraud-cd6be0df351f3018",
+          "id": "difraud-2b7a94ccd596abf3",
           "label": 0,
           "prediction": 1,
-          "risk_score": 32.9
+          "risk_score": 35.0
         },
         {
-          "id": "difraud-46f6fe1c35b7a724",
+          "id": "difraud-ce6f759fa603c2bb",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.8
+        },
+        {
+          "id": "difraud-c5aacee1a1db2eb4",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 24.4
+        },
+        {
+          "id": "difraud-37d658b02f7df36e",
           "label": 1,
           "prediction": 0,
-          "risk_score": 4.9
+          "risk_score": 0.0
         },
         {
-          "id": "difraud-c610d7feb6781a11",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 99.7
+          "id": "difraud-964175611e1dc8b9",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 5.5
         },
         {
-          "id": "difraud-a0caa65c1c0b4df8",
+          "id": "difraud-e04980aac22154d2",
           "label": 0,
           "prediction": 1,
-          "risk_score": 94.1
+          "risk_score": 99.6
+        },
+        {
+          "id": "difraud-72e11ddfab4929e7",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 18.3
+        },
+        {
+          "id": "difraud-a164e9739076f2c0",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 0.8
+        },
+        {
+          "id": "difraud-62788fd9dbe9901b",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 5.1
+        },
+        {
+          "id": "difraud-e383ebd5aa541122",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 12.8
+        },
+        {
+          "id": "difraud-c0ac238130829aa7",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 100.0
         },
         {
           "id": "difraud-68e0e7b815d0c6ae",
           "label": 0,
           "prediction": 1,
-          "risk_score": 31.3
+          "risk_score": 92.8
         },
         {
           "id": "difraud-cc30b76fbdbf1ecd",
           "label": 1,
           "prediction": 0,
-          "risk_score": 0.2
+          "risk_score": 0.0
+        },
+        {
+          "id": "difraud-679bc24ff247de25",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 83.1
+        },
+        {
+          "id": "difraud-a3c821a9d1852c90",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.5
         },
         {
           "id": "difraud-e38761f198ba2db1",
           "label": 0,
           "prediction": 1,
-          "risk_score": 80.0
+          "risk_score": 100.0
         },
         {
           "id": "difraud-d87dbb49b30538f3",
@@ -5358,25 +5816,13 @@
           "id": "difraud-c7525533611a7546",
           "label": 0,
           "prediction": 1,
-          "risk_score": 86.2
-        },
-        {
-          "id": "difraud-91f343588e334670",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 42.5
+          "risk_score": 97.0
         },
         {
           "id": "difraud-78a2ba1dcd874259",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.5
-        },
-        {
-          "id": "difraud-d5f155a85f35f39d",
-          "label": 1,
-          "prediction": 0,
-          "risk_score": 5.3
+          "risk_score": 100.0
         },
         {
           "id": "difraud-e50dc64b7f280614",
@@ -5388,28 +5834,28 @@
           "id": "difraud-f05d9e6b34a659e4",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 99.9
         },
         {
           "id": "difraud-b4abf967853608f0",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 92.0
         },
         {
           "id": "difraud-c9b1370db45f2d3d",
           "label": 0,
           "prediction": 1,
-          "risk_score": 97.4
-        },
-        {
-          "id": "difraud-e4d3760a5d1fabe9",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 44.1
+          "risk_score": 100.0
         },
         {
           "id": "difraud-d0e928477bfd7c48",
+          "label": 0,
+          "prediction": 1,
+          "risk_score": 99.9
+        },
+        {
+          "id": "difraud-a16b41be81dbd67b",
           "label": 0,
           "prediction": 1,
           "risk_score": 100.0
@@ -5424,31 +5870,31 @@
           "id": "difraud-ece411cb5ec6cf17",
           "label": 0,
           "prediction": 1,
-          "risk_score": 28.9
+          "risk_score": 37.4
         },
         {
-          "id": "difraud-b87bf99b1e387c16",
-          "label": 0,
-          "prediction": 1,
-          "risk_score": 100.0
+          "id": "difraud-fa83a18e0e0bd51b",
+          "label": 1,
+          "prediction": 0,
+          "risk_score": 3.6
         },
         {
-          "id": "difraud-428fac69dc248964",
+          "id": "difraud-7a550f2dab7b36ab",
           "label": 0,
           "prediction": 1,
-          "risk_score": 100.0
+          "risk_score": 95.7
         },
         {
           "id": "difraud-be63bc5f52e4ed97",
           "label": 1,
           "prediction": 0,
-          "risk_score": 0.5
+          "risk_score": 0.2
         },
         {
-          "id": "difraud-c3a20882d1a6772a",
+          "id": "difraud-63ccfe90fb13a4e4",
           "label": 0,
           "prediction": 1,
-          "risk_score": 99.3
+          "risk_score": 100.0
         }
       ]
     }

@@ -524,6 +524,12 @@ class AnalysisBackendService:
                             getattr(classifier, "training_sources", []) or []
                         ),
                         "training_columns": getattr(classifier, "training_columns", None),
+                        "model_format_version": getattr(
+                            classifier, "model_format_version", None
+                        ),
+                        "training_protocol": getattr(
+                            classifier, "training_protocol", {}
+                        ),
                     }
                 )
         with self._metadata_lock:

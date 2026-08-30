@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "sources": {
+    "es_hf_train": {
+      "file": "train.csv",
+      "language_directory_prefix": "espa",
+      "sha256": "e20d11338778bb40498552317081cf207f5060c8c0e0bc1fe7ab8b19d27fb011",
+      "repository": "https://huggingface.co/datasets/softecapps/spam_ham_spanish",
+      "citation": "softecapps/spam_ham_spanish, DOI 10.57967/hf/2264",
+      "license": "Apache-2.0",
+      "role": "training"
+    },
+    "es_hf_test": {
+      "file": "test.csv",
+      "language_directory_prefix": "espa",
+      "sha256": "aae65f9e17966729528a7f81eaf20f82a42865ef9c3002b7bba31f4c62eb4955",
+      "repository": "https://huggingface.co/datasets/softecapps/spam_ham_spanish",
+      "citation": "softecapps/spam_ham_spanish, DOI 10.57967/hf/2264",
+      "license": "Apache-2.0",
+      "role": "heldout_test"
+    },
+    "es_kaggle_train": {
+      "file": "dataset_renombrado.csv",
+      "language_directory_prefix": "espa",
+      "sha256": "adc52111076a655520585c14e28a924cdbdbb90fbfa549b5697a4f67da420524",
+      "repository": "https://www.kaggle.com/datasets/aldoivan/sms-spam-mexico-dataset-en-espaol-mexicano",
+      "citation": "Aldo Iván, SMS Spam Mexico - Dataset en Español Mexicano",
+      "license": "CC BY-SA 4.0",
+      "role": "training"
+    },
+    "en_kaggle_merged": {
+      "file": "phishing_email.csv",
+      "language_directory_prefix": "ingl",
+      "sha256": "73a5c5410baf46ed69517fedfd37910f2e93777dc504b73ea483bc16be3a69d1",
+      "repository": "https://www.kaggle.com/datasets/naserabdullahalam/phishing-email-dataset",
+      "citation": "Naser Abdullah Alam et al., Phishing Email Dataset",
+      "license": "CC BY-SA 4.0",
+      "role": "stratified_train_test_source",
+      "note": "CSV agregado de CEAS, Enron, Ling, Nazario, Nigerian Fraud y SpamAssassin; no se vuelven a añadir por separado."
+    },
+    "en_zenodo_validation": {
+      "file": "test.csv",
+      "language_directory_prefix": "ingl",
+      "sha256": "ad15f63cb8db2caaee33c442f1ff4488b9444530a4c42ab63bb580016b160bd3",
+      "repository": "https://zenodo.org/records/13474746",
+      "citation": "Miltchev, Rangelov y Genchev (2024), DOI 10.5281/zenodo.13474746",
+      "license": "No indicada en la ficha pública de Zenodo consultada el 31-08-2026",
+      "role": "secondary_external_validation"
+    }
+  }
+}

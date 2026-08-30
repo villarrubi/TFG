@@ -6,22 +6,22 @@
     "api_version": "1.0",
     "architecture": "client-server",
     "mode": "combinado",
-    "threshold": 26.0,
-    "heur_weight": 35,
-    "neural_weight": 65,
+    "threshold": 21.0,
+    "heur_weight": 45,
+    "neural_weight": 55,
     "high_confidence_threshold": 70.0,
     "models": {
       "es": {
         "language": "es",
         "available": true,
-        "version": "432905694ee1",
-        "size_bytes": 6439401
+        "version": "165e7c2bf292",
+        "size_bytes": 6371700
       },
       "en": {
         "language": "en",
         "available": true,
-        "version": "f414b707d7aa",
-        "size_bytes": 6335457
+        "version": "a3dd9dc32164",
+        "size_bytes": 6349517
       }
     }
   },
@@ -35,7 +35,7 @@
         "label": "phishing",
         "selected_mode": "combinado",
         "language": "es",
-        "risk_score": 76.0,
+        "risk_score": 76.3,
         "is_phishing": true,
         "active_signals": [
           "cambio_datos_bancarios",
@@ -46,8 +46,8 @@
         "model": {
           "language": "es",
           "available": true,
-          "version": "432905694ee1",
-          "size_bytes": 6439401,
+          "version": "165e7c2bf292",
+          "size_bytes": 6371700,
           "active_source": "artifact",
           "fallback": false
         }
@@ -68,8 +68,8 @@
         "model": {
           "language": "en",
           "available": true,
-          "version": "f414b707d7aa",
-          "size_bytes": 6335457,
+          "version": "a3dd9dc32164",
+          "size_bytes": 6349517,
           "active_source": "artifact",
           "fallback": false
         }

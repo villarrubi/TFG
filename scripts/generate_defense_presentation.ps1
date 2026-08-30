@@ -292,7 +292,7 @@ try {
     [void](Add-Text $s "TF-IDF con n-gramas`nPerceptrón multicapa (MLP)`nModelos separados ES / EN`nProbabilidad de phishing" 528 225 360 140 16 $C.Muted $false 1 1 "Neural list")
     [void](Add-Rect $s 124 410 712 62 $C.Ink -1 0 "Combined band")
     [void](Add-Text $s "MODO COMBINADO" 148 430 150 18 12 $C.TealLight $true 1 1 "Combined label")
-    [void](Add-Text $s "35/65 · umbral 26 · alta confianza ≥ 70" 318 425 490 28 18 $C.White $true 1 3 "Combined formula")
+    [void](Add-Text $s "45/55 · umbral 21 · alta confianza ≥ 70" 318 425 490 28 18 $C.White $true 1 3 "Combined formula")
     Add-Notes $s "Contrastar interpretabilidad y capacidad de generalización. El modo combinado fue calibrado con un conjunto separado; la evidencia individual fuerte no se diluye en la media.`n`n[Sources]`n- TFG.txt: Diseño del clasificador y metodología cuantitativa.`n- evaluation/calibration_results.json.`n[/Sources]"
 
     # 7. Modelos centrales
@@ -343,9 +343,9 @@ try {
     $evalX = @(128, 420, 712)
     foreach ($x in $evalX) { [void](Add-Circle $s ($x - 8) 262 16 $C.Blue "Evaluation dot") }
     $eval = @(
-        @("40 CASOS", "Calibración controlada", "Cinco particiones estratificadas seleccionan pesos y umbrales."),
-        @("16 EML", "Comprobación final", "Mensajes bilingües reservados con MIME, cabeceras y escenarios BEC."),
-        @("1.528 TEXTOS", "Diagnóstico externo", "DIFrauD aporta escala, pero es histórico y puede solaparse.")
+        @("1.148 + 209", "Corpus español", "Entrenamiento limpio y split oficial de prueba sin solapamientos."),
+        @("65.661 + 16.416", "Corpus inglés", "División 80/20 estratificada tras deduplicar el CSV agregado."),
+        @("40 + 16 EML", "Sistema completo", "Calibración separada y comprobación bilingüe con MIME y cabeceras.")
     )
     for ($i = 0; $i -lt 3; $i++) {
         $x = $evalX[$i] - 42
@@ -354,33 +354,33 @@ try {
         [void](Add-Text $s $eval[$i][2] $x 351 220 72 14 $C.Muted $false 1 1 "Evaluation detail")
     }
     [void](Add-Text $s "Principio metodológico: ninguna muestra se presenta como estimación de producción." 132 455 696 28 17 $C.Red $true 2 1 "Evaluation caveat")
-    Add-Notes $s "Los artefactos declaran 1.298 muestras ES y 164.971 EN. Subrayar que no se usó una división 70/30 inventada: entrenamiento, calibración de 40 casos y evaluación de 16 EML cumplen funciones separadas. DIFrauD es un diagnóstico útil, pero no una validación independiente concluyente por posible solapamiento y falta de MIME completo.`n`n[Sources]`n- TFG.txt: diseño experimental y datasets.`n- EVALUATION_REPORT.md.`n- EXTERNAL_EVALUATION_REPORT.md.`n- evaluation/README.md.`n[/Sources]"
+    Add-Notes $s "El protocolo verifica SHA-256, elimina duplicados y contradicciones y separa la prueba antes del ajuste. Español conserva 209 casos oficiales; inglés usa una división 80/20 con semilla 42. Los seis corpus componentes no se suman al CSV agregado. Los 40 casos de calibración y 16 EML cumplen funciones distintas. DIFrauD y Zenodo son diagnósticos externos con límites explícitos.`n`n[Sources]`n- TRAINING_EVALUATION_REPORT.md.`n- evaluation/training_sources.json.`n- EVALUATION_REPORT.md.`n- EXTERNAL_EVALUATION_REPORT.md.`n[/Sources]"
 
     # 10. Resultados
     $s = New-Slide $presentation
     Add-Header $s "Resultados" "El modo combinado evita falsos negativos" 10
-    [void](Add-Text $s "Evaluación final · 16 EML reservados" 68 121 410 20 12 $C.Soft $true 1 1 "Chart subtitle")
+    [void](Add-Text $s "Evaluación final · 16 EML reservados" 68 113 410 20 12 $C.Soft $true 1 1 "Chart subtitle")
     # Eje y leyenda
-    [void](Add-Line $s 202 442 582 442 $C.Line 1.2 $false "Chart axis")
+    [void](Add-Line $s 202 458 582 458 $C.Line 1.2 $false "Chart axis")
     foreach ($tick in @(0, 25, 50, 75, 100)) {
         $x = 202 + (3.8 * $tick)
-        [void](Add-Line $s $x 158 $x 442 $C.Line 0.7 $false "Grid $tick")
-        [void](Add-Text $s ([string]$tick) ($x - 14) 451 28 14 9 $C.Soft $false 2 1 "Tick $tick")
+        [void](Add-Line $s $x 176 $x 458 $C.Line 0.7 $false "Grid $tick")
+        [void](Add-Text $s ([string]$tick) ($x - 14) 467 28 14 9 $C.Soft $false 2 1 "Tick $tick")
     }
     $legend = @(@("Accuracy", $C.Teal), @("Recall", $C.Blue), @("F1", $C.Ink3))
     $lx = 210
     foreach ($entry in $legend) {
-        [void](Add-Rect $s $lx 132 11 11 $entry[1] -1 0 "Legend swatch")
-        [void](Add-Text $s $entry[0] ($lx + 17) 128 72 18 10 $C.Muted $false 1 1 "Legend")
+        [void](Add-Rect $s $lx 150 11 11 $entry[1] -1 0 "Legend swatch")
+        [void](Add-Text $s $entry[0] ($lx + 17) 146 72 18 10 $C.Muted $false 1 1 "Legend")
         $lx += 100
     }
     $modes = @(
         @("Heurístico", @(100.0, 100.0, 100.0)),
-        @("Neuronal", @(75.0, 75.0, 75.0)),
-        @("Combinado", @(93.8, 100.0, 94.1))
+        @("Neuronal", @(81.2, 87.5, 82.3)),
+        @("Combinado", @(87.5, 100.0, 88.9))
     )
     $colors = @($C.Teal, $C.Blue, $C.Ink3)
-    $baseY = 190
+    $baseY = 198
     foreach ($mode in $modes) {
         [void](Add-Text $s $mode[0] 68 ($baseY + 13) 116 22 13 $C.Ink $true 1 1 "Mode label")
         for ($j = 0; $j -lt 3; $j++) {
@@ -393,9 +393,9 @@ try {
     }
     [void](Add-Rect $s 648 154 240 112 $C.Ink -1 0 "Result callout")
     [void](Add-Text $s "100 % recall" 672 180 190 32 25 $C.White $true 1 1 "Recall result")
-    [void](Add-Text $s "8/8 phishing detectados`n0 falsos negativos · 1 falso positivo" 672 221 190 38 12 (Get-Color "C9D7E0") $false 1 1 "Recall detail")
+    [void](Add-Text $s "8/8 phishing detectados`n0 falsos negativos · 2 falsos positivos" 672 221 190 38 12 (Get-Color "C9D7E0") $false 1 1 "Recall detail")
     [void](Add-Text $s "Diagnóstico DIFrauD" 648 302 240 24 17 $C.Ink $true 1 1 "External title")
-    [void](Add-Text $s "90,8 % accuracy`n96,4 % recall" 648 339 240 54 22 $C.TealDark $true 1 1 "External metrics")
+    [void](Add-Text $s "89,0 % accuracy`n93,4 % recall" 648 339 240 54 22 $C.TealDark $true 1 1 "External metrics")
     [void](Add-Text $s "Resultado complementario; no equivale a producción." 648 407 226 38 12 $C.Muted $false 1 1 "External caveat")
     Add-Notes $s "Mostrar que el combinado conserva el recall del heurístico con una accuracy alta. Explicar el único falso positivo y evitar presentar los porcentajes como rendimiento garantizado en una empresa.`n`n[Sources]`n- EVALUATION_REPORT.md: resultados globales.`n- EXTERNAL_EVALUATION_REPORT.md: resultado DIFrauD.`n[/Sources]"
 
@@ -405,7 +405,7 @@ try {
     [void](Add-Line $s 480 142 480 443 $C.Line 1.2 $false "Metric vertical")
     [void](Add-Line $s 80 292 880 292 $C.Line 1.2 $false "Metric horizontal")
     $metrics = @(
-        @(90, 150, "87", "pruebas Python", "Componentes, API, modelos e integraciones"),
+        @(90, 150, "89", "pruebas Python", "Componentes, API, modelos e integraciones"),
         @(520, 150, "2", "recorridos Chromium", "Incluido navegador → Streamlit → backend"),
         @(90, 318, "96,6 %", "menos tiempo de importación", "Heurísticas tras diferir dependencias pesadas"),
         @(520, 318, "76,2 %", "menos arranque de la web", "Mejora medida; inferencia estable")

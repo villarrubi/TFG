@@ -13,6 +13,9 @@ token.json
 estado_monitor.json
 config/credentials.json
 config/token.json
+# Corpus brutos: se verifican por SHA-256 desde una carpeta externa.
+datos_entrenamiento/
+datos/_entrenamiento/
 
 # Editor
 .vscode/
@@ -24,6 +27,7 @@ Propuestaformato.pdf
 Guia_defensa_TFG.txt
 _docx_qa/
 _docx_qa_*/
+_pptx_qa_*/
 debug.log
 .test_tmp/
 .external-evaluation/

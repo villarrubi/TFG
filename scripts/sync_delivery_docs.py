@@ -127,8 +127,8 @@ def _replace_controlled_results_table(doc: DocumentObject) -> None:
         rows = [
             ["Modo", "N", "Accuracy", "Precisión", "Recall", "F1"],
             ["Heurístico", "16", "100,0 %", "100,0 %", "100,0 %", "100,0 %"],
-            ["Neuronal", "16", "75,0 %", "75,0 %", "75,0 %", "75,0 %"],
-            ["Combinado 35/65", "16", "93,8 %", "88,9 %", "100,0 %", "94,1 %"],
+            ["Neuronal", "16", "81,2 %", "77,8 %", "87,5 %", "82,3 %"],
+            ["Combinado 45/55", "16", "87,5 %", "80,0 %", "100,0 %", "88,9 %"],
         ]
         while len(table.rows) > len(rows):
             table._tbl.remove(table.rows[-1]._tr)
@@ -180,6 +180,38 @@ def _replace_signal_weights_table(doc: DocumentObject) -> None:
     raise ValueError("No se encontró la tabla de pesos heurísticos en la guía extensa.")
 
 
+def _sync_experimental_literals(doc: DocumentObject) -> None:
+    """Retira cifras de calibraciones y artefactos anteriores."""
+
+    replacements = [
+        ("87 pruebas", "89 pruebas"),
+        ("35/65", "45/55"),
+        ("35 % heurística y 65 % neuronal", "45 % heurística y 55 % neuronal"),
+        ("35 % heurístico y 65 % neuronal", "45 % heurístico y 55 % neuronal"),
+        ("35 % heurística + 65 % neuronal", "45 % heurística + 55 % neuronal"),
+        ("umbral 26", "umbral 21"),
+        ("umbral de 26", "umbral de 21"),
+        ("superar 26", "superar 21"),
+        ("riesgo_heuristico >= 26", "riesgo_heuristico >= 21"),
+        ("riesgo_heurístico >= 26", "riesgo_heurístico >= 21"),
+        ("1.298 muestras", "1.148 muestras"),
+        ("1.298 ejemplos", "1.148 ejemplos"),
+        ("686 phishing y 612 legítimas", "613 phishing/spam y 535 legítimas"),
+        ("686 phishing / 612 legítimos", "613 phishing/spam / 535 legítimos"),
+        ("99,85 %", "99,91 %"),
+        ("164.971", "65.661"),
+        ("85.781", "34.275"),
+        ("79.190", "31.386"),
+        ("93,8 % de accuracy", "87,5 % de accuracy"),
+        ("94,1 % de F1", "88,9 % de F1"),
+        ("neuronal, 75,0 %", "neuronal, 81,2 %"),
+        ("90,8 % de accuracy", "89,0 % de accuracy"),
+        ("96,4 % de recall", "93,4 % de recall"),
+    ]
+    for old, new in replacements:
+        replace_fragment(doc, old, new)
+
+
 def sync_memory() -> None:
     path = ROOT / "TFG.docx"
     doc = Document(path)
@@ -190,7 +222,7 @@ def sync_memory() -> None:
         ),
         (
             "La validación del sistema",
-            "La validación del sistema se realiza en seis niveles complementarios: 87 pruebas Python de componentes e integración, 2 recorridos reales con Chromium, un benchmark reproducible, una calibración bilingüe de 40 casos, 16 EML locales reservados y un diagnóstico de 1.528 textos externos DIFrauD. Un recorrido levanta cliente web y backend separados; otro prueba Gmail, HTTP y Telegram de extremo a extremo con dobles externos. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento con fuentes de entrenamiento; ninguna cifra se extrapola a producción.",
+            "La validación del sistema se realiza en seis niveles complementarios: 89 pruebas Python de componentes e integración, 2 recorridos reales con Chromium, un benchmark reproducible, una calibración bilingüe de 40 casos, 16 EML locales reservados y un diagnóstico de 1.528 textos externos DIFrauD. Un recorrido levanta cliente web y backend separados; otro prueba Gmail, HTTP y Telegram de extremo a extremo con dobles externos. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento con fuentes de entrenamiento; ninguna cifra se extrapola a producción.",
         ),
         (
             "La metodología seguida ha combinado",
@@ -234,35 +266,35 @@ def sync_memory() -> None:
         ),
         (
             "Esta separación facilita la evolución del prototipo.",
-            "Esta separación facilita la evolución del prototipo. Pueden añadirse reglas o sustituirse el clasificador en el servidor sin redistribuir los clientes. La versión revisada ejecuta correctamente 87 pruebas Python y 2 recorridos reales con Chromium; GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible, respaldo de defensa y navegación de interfaz.",
+            "Esta separación facilita la evolución del prototipo. Pueden añadirse reglas o sustituirse el clasificador en el servidor sin redistribuir los clientes. La versión revisada ejecuta correctamente 89 pruebas Python y 2 recorridos reales con Chromium; GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible, respaldo de defensa y navegación de interfaz.",
         ),
         (
             "La versión revisada ejecuta",
-            "La versión revisada ejecuta 87 pruebas unitarias y de integración mediante unittest. Cubren EML, señales BEC, combinación calibrada, selección determinista de idioma, cliente HTTP, entrenamiento central, Gmail, monitor, heurísticas, clasificador, persistencia, API, autenticación administrativa, extensión, evaluación externa, respaldo de defensa y Telegram. Una prueba integral recorre Gmail EML, JSON, HTTP, backend, estado y alerta Telegram. Además, 2 pruebas con Chromium recorren la extensión y un análisis real entre Streamlit y backend. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.",
+            "La versión revisada ejecuta 89 pruebas unitarias y de integración mediante unittest. Cubren EML, señales BEC, combinación calibrada, selección determinista de idioma, cliente HTTP, entrenamiento central, Gmail, monitor, heurísticas, clasificador, persistencia, API, autenticación administrativa, extensión, evaluación externa, respaldo de defensa y Telegram. Una prueba integral recorre Gmail EML, JSON, HTTP, backend, estado y alerta Telegram. Además, 2 pruebas con Chromium recorren la extensión y un análisis real entre Streamlit y backend. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.",
         ),
         (
             "La metodología cuantitativa separa",
-            "La metodología cuantitativa separa ajuste y comprobación. Cuarenta casos controlados y cinco particiones estratificadas calibran el modo combinado en 35 % heurístico, 65 % neuronal, umbral 26 y conservación de evidencia a partir de 70. Después se evalúan 16 EML reservados: el heurístico alcanza 100,0 % de accuracy, recall y F1; el combinado obtiene 93,8 % de accuracy, 100,0 % de recall y 94,1 % de F1; el neuronal obtiene 75,0 % en esas métricas. Un diagnóstico DIFrauD de 1.528 textos externos da 90,8 % de accuracy y 96,4 % de recall al combinado, pero se documenta riesgo de solapamiento. Ninguna muestra estima producción.",
+            "La metodología cuantitativa separa entrenamiento y prueba antes del ajuste. Español usa 1.148 textos para entrenar y 209 del split oficial para probar; inglés deduplica el agregado a 82.077 textos y lo divide de forma estratificada 80/20 con semilla 42 (65.661/16.416). Cuarenta casos adicionales calibran el combinado en 45 % heurístico, 55 % neuronal, umbral 21 y alta confianza 70. En 16 EML reservados, el heurístico obtiene 100,0 % de accuracy; el combinado 87,5 % con 100,0 % de recall; y el neuronal 81,2 %. DIFrauD aporta 89,0 % de accuracy y 93,4 % de recall combinados, con riesgo de solapamiento documentado. Ninguna muestra estima producción.",
         ),
         (
             "La mezcla ponderada original podía diluir una evidencia fuerte",
-            "La mezcla ponderada original podía diluir una evidencia fuerte. Tras incorporar señales bilingües de cambio bancario, transferencia urgente y suplantación ejecutiva, la calibración separada asignó 35 % a heurística y 65 % al modelo, fijó el umbral 26 y mantuvo alta confianza 70. Los indicios BEC aislados pesan poco y solo la coincidencia de los tres recibe el refuerzo de alta confianza. Los dos BEC sin enlace reservados pasan a detectarse. Esto resuelve esos escenarios concretos, no todo BEC posible.",
+            "La mezcla ponderada original podía diluir una evidencia fuerte. Con los modelos reproducibles reentrenados, la calibración separada asignó 45 % a heurística y 55 % al modelo, fijó el umbral 21 y mantuvo alta confianza 70. Los indicios BEC aislados pesan poco y solo la coincidencia de los tres recibe el refuerzo de alta confianza. Los dos BEC sin enlace reservados se detectan. Esto resuelve esos escenarios concretos, no todo BEC posible.",
         ),
         (
             "Se realizaron",
-            "Se realizaron 87 pruebas Python y 2 recorridos Chromium. Las comprobaciones verifican los tres modos, calibración, idioma determinista, EML serializable, Gmail a backend y Telegram, cliente HTTP, entrenamiento y versión central, caché, señales BEC, API, límites, token administrativo, evaluación externa, respaldo, extensión y Streamlit. Los 16 EML y DIFrauD añaden medición separada con sus límites expresos; no se presentan como evaluación estadística de producción.",
+            "Se realizaron 89 pruebas Python y 2 recorridos Chromium. Las comprobaciones verifican los tres modos, calibración, idioma determinista, EML serializable, Gmail a backend y Telegram, cliente HTTP, entrenamiento y versión central, caché, señales BEC, API, límites, token administrativo, evaluación externa, respaldo, extensión y Streamlit. Los 16 EML y DIFrauD añaden medición separada con sus límites expresos; no se presentan como evaluación estadística de producción.",
         ),
         (
             "Los resultados confirman el diseño como base funcional",
-            "Los resultados confirman el diseño como base funcional: en los 16 EML reservados, el heurístico obtiene 100,0 % de accuracy y recall; el combinado detecta los ocho phishing, incluido BEC sin enlace, con 93,8 % de accuracy y un falso positivo; el neuronal conserva dos falsos negativos y dos falsos positivos. En DIFrauD el combinado logra 90,8 % de accuracy y 96,4 % de recall. La limitación principal pasa a ser la independencia y actualidad de los datos externos, además de la falta de validación real bilingüe y de controles de producción.",
+            "Los resultados confirman el diseño como base funcional: en los 16 EML reservados, el heurístico obtiene 100,0 % de accuracy y recall; el combinado detecta los ocho phishing, incluido BEC sin enlace, con 87,5 % de accuracy y dos falsos positivos; el neuronal conserva un falso negativo y dos falsos positivos. En DIFrauD el combinado logra 89,0 % de accuracy y 93,4 % de recall. La diferencia entre el holdout inglés interno (98,4 %) y las validaciones externas muestra cambio de distribución. La limitación principal es la independencia, actualidad y validez de constructo de los datos, además de los controles de producción.",
         ),
         (
             "El sexto objetivo, evaluar el comportamiento",
-            "El sexto objetivo, evaluar el comportamiento del sistema, se aborda con 87 pruebas Python, 2 recorridos Chromium —incluido web a backend—, benchmark reproducible, calibración separada de 40 casos, 16 EML reservados y 1.528 textos externos con hashes, matriz de confusión y errores por identificador. La estimación independiente sobre correo real reciente sigue delimitada como trabajo pendiente.",
+            "El sexto objetivo, evaluar el comportamiento del sistema, se aborda con 89 pruebas Python, 2 recorridos Chromium —incluido web a backend—, benchmark reproducible, calibración separada de 40 casos, 16 EML reservados y 1.528 textos externos con hashes, matriz de confusión y errores por identificador. La estimación independiente sobre correo real reciente sigue delimitada como trabajo pendiente.",
         ),
         (
             "Entre los logros principales destacan",
-            "Entre los logros principales destacan la arquitectura cliente-servidor, una versión activa por idioma compartida por todos los clientes, activación atómica, Gmail/Telegram, 87 pruebas Python, 2 pruebas de navegador, CI, calibración separada, detección BEC y evaluación trazable local/externa. La carga diferida reduce históricamente el arranque de heurísticas un 96,6 % y el de la aplicación un 76,2 %. La fusión 35/65 conserva evidencia de alta confianza.",
+            "Entre los logros principales destacan la arquitectura cliente-servidor, una versión activa por idioma compartida por todos los clientes, activación atómica, Gmail/Telegram, pruebas Python y de navegador, CI, reentrenamiento reproducible, calibración separada, detección BEC y evaluación trazable local/externa. La carga diferida reduce históricamente el arranque de heurísticas un 96,6 % y el de la aplicación un 76,2 %. La fusión 45/55 conserva evidencia de alta confianza.",
         ),
         (
             "Como trabajo futuro prioritario se plantea",
@@ -274,7 +306,7 @@ def sync_memory() -> None:
         ),
         (
             "Verificado: 87 pruebas Python",
-            "Verificado: 87 pruebas Python y 2 recorridos reales con Chromium, incluido cliente web a backend.",
+            "Verificado: 89 pruebas Python y 2 recorridos reales con Chromium, incluido cliente web a backend.",
         ),
         (
             "Verificado: holdout controlado bilingüe",
@@ -353,11 +385,11 @@ def sync_memory() -> None:
         "pip install -r requirements.txt",
         "python -m pip install -r requirements-dev.txt -c constraints.txt",
     )
-    replace_fragment(doc, "54 pruebas Python", "87 pruebas Python")
-    replace_fragment(doc, "59 pruebas Python", "87 pruebas Python")
-    replace_fragment(doc, "60 pruebas Python", "87 pruebas Python")
-    replace_fragment(doc, "72 pruebas Python", "87 pruebas Python")
-    replace_fragment(doc, "81 pruebas Python", "87 pruebas Python")
+    replace_fragment(doc, "54 pruebas Python", "89 pruebas Python")
+    replace_fragment(doc, "59 pruebas Python", "89 pruebas Python")
+    replace_fragment(doc, "60 pruebas Python", "89 pruebas Python")
+    replace_fragment(doc, "72 pruebas Python", "89 pruebas Python")
+    replace_fragment(doc, "81 pruebas Python", "89 pruebas Python")
     replace_fragment(
         doc,
         "API: Interfaz de operaciones que permite a un cliente local enviar datos",
@@ -458,16 +490,17 @@ def sync_memory() -> None:
             "En la defensa se ejecuta sobre loopback, aunque puede separarse por configuración."
         )
         doc.add_paragraph(
-            "La evidencia reproducible comprende 87 pruebas Python, 2 recorridos con Chromium, "
+            "La evidencia reproducible comprende 89 pruebas Python, 2 recorridos con Chromium, "
             "integración continua, benchmark, calibración separada de 40 casos, evaluación de "
             "16 EML reservados y diagnóstico de 1.528 textos DIFrauD con riesgo de solapamiento."
         )
     replace_prefix(
         doc,
         "La evidencia reproducible comprende",
-        "La evidencia reproducible comprende 87 pruebas Python, 2 recorridos con Chromium, integración continua, benchmark, calibración separada de 40 casos, evaluación de 16 EML reservados y diagnóstico de 1.528 textos DIFrauD. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento; ninguna cifra estima producción.",
+        "La evidencia reproducible comprende 89 pruebas Python, 2 recorridos con Chromium, integración continua, benchmark, calibración separada de 40 casos, evaluación de 16 EML reservados y diagnóstico de 1.528 textos DIFrauD. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento; ninguna cifra estima producción.",
     )
     _keep_table_rows_together(doc)
+    _sync_experimental_literals(doc)
     # Estas dos piezas se sustituyen después por la versión ampliada solicitada
     # por el tutor. Su ausencia es correcta en ejecuciones posteriores.
     if any(paragraph.text == "Conclusiones generales" for paragraph in doc.paragraphs):
@@ -509,26 +542,26 @@ def sync_full_guide() -> None:
         ),
         (
             "La validación actual",
-            "La validación actual ejecuta 87 pruebas Python y 2 recorridos reales con Chromium. Todas pasan. Incluye web-backend, señales BEC, respaldo de defensa y el recorrido local Gmail EML-JSON-HTTP-backend-Telegram. Las pruebas neuronales rápidas pueden generar ConvergenceWarning esperado; no es un fallo funcional.",
+            "La validación actual ejecuta 89 pruebas Python y 2 recorridos reales con Chromium. Todas pasan. Incluye web-backend, señales BEC, respaldo de defensa y el recorrido local Gmail EML-JSON-HTTP-backend-Telegram. Las pruebas neuronales rápidas pueden generar ConvergenceWarning esperado; no es un fallo funcional.",
         ),
         (
             "La formulación rigurosa es:",
-            "La formulación rigurosa es: 'La rama main ejecuta 87 pruebas Python, 2 recorridos Chromium —incluido cliente web a backend—, CI, calibración y evaluaciones reproducibles'. Los 16 EML son sintéticos y DIFrauD puede solaparse con fuentes del modelo; no demuestran eficacia universal.",
+            "La formulación rigurosa es: 'La rama main ejecuta 89 pruebas Python, 2 recorridos Chromium —incluido cliente web a backend—, CI, calibración y evaluaciones reproducibles'. Los 16 EML son sintéticos y DIFrauD puede solaparse con fuentes del modelo; no demuestran eficacia universal.",
         ),
         (
             "El repositorio separa 40 casos de calibración",
-            "El repositorio separa 40 casos de calibración y 16 EML finales (4 por idioma y clase). El evaluador genera accuracy, precisión, recall, F1, accuracy balanceada, VP/VN/FP/FN, hashes y detalle por caso. En los EML, el heurístico obtiene 100,0 %; el combinado, 93,8 % de accuracy y 100,0 % de recall; el neuronal, 75,0 % en ambas. DIFrauD añade 1.528 textos: 90,8 % de accuracy y 96,4 % de recall combinados, con riesgo de fuga documentado.",
+            "El protocolo fija fuentes y hashes, limpia solapamientos y separa 1.148/209 textos ES y 65.661/16.416 EN. Otros 40 casos calibran y 16 EML finales comparan los tres modos con MIME. En los EML, el heurístico obtiene 100,0 %; el combinado, 87,5 % de accuracy y 100,0 % de recall; el neuronal, 81,2 % de accuracy. DIFrauD añade 1.528 textos: 89,0 % de accuracy y 93,4 % de recall combinados, con riesgo de solapamiento documentado.",
         ),
         (
             "normalizar_etiqueta",
-            "normalizar_etiqueta acepta formas habituales de phishing y correo legítimo, con error para valores desconocidos. La rama main ejecuta 87 pruebas Python, 2 pruebas de navegador, CI, calibración, evaluaciones reproducibles, respaldo de defensa y benchmark.",
+            "normalizar_etiqueta acepta formas habituales de phishing y correo legítimo, con error para valores desconocidos. La rama main ejecuta 89 pruebas Python, 2 pruebas de navegador, CI, calibración, evaluaciones reproducibles, respaldo de defensa y benchmark.",
         ),
     ]
     replacements.extend(
         [
             (
                 "Versión revisada:",
-                "Versión revisada: 30 de agosto de 2026",
+                "Versión revisada: 31 de agosto de 2026",
             ),
             (
                 "Aplicación web local modular",
@@ -686,71 +719,71 @@ def sync_full_guide() -> None:
             paragraph.text == replacement for paragraph in _all_paragraphs(doc)
         ):
             missing.append(prefix)
-    replace_fragment(doc, "47 pruebas", "87 pruebas Python y 2 de navegador")
-    replace_fragment(doc, "54 pruebas Python", "87 pruebas Python")
-    replace_fragment(doc, "59 pruebas Python", "87 pruebas Python")
-    replace_fragment(doc, "60 pruebas Python", "87 pruebas Python")
-    replace_fragment(doc, "72 pruebas Python", "87 pruebas Python")
-    replace_fragment(doc, "81 pruebas Python", "87 pruebas Python")
+    replace_fragment(doc, "47 pruebas", "89 pruebas Python y 2 de navegador")
+    replace_fragment(doc, "54 pruebas Python", "89 pruebas Python")
+    replace_fragment(doc, "59 pruebas Python", "89 pruebas Python")
+    replace_fragment(doc, "60 pruebas Python", "89 pruebas Python")
+    replace_fragment(doc, "72 pruebas Python", "89 pruebas Python")
+    replace_fragment(doc, "81 pruebas Python", "89 pruebas Python")
     replace_fragment(
         doc,
         "¿Por qué pesos 60/40?",
-        "¿Por qué pesos 35/65 y alta confianza 70?",
+        "¿Por qué pesos 45/55 y alta confianza 70?",
     )
     replace_fragment(
         doc,
         "por defecto 60 % heurística y 40 % red neuronal",
-        "por defecto 35 % heurística y 65 % neuronal, con alta confianza 70",
+        "por defecto 45 % heurística y 55 % neuronal, con alta confianza 70",
     )
     replace_fragment(
         doc,
         "configuración habitual: 60 % heurística + 40 % neuronal",
-        "configuración calibrada: 35 % heurística + 65 % neuronal; alta confianza: 70",
+        "configuración calibrada: 45 % heurística + 55 % neuronal; alta confianza: 70",
     )
     replace_fragment(
         doc,
         "¿Por qué pesos 20/80 y alta confianza 70?",
-        "¿Por qué pesos 35/65 y alta confianza 70?",
+        "¿Por qué pesos 45/55 y alta confianza 70?",
     )
     replace_fragment(
         doc,
         "por defecto 20 % heurística y 80 % neuronal, con alta confianza 70",
-        "por defecto 35 % heurística y 65 % neuronal, con alta confianza 70",
+        "por defecto 45 % heurística y 55 % neuronal, con alta confianza 70",
     )
     replace_fragment(
         doc,
         "configuración calibrada: 20 % heurística + 80 % neuronal; alta confianza: 70",
-        "configuración calibrada: 35 % heurística + 65 % neuronal; alta confianza: 70",
+        "configuración calibrada: 45 % heurística + 55 % neuronal; alta confianza: 70",
     )
     replace_fragment(
         doc,
         "¿Por qué pesos 30/70 y alta confianza 70?",
-        "¿Por qué pesos 35/65 y alta confianza 70?",
+        "¿Por qué pesos 45/55 y alta confianza 70?",
     )
     replace_fragment(
         doc,
         "por defecto 30 % heurística y 70 % neuronal, con alta confianza 70",
-        "por defecto 35 % heurística y 65 % neuronal, con alta confianza 70",
+        "por defecto 45 % heurística y 55 % neuronal, con alta confianza 70",
     )
     replace_fragment(
         doc,
         "configuración calibrada: 30 % heurística + 70 % neuronal; alta confianza: 70",
-        "configuración calibrada: 35 % heurística + 65 % neuronal; alta confianza: 70",
+        "configuración calibrada: 45 % heurística + 55 % neuronal; alta confianza: 70",
     )
     replace_fragment(
         doc,
         "El umbral 45 es una decisión operativa del prototipo. No procede de una calibración estadística exhaustiva y debe presentarse como parámetro ajustable. Para producción habría que optimizarlo con una curva precision-recall y con costes explícitos de falsos positivos y falsos negativos.",
-        "El umbral 26 fue seleccionado por la rejilla estratificada de 40 casos junto a la fusión 35/65. Sigue siendo un parámetro ajustable: para producción habría que confirmarlo sobre datos reales independientes, con una curva precision-recall y costes explícitos de falsos positivos y falsos negativos.",
+        "El umbral 21 fue seleccionado por la rejilla estratificada de 40 casos junto a la fusión 45/55. Sigue siendo un parámetro ajustable: para producción habría que confirmarlo sobre datos reales independientes, con una curva precision-recall y costes explícitos de falsos positivos y falsos negativos.",
     )
     replace_fragment(
         doc,
         "El umbral 45 fue seleccionado por la rejilla estratificada de 40 casos junto a la fusión 20/80. Sigue siendo un parámetro ajustable: para producción habría que confirmarlo sobre datos reales representativos, con una curva precision-recall y costes explícitos de falsos positivos y falsos negativos.",
-        "El umbral 26 fue seleccionado por la rejilla estratificada de 40 casos junto a la fusión 35/65. Sigue siendo un parámetro ajustable: para producción habría que confirmarlo sobre datos reales independientes, con una curva precision-recall y costes explícitos de falsos positivos y falsos negativos.",
+        "El umbral 21 fue seleccionado por la rejilla estratificada de 40 casos junto a la fusión 45/55. Sigue siendo un parámetro ajustable: para producción habría que confirmarlo sobre datos reales independientes, con una curva precision-recall y costes explícitos de falsos positivos y falsos negativos.",
     )
     replace_fragment(
         doc,
         "El umbral 36 fue seleccionado por la rejilla estratificada de 40 casos junto a la fusión 30/70. Sigue siendo un parámetro ajustable: para producción habría que confirmarlo sobre datos reales independientes, con una curva precision-recall y costes explícitos de falsos positivos y falsos negativos.",
-        "El umbral 26 fue seleccionado por la rejilla estratificada de 40 casos junto a la fusión 35/65. Sigue siendo un parámetro ajustable: para producción habría que confirmarlo sobre datos reales independientes, con una curva precision-recall y costes explícitos de falsos positivos y falsos negativos.",
+        "El umbral 21 fue seleccionado por la rejilla estratificada de 40 casos junto a la fusión 45/55. Sigue siendo un parámetro ajustable: para producción habría que confirmarlo sobre datos reales independientes, con una curva precision-recall y costes explícitos de falsos positivos y falsos negativos.",
     )
     replace_fragment(
         doc,
@@ -760,37 +793,38 @@ def sync_full_guide() -> None:
     replace_prefix(
         doc,
         "Es un umbral operativo del prototipo",
-        "El valor 26 fue seleccionado por la rejilla estratificada junto a la fusión 35/65. Debe confirmarse con un corpus real independiente y con el coste concreto de falsos positivos y negativos.",
+        "El valor 21 fue seleccionado por la rejilla estratificada junto a la fusión 45/55. Debe confirmarse con un corpus real independiente y con el coste concreto de falsos positivos y negativos.",
     )
     replace_prefix(
         doc,
         "El valor 45 se mantuvo porque la rejilla estratificada",
-        "El valor 26 fue seleccionado por la rejilla estratificada junto a la fusión 35/65. Debe confirmarse con un corpus real independiente y con el coste concreto de falsos positivos y negativos.",
+        "El valor 21 fue seleccionado por la rejilla estratificada junto a la fusión 45/55. Debe confirmarse con un corpus real independiente y con el coste concreto de falsos positivos y negativos.",
     )
     replace_prefix(
         doc,
         "El valor 36 fue seleccionado por la rejilla estratificada",
-        "El valor 26 fue seleccionado por la rejilla estratificada junto a la fusión 35/65. Debe confirmarse con un corpus real independiente y con el coste concreto de falsos positivos y negativos.",
+        "El valor 21 fue seleccionado por la rejilla estratificada junto a la fusión 45/55. Debe confirmarse con un corpus real independiente y con el coste concreto de falsos positivos y negativos.",
     )
     replace_prefix(
         doc,
         "Se prioriza ligeramente la trazabilidad heurística",
-        "La rejilla de calibración sobre 40 casos seleccionó 35 % heurístico y 65 % neuronal, reservando al menos 20 % a cada detector. El nivel 70 conserva una evidencia individual concluyente. Los 16 EML posteriores se evaluaron sin reajustar esos valores.",
+        "La rejilla de calibración sobre 40 casos seleccionó 45 % heurístico y 55 % neuronal, reservando al menos 20 % a cada detector. El nivel 70 conserva una evidencia individual concluyente. Los 16 EML posteriores se evaluaron sin reajustar esos valores.",
     )
     replace_prefix(
         doc,
         "La rejilla de calibración sobre 40 casos seleccionó 20 % heurístico",
-        "La rejilla de calibración sobre 40 casos seleccionó 35 % heurístico y 65 % neuronal, reservando al menos 20 % a cada detector. El nivel 70 conserva una evidencia individual concluyente. Los 16 EML posteriores se evaluaron sin reajustar esos valores.",
+        "La rejilla de calibración sobre 40 casos seleccionó 45 % heurístico y 55 % neuronal, reservando al menos 20 % a cada detector. El nivel 70 conserva una evidencia individual concluyente. Los 16 EML posteriores se evaluaron sin reajustar esos valores.",
     )
     replace_prefix(
         doc,
         "La rejilla de calibración sobre 40 casos seleccionó 30 % heurístico",
-        "La rejilla de calibración sobre 40 casos seleccionó 35 % heurístico y 65 % neuronal, reservando al menos 20 % a cada detector. El nivel 70 conserva una evidencia individual concluyente. Los 16 EML posteriores se evaluaron sin reajustar esos valores.",
+        "La rejilla de calibración sobre 40 casos seleccionó 45 % heurístico y 55 % neuronal, reservando al menos 20 % a cada detector. El nivel 70 conserva una evidencia individual concluyente. Los 16 EML posteriores se evaluaron sin reajustar esos valores.",
     )
     replace_fragment(doc, "26 de agosto de 2026", "30 de agosto de 2026")
     replace_fragment(doc, "27 de agosto de 2026", "30 de agosto de 2026")
     replace_fragment(doc, "28 de agosto de 2026", "30 de agosto de 2026")
     replace_fragment(doc, "29 de agosto de 2026", "30 de agosto de 2026")
+    replace_fragment(doc, "30 de agosto de 2026", "31 de agosto de 2026")
     replace_fragment(doc, "propuesta híbrida", "arquitectura cliente-servidor")
     replace_fragment(
         doc,
@@ -857,7 +891,7 @@ def sync_full_guide() -> None:
     )
     replace_fragment(doc, "¿Por qué un umbral de 45?", "¿Por qué un umbral de 26?")
     replace_fragment(
-        doc, "Combinado con 60 % heurística", "Combinado con 35 % heurística"
+        doc, "Combinado con 60 % heurística", "Combinado con 45 % heurística"
     )
     replace_fragment(
         doc,
@@ -868,7 +902,7 @@ def sync_full_guide() -> None:
         doc,
         "Interpretación correcta:",
         "Interpretación correcta: 40 casos controlados calibran y 16 EML distintos evalúan. "
-        "El combinado obtiene 93,8 % de accuracy y 100,0 % de recall en esos 16 escenarios; DIFrauD añade 90,8 % de accuracy y 96,4 % de recall, pero "
+        "El combinado obtiene 87,5 % de accuracy y 100,0 % de recall en esos 16 escenarios; DIFrauD añade 89,0 % de accuracy y 93,4 % de recall, pero "
         "la primera muestra es sintética y la segunda puede solaparse con fuentes del entrenamiento.",
     )
     replace_fragment(
@@ -907,8 +941,11 @@ def sync_full_guide() -> None:
     _replace_controlled_results_table(doc)
     _replace_signal_weights_table(doc)
     _keep_table_rows_together(doc)
+    _sync_experimental_literals(doc)
     if any(
-        paragraph.text.startswith("Los modelos activos declaran 1.298 muestras")
+        paragraph.text.startswith(
+            ("Los modelos activos declaran", "El protocolo reproducible usa")
+        )
         for paragraph in _all_paragraphs(doc)
     ):
         missing = [

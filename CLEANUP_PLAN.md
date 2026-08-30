@@ -1,6 +1,6 @@
 # Estado de puesta a punto y deuda restante
 
-Revisión actualizada el 30 de agosto de 2026 sobre `main`. Este documento sustituye
+Revisión actualizada el 31 de agosto de 2026 sobre `main`. Este documento sustituye
 el plan histórico de `feature/web`, que ya no describía el estado real de las
 ramas ni de la entrega.
 
@@ -26,7 +26,7 @@ ramas ni de la entrega.
 - Se separan calibración y evaluación: 40 casos controlados calibran la fusión y
   16 EML locales reservados verifican escenarios con cabeceras y MIME completos.
   Ambos conservan hashes, resultados por caso e informe de limitaciones.
-- La suite crece a 87 pruebas Python y 2 recorridos Chromium. Uno levanta web y
+- La suite crece a 89 pruebas Python y 2 recorridos Chromium. Uno levanta web y
   backend separados y comprueba el intercambio HTTP real. GitHub Actions
   ejecuta pruebas, Ruff, evaluación reproducible y navegación real.
 - `constraints.txt` fija las versiones directas y transitivas validadas.
@@ -42,7 +42,7 @@ ramas ni de la entrega.
   administrativas desde navegador y HTTP remoto sin TLS.
 - La inicialización del estado del monitor distingue entre «sin fichero previo»
   y «fichero previo vacío», evitando saltarse el primer correo que aparezca.
-- El modo combinado queda recalibrado en 35/65, umbral 26 y alta confianza 70. La
+- El modo combinado queda recalibrado en 45/55, umbral 21 y alta confianza 70. La
   fusión conserva una evidencia individual concluyente y la selección de idioma
   fija la semilla para producir el mismo resultado entre procesos.
 - Tres señales bilingües detectan cambios bancarios, transferencias urgentes y

@@ -10,7 +10,7 @@ chat, tokens, rutas de usuario y cualquier correo real. No captures nunca
 1. `01_backend_arrancado.png`: terminal con `python src/backend_server.py`, URL
    `127.0.0.1:8766` y sin errores.
 2. `02_health_cliente_servidor.png`: `http://127.0.0.1:8766/health` mostrando
-   `architecture: client-server`, modo combinado, umbral 26, pesos 35/65 y los
+   `architecture: client-server`, modo combinado, umbral 21, pesos 45/55 y los
    dos modelos disponibles.
 3. `03_inicio_web_conectado.png`: portada de Streamlit con la marca, la
    navegación superior y las tarjetas de estado; el backend debe figurar como

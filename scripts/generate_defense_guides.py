@@ -437,7 +437,7 @@ def flujo():
             "El adaptador extrae From, Subject, cuerpo, anclas y URL.",
             "Las reglas detectan urgencia, dominio externo, anchor distinto y posible incoherencia de cabeceras.",
             "El modelo neuronal calcula una probabilidad sobre el texto completo.",
-            "El modo combinado aplica la fusión calibrada 35/65 y el umbral 26; si una evidencia alcanza 70 no se diluye, y la explicación muestra qué señales activaron el riesgo.",
+            "El modo combinado aplica la fusión calibrada 45/55 y el umbral 21; si una evidencia alcanza 70 no se diluye, y la explicación muestra qué señales activaron el riesgo.",
             "La UI pinta la tarjeta, la extensión la inserta en Gmail y el monitor podría notificar por Telegram.",
         ],
         1,
@@ -450,7 +450,7 @@ def flujo():
     )
     _bullet(
         doc,
-        "El análisis apoya decisiones y las 87 pruebas más 2 recorridos validan el flujo, no la eficacia en producción; "
+        "El análisis apoya decisiones y las 89 pruebas más 2 recorridos validan el flujo, no la eficacia en producción; "
         "el MLP requiere datos representativos y evaluación separada.",
     )
     doc.save(ROOT / "Guia_01_Flujo_y_funcionamiento.docx")
@@ -593,7 +593,7 @@ def tecnologias():
     _heading(doc, "6. Reproducibilidad y evaluación", 1)
     _para(
         doc,
-        "Los hiperparámetros se concentran en HiperparametrosModelo. Los artefactos activos declaran 1.298 muestras de entrenamiento ES (686 phishing y 612 legítimas) y 164.971 EN (85.781 phishing y 79.190 legítimas). El cliente envía los CSV al backend, que entrena desde cero, registra procedencia, guarda atómicamente e invalida la versión cacheada. Cuarenta casos controlados calibran la fusión y 16 EML distintos quedan reservados para la evaluación final; ambos conjuntos son sintéticos. DIFrauD añade 1.528 textos con riesgo de solapamiento. Ninguna cifra estima producción.",
+        "Los hiperparámetros se concentran en HiperparametrosModelo. El protocolo usa 1.148 textos ES para entrenar y 209 para probar; en inglés deduplica el agregado a 82.077 y lo divide con semilla 42 en 65.661/16.416. Los hashes y fuentes se verifican antes de reentrenar y los joblib no guardan textos brutos. Cuarenta casos controlados calibran la fusión y 16 EML distintos comprueban el sistema completo. DIFrauD añade 1.528 textos con riesgo de solapamiento. Ninguna cifra estima producción.",
     )
     _para(
         doc,
@@ -601,7 +601,7 @@ def tecnologias():
     )
     _para(
         doc,
-        "La validación automatizada reúne 87 pruebas Python y 2 pruebas con Chromium. Incluye idioma determinista y el recorrido local Gmail EML -> JSON -> HTTP -> backend -> Telegram. GitHub Actions instala versiones fijadas, ejecuta Ruff, verifica calibración, regenera la evaluación, comprueba el respaldo de defensa y recorre web-backend. OAuth real usa una lista E2E separada porque sus credenciales no pueden entrar en CI.",
+        "La validación automatizada reúne 89 pruebas Python y 2 pruebas con Chromium. Incluye idioma determinista y el recorrido local Gmail EML -> JSON -> HTTP -> backend -> Telegram. GitHub Actions instala versiones fijadas, ejecuta Ruff, verifica calibración, regenera la evaluación, comprueba el respaldo de defensa y recorre web-backend. OAuth real usa una lista E2E separada porque sus credenciales no pueden entrar en CI.",
     )
     _heading(doc, "7. Diferencias con la propuesta inicial", 1)
     _table(
@@ -698,7 +698,7 @@ def guion():
             (
                 "15:00–17:00",
                 "Pruebas y resultados",
-                "87 pruebas Python, 2 de navegador, calibración, 16 EML y diagnóstico externo",
+                "89 pruebas Python, 2 de navegador, calibración, 16 EML y diagnóstico externo",
             ),
             (
                 "17:00–19:00",
@@ -737,7 +737,7 @@ def guion():
     _heading(doc, "5. Cómo explicar los resultados", 1)
     _para(
         doc,
-        "La calibración usa 40 casos distintos de los 16 EML finales. Tras añadir tres señales BEC bilingües, la rejilla selecciona 35 % heurística, 65 % neuronal, umbral 26 y alta confianza 70. En los EML, el heurístico obtiene 100,0 % de accuracy/recall/F1; el combinado, 93,8 % de accuracy, 88,9 % de precisión, 100,0 % de recall y 94,1 % de F1; y el neuronal, 75,0 % en las cuatro métricas. DIFrauD añade 1.528 textos externos y el combinado alcanza 90,8 % de accuracy y 96,4 % de recall, pero existe riesgo de solapamiento de fuentes. Ninguna cifra debe presentarse como producción.",
+        "La calibración usa 40 casos distintos de los 16 EML finales. Con los modelos reproducibles, la rejilla selecciona 45 % heurística, 55 % neuronal, umbral 21 y alta confianza 70. En los EML, el heurístico obtiene 100,0 % de accuracy/recall/F1; el combinado, 87,5 % de accuracy, 80,0 % de precisión, 100,0 % de recall y 88,9 % de F1; y el neuronal, 81,2 % de accuracy, 77,8 % de precisión, 87,5 % de recall y 82,3 % de F1. DIFrauD añade 1.528 textos externos y el combinado alcanza 89,0 % de accuracy y 93,4 % de recall, pero existe riesgo de solapamiento de fuentes. Ninguna cifra debe presentarse como producción.",
     )
     _para(
         doc,
@@ -766,7 +766,7 @@ def guion():
             ),
             (
                 "¿Cómo evitas falsos positivos?",
-                "La fusión 35/65 y el umbral 26 se calibraron separadamente; conserva evidencias sobre 70, muestra FP/FN y mantiene la explicación para revisar cada caso.",
+                "La fusión 45/55 y el umbral 21 se calibraron separadamente; conserva evidencias sobre 70, muestra FP/FN y mantiene la explicación para revisar cada caso.",
             ),
             (
                 "¿Consulta una blacklist externa?",

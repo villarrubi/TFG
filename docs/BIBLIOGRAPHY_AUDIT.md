@@ -1,6 +1,6 @@
 # Auditoría de bibliografía de la memoria
 
-Revisión realizada el 30 de agosto de 2026 sobre la sección **Referencias** de
+Revisión realizada el 31 de agosto de 2026 sobre la sección **Referencias** de
 `TFG.docx` y las citas de `TFG.txt`.
 
 ## Controles realizados

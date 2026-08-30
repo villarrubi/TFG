@@ -135,11 +135,11 @@ def reconcile_prose(doc) -> None:
         ),
         (
             "La revisión actual de la rama web ejecuta correctamente 44 pruebas",
-            "La rama main ejecuta 87 pruebas automatizadas que protegen los componentes, el contrato cliente-servidor y sus integraciones.",
+            "La rama main ejecuta 89 pruebas automatizadas que protegen los componentes, el contrato cliente-servidor y sus integraciones.",
         ),
         (
             "La revisión actual de la rama web ejecuta 44 pruebas unitarias",
-            "La rama main ejecuta 87 pruebas unitarias y de integración mediante unittest. Cubren EML, BEC, combinación, configuración, Gmail, monitor, heurísticas, clasificador, persistencia, cliente y API HTTP, seguridad, evaluación externa, respaldo, extensión y Telegram. Todas finalizaron correctamente; los avisos corresponden a iteraciones reducidas del MLP en pruebas rápidas.",
+            "La rama main ejecuta 89 pruebas unitarias y de integración mediante unittest. Cubren EML, BEC, combinación, configuración, Gmail, monitor, heurísticas, clasificador, persistencia, cliente y API HTTP, seguridad, evaluación externa, respaldo, extensión y Telegram. Todas finalizaron correctamente; los avisos corresponden a iteraciones reducidas del MLP en pruebas rápidas.",
         ),
         (
             "En segundo lugar, se evaluó el clasificador neuronal",
@@ -155,7 +155,7 @@ def reconcile_prose(doc) -> None:
         ),
         (
             "Se realizó una prueba funcional del análisis",
-            "Se realizaron comprobaciones funcionales sobre mensajes sintéticos en español e inglés y sobre un correo legítimo de control. Las comprobaciones verificaron los tres modos, el umbral, la selección por idioma y las explicaciones. La suite de 87 pruebas añade contrato HTTP, límites, caché, artefactos inválidos y entradas malformadas; no se presenta como evaluación estadística de producción.",
+            "Se realizaron comprobaciones funcionales sobre mensajes sintéticos en español e inglés y sobre un correo legítimo de control. Las comprobaciones verificaron los tres modos, el umbral, la selección por idioma y las explicaciones. La suite de 89 pruebas añade contrato HTTP, límites, caché, artefactos inválidos y entradas malformadas; no se presenta como evaluación estadística de producción.",
         ),
         (
             "Los resultados confirman el diseño",
@@ -375,7 +375,7 @@ def main() -> None:
     replace_prefix(
         doc,
         "Este anexo resume los pasos necesarios",
-        "Este anexo resume los pasos necesarios para ejecutar la aplicación web y sus adaptadores locales. Streamlit se inicia con src/app.py; la API HTTP local escucha por defecto en 127.0.0.1:8766 y expone /health y /analyze, mientras que el servidor de la extensión Gmail utiliza 127.0.0.1:8765. La guía ampliada, la configuración de credenciales y la solución de problemas se mantienen en el archivo README del repositorio.",
+        "Este anexo resume los pasos necesarios para ejecutar la aplicación cliente-servidor. Primero se inicia backend_server.py en 127.0.0.1:8766 y después Streamlit con src/app.py. La extensión actual llama directamente al backend central; gmail_extension_server.py conserva el puerto 8765 solo como proxy opcional de compatibilidad. La guía ampliada, la configuración de credenciales y la solución de problemas se mantienen en el archivo README del repositorio.",
     )
     replace_prefix(
         doc,

@@ -758,12 +758,12 @@ def correct_project_sections(doc) -> None:
     replace_prefix(
         doc,
         "Esta separación facilita la evolución del prototipo.",
-        "Esta separación facilita la evolución del prototipo. Pueden añadirse reglas en los módulos de señales, sustituirse el clasificador neuronal o incorporarse nuevas fuentes de entrada sin alterar la navegación de la aplicación. La versión revisada ejecuta correctamente 87 pruebas Python y 2 recorridos reales con Chromium.",
+        "Esta separación facilita la evolución del prototipo. Pueden añadirse reglas en los módulos de señales, sustituirse el clasificador neuronal o incorporarse nuevas fuentes de entrada sin alterar la navegación de la aplicación. La versión revisada ejecuta correctamente 89 pruebas Python y 2 recorridos reales con Chromium.",
     )
     replace_prefix(
         doc,
         "La revisión actual de la rama web ejecuta 44 pruebas unitarias",
-        "La versión revisada ejecuta 87 pruebas Python y 2 recorridos reales con Chromium. Cubren componentes, integraciones locales, seguridad de bind, activos de la extensión, evaluación e interfaces. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.",
+        "La versión revisada ejecuta 89 pruebas Python y 2 recorridos reales con Chromium. Cubren componentes, integraciones locales, seguridad de bind, activos de la extensión, evaluación e interfaces. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.",
     )
     replace_prefix(
         doc,
@@ -775,19 +775,19 @@ def correct_project_sections(doc) -> None:
         text = paragraph.text
         paragraph.text = paragraph.text.replace(
             "la revisión actual de la rama web ejecuta 44 pruebas",
-            "la versión revisada ejecuta 87 pruebas Python y 2 de navegador",
+            "la versión revisada ejecuta 89 pruebas Python y 2 de navegador",
         )
         paragraph.text = paragraph.text.replace(
             "correctamente 44 pruebas",
-            "correctamente 87 pruebas Python y 2 de navegador",
+            "correctamente 89 pruebas Python y 2 de navegador",
         )
         paragraph.text = paragraph.text.replace(
             "La versión final ejecuta 44 pruebas",
-            "La versión revisada ejecuta 87 pruebas Python y 2 de navegador",
+            "La versión revisada ejecuta 89 pruebas Python y 2 de navegador",
         )
         paragraph.text = paragraph.text.replace(
             "La suite de 44 pruebas",
-            "La suite de 87 pruebas Python y 2 de navegador",
+            "La suite de 89 pruebas Python y 2 de navegador",
         )
         paragraph.text = paragraph.text.replace(
             "suite actual de 44 casos",
@@ -795,7 +795,7 @@ def correct_project_sections(doc) -> None:
         )
         paragraph.text = paragraph.text.replace(
             "suite de 44 pruebas unitarias",
-            "suite de 87 pruebas Python y 2 de navegador",
+            "suite de 89 pruebas Python y 2 de navegador",
         )
         if text.startswith(".venv\\Scripts\\Activate.ps1"):
             paragraph.text = ".\\" + text

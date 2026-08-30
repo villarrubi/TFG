@@ -1,6 +1,6 @@
 # Validación de Gmail y Telegram
 
-Fecha de ejecución: 30 de agosto de 2026.
+Fecha de ejecución: 31 de agosto de 2026.
 
 ## Resultado automatizado local
 
@@ -18,7 +18,7 @@ Resultado: superado. También se prueba por separado el contrato de listado,
 descarga `raw` y perfil de Gmail, además de errores de red y escape HTML de
 Telegram. Esta ejecución descubrió y corrigió la falta de serialización JSON de
 cabeceras enriquecidas y bytes SMTPUTF8 conservados como `surrogateescape`.
-La suite completa que incluye este recorrido contiene 87 pruebas Python.
+La suite completa que incluye este recorrido contiene 89 pruebas Python.
 
 ## Preparación de servicios reales
 

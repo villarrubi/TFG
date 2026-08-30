@@ -25,7 +25,7 @@ observado.
 ## Revalidación tras la calibración
 
 El 28 de agosto de 2026 se repitió el comando documentado, con 200 operaciones y
-cinco repeticiones. La configuración ya usa fusión 35/65, umbral 26 y alta
+cinco repeticiones. La configuración ya usa fusión 45/55, umbral 21 y alta
 confianza 70.
 
 | Benchmark | Mediana actual (ms) | Mejor actual (ms) |
@@ -48,7 +48,7 @@ caliente continúa por debajo de 4 ms en este equipo.
 
 En aquella medición, la suite de 47 casos pasó de 2,435 s a 2,398 s; este cambio
 pequeño se considera ruido, no una optimización de entrenamiento. La validación
-actual ha crecido hasta 87 pruebas Python y 2 recorridos reales con Chromium.
+actual ha crecido hasta 89 pruebas Python y 2 recorridos reales con Chromium.
 El recorrido principal levanta el cliente Streamlit y el backend en procesos
 distintos y valida una petición de análisis completa.
 

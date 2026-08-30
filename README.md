@@ -62,7 +62,7 @@ python -m unittest discover -s browser_tests -p "test_*.py"
 python scripts/generate_defense_guides.py
 ```
 
-La validación actual contiene 87 pruebas unitarias y de integración en Python y 2 recorridos con Chromium. Uno de ellos levanta el backend y Streamlit en procesos separados, introduce un correo desde el navegador y comprueba que la respuesta HTTP se presenta en la web. Otra prueba recorre Gmail EML → cliente HTTP → backend → alerta Telegram sin usar secretos externos. Las advertencias de convergencia del MLP pertenecen únicamente a pruebas rápidas con pocas iteraciones. GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible y navegación real en cada `push` y `pull_request`.
+La validación actual contiene 89 pruebas unitarias y de integración en Python y 2 recorridos con Chromium. Uno de ellos levanta el backend y Streamlit en procesos separados, introduce un correo desde el navegador y comprueba que la respuesta HTTP se presenta en la web. Otra prueba recorre Gmail EML → cliente HTTP → backend → alerta Telegram sin usar secretos externos. Las advertencias de convergencia del MLP pertenecen únicamente a pruebas rápidas con pocas iteraciones. GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible y navegación real en cada `push` y `pull_request`.
 
 ## Cómo está montado
 
@@ -144,7 +144,7 @@ Los clientes solo admiten HTTP sobre loopback; una URL remota debe ser HTTPS. La
 
 - `heuristico`: 31 señales de cabeceras, remitente, URLs, dominios, HTML, adjuntos, lenguaje y fraude BEC sin enlaces. Para SPF, DKIM y DMARC interpreta de forma pasiva los resultados ya escritos por los servidores de correo en `Received-SPF`, `Authentication-Results` y cabeceras ARC; no consulta DNS ni valida firmas criptográficas.
 - `neural`: clasificador TF-IDF + `MLPClassifier`; selecciona el modelo español o inglés según el mensaje.
-- `combinado`: media calibrada 35 % heurística + 65 % neuronal; si cualquiera alcanza 70 % de alta confianza se conserva esa evidencia para que el otro detector no la diluya. El umbral de decisión es 26 % por defecto.
+- `combinado`: media calibrada 45 % heurística + 55 % neuronal; si cualquiera alcanza 70 % de alta confianza se conserva esa evidencia para que el otro detector no la diluya. El umbral de decisión es 21 % por defecto.
 
 Los artefactos centrales son `modelo_neural_es.joblib` y `modelo_neural_en.joblib`. Si falta uno, el backend puede construir un fallback sintético del mismo idioma y lo declara como tal; los clientes no crean copias. Los ficheros `.joblib` son artefactos de confianza y no deben sustituirse por descargas no verificadas, porque su carga usa deserialización de Python.
 
@@ -154,11 +154,20 @@ La vista **Entrenamiento** es un cliente ligero. Sube uno o varios CSV al backen
 
 La evaluación usa un CSV distinto y muestra accuracy, precisión, recall, F1, accuracy balanceada y matriz de confusión. La comparación entrena hasta tres configuraciones en memoria y no modifica el modelo activo.
 
-Los artefactos entregados conservan metadatos, pero no los mensajes originales. El modelo ES declara 1.298 muestras (686 phishing y 612 legítimas) procedentes de `train.csv` y `dataset_renombrado.csv`; el modelo EN, 164.971 (85.781 phishing y 79.190 legítimas) de CEAS, Enron, Ling, Nazario, Nigerian Fraud, Phishing Email y SpamAssassin. Los CSV históricos no se distribuyen, por lo que no se inventa una partición 70/30 ni se promete reproducir exactamente aquel entrenamiento: sí son reproducibles la calibración y las evaluaciones incluidas.
+Los artefactos entregados conservan metadatos y huellas del protocolo, pero no los mensajes originales. El modelo ES se entrena con 1.148 muestras limpias (613 phishing/spam y 535 legítimas) y se prueba con las 209 filas oficiales separadas de `softecapps/spam_ham_spanish`. El modelo EN usa solo el CSV agregado `phishing_email.csv`: tras retirar 408 duplicados quedan 82.077 textos, divididos de forma estratificada y determinista en 65.661 para entrenamiento y 16.416 para prueba. Los seis corpus que componen el agregado no se vuelven a añadir.
 
-El script offline `scripts/calibrate_combined.py` selecciona pesos, umbral y nivel de alta confianza sobre 40 casos controlados mediante cinco particiones estratificadas. Ese conjunto no se reutiliza para la comprobación final. `scripts/evaluate_models.py` evalúa después 16 archivos EML locales reservados, equilibrados por idioma y clase, con escenarios de credenciales, BEC, enlaces, adjuntos y mensajes legítimos. El heurístico obtiene 100,0 % de accuracy; el combinado, 93,8 % con 100,0 % de recall; y el neuronal, 75,0 %. Los resultados y límites están en [EVALUATION_REPORT.md](EVALUATION_REPORT.md).
+Los CSV permanecen fuera de Git por tamaño, licencia y privacidad. `evaluation/training_sources.json` fija URLs, licencias y SHA-256, mientras `scripts/retrain_reproducible.py` verifica los archivos, elimina duplicados y contradicciones, evita solapamientos, reentrena ambos modelos y regenera las métricas. La evidencia completa está en [TRAINING_EVALUATION_REPORT.md](TRAINING_EVALUATION_REPORT.md).
 
-Como diagnóstico adicional, `scripts/evaluate_external.py` comprueba 1.528 textos del split de prueba de phishing de DIFrauD, con revisión y SHA-256 fijados y corpus bruto excluido de Git. El combinado obtiene 90,8 % de accuracy y 96,4 % de recall. [El informe externo](EXTERNAL_EVALUATION_REPORT.md) no lo presenta como validación independiente: el origen es histórico, carece de MIME completo y no puede descartarse solapamiento con fuentes del modelo inglés.
+| Uso | Fuente pública | Licencia indicada por la ficha |
+| --- | --- | --- |
+| Entrenamiento y prueba ES | [softecapps/spam_ham_spanish](https://huggingface.co/datasets/softecapps/spam_ham_spanish), DOI 10.57967/hf/2264 | Apache-2.0 |
+| Entrenamiento ES adicional | [SMS Spam Mexico](https://www.kaggle.com/datasets/aldoivan/sms-spam-mexico-dataset-en-espaol-mexicano) | CC BY-SA 4.0 |
+| Entrenamiento y holdout EN | [Phishing Email Dataset](https://www.kaggle.com/datasets/naserabdullahalam/phishing-email-dataset) | CC BY-SA 4.0 |
+| Diagnóstico EN secundario | [Phishing validation emails dataset](https://zenodo.org/records/13474746), DOI 10.5281/zenodo.13474746 | No indicada en la ficha pública consultada |
+
+El script offline `scripts/calibrate_combined.py` selecciona pesos, umbral y nivel de alta confianza sobre 40 casos controlados mediante cinco particiones estratificadas. Ese conjunto no se reutiliza para la comprobación final. `scripts/evaluate_models.py` evalúa después 16 archivos EML locales reservados, equilibrados por idioma y clase, con escenarios de credenciales, BEC, enlaces, adjuntos y mensajes legítimos. El heurístico obtiene 100,0 % de accuracy; el combinado, 87,5 % con 100,0 % de recall; y el neuronal, 81,2 % de accuracy. Los resultados y límites están en [EVALUATION_REPORT.md](EVALUATION_REPORT.md).
+
+Como diagnóstico adicional, `scripts/evaluate_external.py` comprueba 1.528 textos del split de prueba de phishing de DIFrauD, con revisión y SHA-256 fijados y corpus bruto excluido de Git. El combinado obtiene 89,0 % de accuracy y 93,4 % de recall. [El informe externo](EXTERNAL_EVALUATION_REPORT.md) no lo presenta como validación independiente: el origen es histórico, carece de MIME completo y no puede descartarse solapamiento entre sus fuentes primarias y el agregado inglés.
 
 ## Gmail y Telegram
 
@@ -181,10 +190,10 @@ PHISHING_BACKEND_URL=http://127.0.0.1:8766
 BACKEND_HOST=127.0.0.1
 BACKEND_PORT=8766
 BACKEND_ADMIN_TOKEN=
-PHISHING_THRESHOLD=26
+PHISHING_THRESHOLD=21
 MONITOR_ANALYSIS_MODE=combinado
-MONITOR_HEUR_WEIGHT=35
-MONITOR_NEURAL_WEIGHT=65
+MONITOR_HEUR_WEIGHT=45
+MONITOR_NEURAL_WEIGHT=55
 BACKEND_HIGH_CONFIDENCE_THRESHOLD=70
 ```
 
@@ -222,7 +231,7 @@ src/
     ├── modelo_neural.py          # TF-IDF, MLP y persistencia del servidor
     └── ...                       # señales, URLs, HTML y explicaciones
 extension_gmail/                  # cliente Manifest V3
-tests/                            # 87 pruebas unitarias/de integración
+tests/                            # 89 pruebas unitarias/de integración
 browser_tests/                    # 2 recorridos reales con Chromium
 evaluation/                       # calibración separada, EML reservados y resultados
 defense_demo/                     # respuestas reproducibles para el plan B
