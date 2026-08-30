@@ -23,7 +23,13 @@ from sistema_phishing.telegram_notifier import (
     TelegramNotificationError,
     TelegramNotifier,
 )
-from ui_components import aplicar_estilos_base, estado_badge, render_html
+from ui_components import (
+    aplicar_estilos_base,
+    encabezado_pagina,
+    encabezado_seccion,
+    estado_badge,
+    render_html,
+)
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 cargar_env_local(ROOT_DIR)
@@ -38,11 +44,12 @@ def aplicar_estilos_monitor() -> None:
     aplicar_estilos_base(
         """
         .result-card {
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            background: #ffffff;
-            padding: 14px 16px;
-            margin-bottom: 10px;
+            border: 1px solid var(--line);
+            border-radius: 15px;
+            background: linear-gradient(135deg, #ffffff, #f8fbfc);
+            padding: 17px 18px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-sm);
         }
         .result-title {
             color: #0f172a;
@@ -190,8 +197,14 @@ def main():
     aplicar_estilos_monitor()
     cargar_env_local(ROOT_DIR)
     valores = leer_env_file(ENV_LOCAL_PATH)
-    st.title("Monitor de Gmail")
-    st.caption("Comprueba correos nuevos, calcula riesgo y envía alertas por Telegram.")
+    encabezado_pagina(
+        "Vigilancia automatizada",
+        "Monitor de Gmail",
+        "Revisa mensajes nuevos, consulta el backend central y notifica por Telegram "
+        "cuando el riesgo supera el umbral configurado.",
+        "Proceso independiente",
+        "Puede ejecutarse una vez desde la web o permanecer activo en segundo plano.",
+    )
     _mostrar_estado_general(valores)
 
     if not dependencias_disponibles():
@@ -200,9 +213,18 @@ def main():
             "`python -m pip install -r requirements.txt -c constraints.txt`."
         )
 
-    st.markdown("### Configuración activa")
+    encabezado_seccion(
+        "01",
+        "Configuración activa",
+        "Valores que utiliza actualmente el proceso de monitorización.",
+    )
     _mostrar_configuracion_activa(valores)
 
+    encabezado_seccion(
+        "02",
+        "Integraciones",
+        "Comprueba que la fuente de correo y el canal de alertas estén disponibles.",
+    )
     col_gmail, col_telegram = st.columns(2)
     with col_gmail:
         st.subheader("Gmail")
@@ -229,7 +251,11 @@ def main():
             except TelegramNotificationError as exc:
                 st.error(str(exc))
 
-    st.markdown("### Comprobación manual")
+    encabezado_seccion(
+        "03",
+        "Comprobación manual",
+        "Ejecuta un ciclo controlado antes de activar la monitorización continua.",
+    )
     query = st.text_input("Consulta de Gmail", value=valores.get("GMAIL_MONITOR_QUERY", "in:inbox newer_than:1d"))
     limit = st.number_input(
         "Máximo de correos a revisar",
@@ -251,7 +277,7 @@ def main():
         heur_weight = st.slider("Peso heurístico (%)", 0, 100, int(valores.get("MONITOR_HEUR_WEIGHT", str(DEFAULT_HEUR_WEIGHT))))
     enviar_alertas = st.checkbox("Enviar alertas Telegram durante esta comprobación", value=False)
 
-    if st.button("Comprobar correos ahora"):
+    if st.button("Comprobar correos ahora", type="primary", use_container_width=True):
         try:
             servicio = construir_servicio_gmail(GMAIL_CREDENTIALS_PATH, GMAIL_TOKEN_PATH)
             correos = obtener_ultimos_correos(servicio, limite=int(limit), query=query)
@@ -270,7 +296,11 @@ def main():
         except Exception as exc:  # noqa: BLE001 - límite de la integración UI
             st.error(f"No se pudo ejecutar la comprobación: {exc}")
 
-    st.markdown("### Ejecución 24/7")
+    encabezado_seccion(
+        "04",
+        "Ejecución continua",
+        "Inicia el proceso separado para mantener la vigilancia aunque cierres la web.",
+    )
     st.code("python src/monitor_gmail.py", language="powershell")
     st.write("Para una prueba puntual sin bucle continuo:")
     st.code("python src/monitor_gmail.py --once", language="powershell")

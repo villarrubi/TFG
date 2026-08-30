@@ -29,6 +29,8 @@ streamlit run src/app.py
 
 La aplicación se abre en `http://127.0.0.1:8501` y consume por defecto el backend de `http://127.0.0.1:8766`. Si el backend no está levantado, la interfaz lo indica y no ejecuta un detector alternativo local.
 
+La interfaz comparte un diseño visual adaptable a escritorio y móvil: cabecera de marca, navegación compacta, estados de conexión y tarjetas coherentes en las cinco vistas. Detección guía el recorrido en tres pasos —fuente, configuración y resultado— y Configuración agrupa conexiones, monitor, backend y red neuronal mediante pestañas. La capa web se limita a recoger datos y mostrar la respuesta del servidor; tampoco expone rutas locales completas de credenciales.
+
 Validación automática:
 
 ```powershell

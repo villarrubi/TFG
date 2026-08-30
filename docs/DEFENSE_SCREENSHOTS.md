@@ -12,19 +12,23 @@ chat, tokens, rutas de usuario y cualquier correo real. No captures nunca
 2. `02_health_cliente_servidor.png`: `http://127.0.0.1:8766/health` mostrando
    `architecture: client-server`, modo combinado, umbral 26, pesos 35/65 y los
    dos modelos disponibles.
-3. `03_inicio_web_conectado.png`: Inicio de Streamlit con el backend conectado y
-   su estado visible.
-4. `04_entrada_bec.png`: vista Detección con
-   `evaluation/local_emails_v1/es_phishing_bec.eml` cargado, antes de analizar.
-5. `05_resultado_bec.png`: veredicto phishing del caso BEC, puntuación y señales
+3. `03_inicio_web_conectado.png`: portada de Streamlit con la marca, la
+   navegación superior y las tarjetas de estado; el backend debe figurar como
+   conectado.
+4. `04_entrada_bec.png`: vista Detección mostrando los pasos 01 y 02, con
+   `evaluation/local_emails_v1/es_phishing_bec.eml` cargado y el modo combinado
+   seleccionado, antes de analizar.
+5. `05_resultado_bec.png`: tarjeta de resultado del caso BEC con veredicto,
+   puntuación, métricas y señales
    `cambio_datos_bancarios`, `transferencia_urgente` y
    `suplantacion_ejecutivo`.
 6. `06_resultado_legitimo.png`: resultado legítimo de
    `en_legitimate_meeting.eml`, para demostrar que no todo se marca como fraude.
 7. `07_comparacion_tres_modos.png`: tabla o tarjetas de heurístico, neuronal y
    combinado sobre el mismo mensaje.
-8. `08_modelos_centrales.png`: vista Entrenamiento o `/models` con una versión
-   activa ES y otra EN; debe quedar claro que pertenecen al servidor.
+8. `08_modelos_centrales.png`: vista Entrenamiento con las tarjetas o pestañas
+   de administración y una versión activa ES y otra EN; debe quedar claro que
+   pertenecen al servidor.
 9. `09_evaluacion_local.png`: tabla de `EVALUATION_REPORT.md` con los 16 EML y
    las métricas por modo.
 10. `10_evaluacion_externa.png`: tabla de
@@ -39,8 +43,9 @@ chat, tokens, rutas de usuario y cualquier correo real. No captures nunca
 
 ## Capturas de integraciones, solo con cuentas de laboratorio
 
-14. `14_gmail_oauth.png`: Configuración indicando Gmail conectado. Oculta la
-    dirección salvo un alias de laboratorio.
+14. `14_gmail_oauth.png`: pestaña **Conexiones** de Configuración indicando
+    Gmail conectado. Oculta la dirección salvo un alias de laboratorio; la UI
+    solo debe mostrar el nombre del fichero de credenciales, nunca su ruta.
 15. `15_gmail_analizado.png`: correo de prueba importado desde Gmail y resultado
     devuelto por el backend. No uses phishing real ni pulses sus enlaces.
 16. `16_telegram_alerta.png`: alerta recibida por el chat de laboratorio con

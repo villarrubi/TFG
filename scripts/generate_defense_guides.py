@@ -262,7 +262,7 @@ def flujo():
     doc = _setup_document("Flujo y funcionamiento · TFG Phishing")
     _cover(doc, "Guía 01 · mapa del sistema", "Flujo y funcionamiento", "Qué ocurre desde que entra un correo hasta que se explica el riesgo")
     _heading(doc, "1. Idea general", 1)
-    _para(doc, "El montaje es cliente-servidor. El navegador usa Streamlit como capa de presentación y Streamlit envía peticiones HTTP/JSON al backend central. La extensión y el monitor también consumen esa API. Solo el servidor parsea, analiza, entrena y guarda los modelos; Gmail y Telegram son integraciones externas.")
+    _para(doc, "El montaje es cliente-servidor. El navegador usa Streamlit como capa de presentación y Streamlit envía peticiones HTTP/JSON al backend central. La extensión y el monitor también consumen esa API. Solo el servidor parsea, analiza, entrena y guarda los modelos; Gmail y Telegram son integraciones externas. La web comparte una interfaz adaptable con navegación de marca, estados homogéneos y un flujo de detección ordenado en tres pasos.")
     _callout(doc, "Frase para la defensa", "Aunque cliente y servidor estén en el mismo ordenador, son procesos separados con un contrato HTTP. Hay una sola versión activa por idioma y todos los clientes la comparten.")
     _heading(doc, "2. Flujo completo", 1)
     for text in [
@@ -318,12 +318,11 @@ def flujo():
     _heading(doc, "8. Límites que conviene decir", 1)
     _bullet(doc, "La lista de dominios y señales es local; no se afirma que exista reputación online en tiempo real.")
     _bullet(doc, "El análisis es apoyo a la decisión, no sustituto de una pasarela antispam ni garantía absoluta.")
-    _bullet(doc, "El MLP necesita datos representativos y evaluación separada; una accuracy de entrenamiento no demuestra generalización.")
-    _para(
+    _bullet(
         doc,
-        "Validación: 87 pruebas Python y 2 recorridos reales de navegador; uno "
-        "levanta Streamlit y backend por separado y otra prueba local recorre Gmail, HTTP y Telegram. Comprueban comportamiento y "
-        "arquitectura, no eficacia estadística en producción.",
+        "El MLP necesita datos representativos y evaluación separada; una accuracy de entrenamiento no demuestra generalización. "
+        "La evidencia funcional suma 87 pruebas Python y 2 recorridos reales (web-backend y Gmail-HTTP-Telegram): verifican "
+        "arquitectura y comportamiento, no eficacia estadística en producción.",
     )
     doc.save(ROOT / "Guia_01_Flujo_y_funcionamiento.docx")
 
@@ -336,7 +335,7 @@ def tecnologias():
     _heading(doc, "2. Comparativa de tecnologías", 1)
     _table(doc, ["Tecnología", "Cómo se usa", "Por qué se elige", "Alternativa y límite"], [
         ("Python", "Integra parser, reglas, ML, API y automatizaciones", "Ecosistema científico, lectura clara y buena trazabilidad", "Java/Node serían válidos; añadirían complejidad para este alcance"),
-        ("Streamlit", "Cliente web y capa de presentación", "Permite validar el flujo cliente-servidor con poco código de interfaz", "React daría comunicación navegador-API directa, pero exigiría otro stack"),
+        ("Streamlit", "Cliente web con sistema visual compartido y adaptable", "Permite validar el flujo cliente-servidor con una interfaz coherente y poco código", "React daría comunicación navegador-API directa, pero exigiría otro stack"),
         ("scikit-learn", "TF-IDF vectoriza y MLPClassifier clasifica", "Pipeline reproducible, API madura y métricas estándar", "TensorFlow sería más flexible para deep learning, pero sobredimensionado para texto tabular"),
         ("TF-IDF", "Convierte palabras y bigramas en variables", "Explicable, rápido y adecuado para corpus moderados", "Transformers mejorarían contexto, con más coste y menor explicabilidad local"),
         ("email estándar", "Parsea MIME y cabeceras EML", "No añade dependencia para la parte esencial del formato", "Librerías externas pueden aportar atajos, pero no son necesarias"),
@@ -409,8 +408,8 @@ def guion():
     _heading(doc, "4. Qué enseñar en la demo", 1)
     for text in [
         "Arrancar el backend, mostrar /health con las versiones y después abrir el cliente web.",
-        "Pegar o cargar un EML de ejemplo controlado, evitando enseñar credenciales o datos personales.",
-        "Señalar la puntuación, las señales activas, la URL sospechosa y la explicación generada.",
+        "En Detección, recorrer los pasos 01 y 02: cargar un EML controlado y elegir el modo, sin enseñar credenciales ni datos personales.",
+        "Ejecutar el paso 03 y señalar en la tarjeta la puntuación, las señales activas, la URL sospechosa y la explicación generada.",
         "Cambiar a modo heurístico para demostrar que el resultado puede auditarse sin modelo.",
         "Mostrar EVALUATION_REPORT.md y EXTERNAL_EVALUATION_REPORT.md: 16 EML, 1.528 textos, hashes, métricas y las advertencias de representatividad/solapamiento.",
         "Si el tiempo lo permite, enseñar la extensión llamando a la misma URL del backend.",

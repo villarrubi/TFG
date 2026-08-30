@@ -1,6 +1,7 @@
 """Interfaz Streamlit para analizar correos con heurísticas y modelo neuronal."""
 
 import os
+from html import escape
 
 import streamlit as st
 
@@ -21,7 +22,12 @@ from sistema_phishing.gmail_client import (
     obtener_perfil_gmail,
     obtener_ultimos_correos,
 )
-from ui_components import aplicar_estilos_base, render_html
+from ui_components import (
+    aplicar_estilos_base,
+    encabezado_pagina,
+    encabezado_seccion,
+    render_html,
+)
 
 # La interfaz solo necesita rutas de OAuth; los modelos pertenecen al backend.
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -67,12 +73,13 @@ def aplicar_estilos_deteccion() -> None:
     aplicar_estilos_base(
         """
         .risk-card {
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            background: #ffffff;
-            padding: 18px 20px;
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-            margin: 12px 0 18px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: linear-gradient(135deg, #ffffff, #f8fbfc);
+            padding: 22px 24px;
+            box-shadow: var(--shadow-md);
+            margin: 14px 0 18px;
         }
         .risk-card h3 {
             margin: 0 0 4px;
@@ -86,10 +93,11 @@ def aplicar_estilos_deteccion() -> None:
             margin-bottom: 4px;
         }
         .risk-score {
-            font-size: 2.6rem;
-            font-weight: 800;
+            font-size: 3.2rem;
+            font-weight: 850;
             line-height: 1;
-            margin: 8px 0;
+            margin: 12px 0 8px;
+            letter-spacing: -0.06em;
         }
         .risk-summary {
             color: #475569;
@@ -98,7 +106,7 @@ def aplicar_estilos_deteccion() -> None:
             margin: 0;
         }
         .risk-bar-track {
-            height: 14px;
+            height: 10px;
             overflow: hidden;
             border-radius: 999px;
             background: #e2e8f0;
@@ -142,10 +150,11 @@ def aplicar_estilos_deteccion() -> None:
             margin: 10px 0 18px;
         }
         .metric-tile {
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            background: #f8fafc;
-            padding: 12px;
+            border: 1px solid var(--line);
+            border-radius: 13px;
+            background: #ffffff;
+            padding: 14px 15px;
+            box-shadow: var(--shadow-sm);
         }
         .metric-label {
             color: #64748b;
@@ -154,10 +163,44 @@ def aplicar_estilos_deteccion() -> None:
             text-transform: uppercase;
         }
         .metric-value {
-            color: #0f172a;
-            font-size: 1.35rem;
-            font-weight: 800;
+            color: var(--ink-900);
+            font-size: 1.5rem;
+            font-weight: 850;
             margin-top: 4px;
+        }
+        .connection-strip {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 9px 14px;
+            margin: -6px 0 24px;
+            padding: 12px 14px;
+            border: 1px solid #b7e4dc;
+            border-radius: 13px;
+            color: var(--ink-600);
+            background: #f0fdfa;
+            font-size: 0.8rem;
+        }
+        .connection-strip strong { color: #0b625d; }
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+        }
+        .connection-model {
+            padding: 4px 8px;
+            border: 1px solid #cfe4e1;
+            border-radius: 999px;
+            color: #315c5a;
+            background: #ffffff;
+            font-weight: 700;
+        }
+        .st-key-analysis_source_panel [data-testid="stVerticalBlockBorderWrapper"],
+        .st-key-analysis_options_panel [data-testid="stVerticalBlockBorderWrapper"] {
+            padding: 4px 4px 2px;
+            background: rgba(255, 255, 255, 0.94);
         }
         @media (max-width: 720px) {
             .metric-strip {
@@ -579,9 +622,13 @@ def cargar_email_gmail_desde_token() -> None:
 def main():
     """Construye la pantalla de detección y ejecuta el análisis seleccionado."""
     aplicar_estilos_deteccion()
-    st.title("Detección de phishing")
-    st.caption(
-        "Cliente web: envía correos al backend central y se limita a mostrar su respuesta."
+    encabezado_pagina(
+        "Análisis de amenazas",
+        "Detección de phishing",
+        "Carga un mensaje, elige el modo de análisis y revisa el veredicto junto a "
+        "las señales que lo justifican.",
+        "Cliente web ligero",
+        "El análisis y los modelos se ejecutan exclusivamente en el backend.",
     )
 
     client = BackendClient()
@@ -599,7 +646,17 @@ def main():
     models = models_response.get("models", {})
     es_disponible = bool(models.get("es", {}).get("valid"))
     en_disponible = bool(models.get("en", {}).get("valid"))
-    st.success(f"Backend central conectado: `{client.base_url}`")
+    render_html(
+        f"""
+        <div class="connection-strip">
+            <span class="connection-dot"></span>
+            <strong>Backend conectado</strong>
+            <code>{escape(client.base_url)}</code>
+            <span class="connection-model">ES · {'activo' if es_disponible else 'respaldo'}</span>
+            <span class="connection-model">EN · {'activo' if en_disponible else 'respaldo'}</span>
+        </div>
+        """
+    )
 
     artefactos_invalidos = [
         idioma.upper()
@@ -614,7 +671,7 @@ def main():
         )
 
     if es_disponible and en_disponible:
-        st.success("Modelos activos en español e inglés. El idioma se detectará automáticamente.")
+        pass
     elif es_disponible:
         st.info(
             "Solo hay un modelo activo en español. Para correos en inglés se "
@@ -628,74 +685,110 @@ def main():
     else:
         st.warning("No hay modelos entrenados en disco. Se usa el modelo sintético por defecto.")
 
-    modo = st.radio(
-        "Modo de entrada",
-        ["Pegar texto del correo", "Subir archivo .eml", "Analizar correos de Gmail"],
-        index=0,
+    encabezado_seccion(
+        "01",
+        "Selecciona la fuente",
+        "Puedes pegar el mensaje, subir su archivo original o importarlo desde Gmail.",
     )
     texto_para_analisis = ""
     entrada_backend = None
+    with st.container(border=True, key="analysis_source_panel"):
+        modo = st.radio(
+            "Modo de entrada",
+            ["Pegar texto del correo", "Subir archivo .eml", "Analizar correos de Gmail"],
+            index=0,
+            horizontal=True,
+        )
 
-    if modo == "Pegar texto del correo":
-        # En modo texto se trabaja con una representación plana: cabeceras y
-        # cuerpo pegados por el usuario en el mismo campo.
-        texto_para_analisis = st.text_area("Pega aquí el contenido del correo (cabeceras + cuerpo):")
-    elif modo == "Subir archivo .eml":
-        archivo = st.file_uploader("Sube un archivo .eml", type=["eml"])
-        if archivo is not None:
-            entrada_backend = archivo.getvalue()
-            texto_para_analisis = archivo.name
-            st.markdown("#### Correo cargado")
-            st.write({"Archivo": archivo.name, "Tamaño": f"{len(entrada_backend)} bytes"})
-            st.caption("El EML se parseará y analizará exclusivamente en el backend.")
-    else:
-        st.markdown("#### Conexión con Gmail")
-        st.write("Usa permisos de solo lectura y analiza los mensajes sin modificarlos.")
-        if not dependencias_disponibles():
-            st.warning(
-                "Faltan las dependencias de Google. Ejecuta "
-                "`python -m pip install -r requirements.txt -c constraints.txt`."
+        if modo == "Pegar texto del correo":
+            # En modo texto se trabaja con una representación plana: cabeceras
+            # y cuerpo pegados por el usuario en el mismo campo.
+            texto_para_analisis = st.text_area(
+                "Pega aquí el contenido del correo (cabeceras + cuerpo):",
+                height=240,
+                placeholder=(
+                    "From: remitente@dominio.com\nSubject: Asunto del mensaje\n\n"
+                    "Pega aquí el cuerpo completo del correo..."
+                ),
             )
-        st.caption(f"Credenciales esperadas: `{GMAIL_CREDENTIALS_PATH}`")
-        cargar_email_gmail_desde_token()
-        if st.session_state.get("gmail_email"):
-            st.success(f"Cuenta conectada: {st.session_state['gmail_email']}")
-            if st.button("Cambiar cuenta de Gmail"):
-                if os.path.exists(GMAIL_TOKEN_PATH):
-                    os.remove(GMAIL_TOKEN_PATH)
-                st.session_state.pop("gmail_email", None)
-                st.session_state.pop("gmail_resultados", None)
-                st.session_state.pop("gmail_tipo_analisis", None)
-                st.info("Sesión de Gmail eliminada. Vuelve a conectar para elegir otra cuenta.")
-                st.rerun()
+        elif modo == "Subir archivo .eml":
+            archivo = st.file_uploader("Sube un archivo .eml", type=["eml"])
+            if archivo is not None:
+                entrada_backend = archivo.getvalue()
+                texto_para_analisis = archivo.name
+                st.markdown("#### Correo cargado")
+                st.write({"Archivo": archivo.name, "Tamaño": f"{len(entrada_backend)} bytes"})
+                st.caption("El EML se parseará y analizará exclusivamente en el backend.")
         else:
-            st.info("No hay ninguna cuenta de Gmail conectada todavía.")
-        limite_gmail = st.number_input("Número de correos a analizar", min_value=1, max_value=50, value=10)
+            st.markdown("#### Conexión con Gmail")
+            st.write("Usa permisos de solo lectura y analiza los mensajes sin modificarlos.")
+            if not dependencias_disponibles():
+                st.warning(
+                    "Faltan las dependencias de Google. Ejecuta "
+                    "`python -m pip install -r requirements.txt -c constraints.txt`."
+                )
+            st.caption(
+                f"Credenciales esperadas: `{os.path.basename(GMAIL_CREDENTIALS_PATH)}`"
+            )
+            cargar_email_gmail_desde_token()
+            if st.session_state.get("gmail_email"):
+                st.success(f"Cuenta conectada: {st.session_state['gmail_email']}")
+                if st.button("Cambiar cuenta de Gmail"):
+                    if os.path.exists(GMAIL_TOKEN_PATH):
+                        os.remove(GMAIL_TOKEN_PATH)
+                    st.session_state.pop("gmail_email", None)
+                    st.session_state.pop("gmail_resultados", None)
+                    st.session_state.pop("gmail_tipo_analisis", None)
+                    st.info("Sesión de Gmail eliminada. Vuelve a conectar para elegir otra cuenta.")
+                    st.rerun()
+            else:
+                st.info("No hay ninguna cuenta de Gmail conectada todavía.")
+            limite_gmail = st.number_input(
+                "Número de correos a analizar",
+                min_value=1,
+                max_value=50,
+                value=10,
+            )
+            col_query, col_ayuda = st.columns([6, 1])
+            with col_query:
+                query_gmail = st.text_input("Consulta de Gmail", value="in:inbox")
+            with col_ayuda:
+                st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+                with st.popover("Ayuda", use_container_width=True):
+                    st.markdown(GMAIL_QUERY_HELP_MD)
 
-        # Campo de consulta + botón de ayuda (❓) con los operadores de
-        # búsqueda de Gmail más habituales. Se usan columnas para que el
-        # popover quede alineado a la derecha del campo de texto, y un
-        # pequeño espaciador para bajarlo a la altura del input (el popover
-        # se posiciona donde está el botón, no donde está la etiqueta).
-        col_query, col_ayuda = st.columns([6, 1])
-        with col_query:
-            query_gmail = st.text_input("Consulta de Gmail", value="in:inbox")
-        with col_ayuda:
-            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-            with st.popover("❓", use_container_width=True):
-                st.markdown(GMAIL_QUERY_HELP_MD)
-
-    tipo_analisis = st.radio("Tipo de análisis", ["Heurístico", "Red neuronal", "Combinado"], index=2)
+    encabezado_seccion(
+        "02",
+        "Configura el análisis",
+        "El modo combinado ofrece el equilibrio recomendado entre explicación y modelo.",
+    )
     heur_weight = DEFAULT_HEUR_WEIGHT
     neural_weight = DEFAULT_NEURAL_WEIGHT
-    if tipo_analisis == "Combinado":
-        # El peso neuronal se calcula como complemento para evitar que la suma
-        # de ponderaciones pueda superar o quedarse por debajo del 100%.
-        heur_weight = st.slider("Peso heurístico (%)", 0, 100, DEFAULT_HEUR_WEIGHT)
-        neural_weight = 100 - heur_weight
+    with st.container(border=True, key="analysis_options_panel"):
+        tipo_analisis = st.radio(
+            "Tipo de análisis",
+            ["Heurístico", "Red neuronal", "Combinado"],
+            index=2,
+            horizontal=True,
+        )
+        if tipo_analisis == "Combinado":
+            # El peso neuronal se calcula como complemento para evitar que la
+            # suma pueda superar o quedarse por debajo del 100%.
+            heur_weight = st.slider("Peso heurístico (%)", 0, 100, DEFAULT_HEUR_WEIGHT)
+            neural_weight = 100 - heur_weight
+            st.caption(f"Fusión aplicada: {heur_weight}% heurística · {neural_weight}% neuronal")
 
+    encabezado_seccion(
+        "03",
+        "Ejecuta y revisa el resultado",
+        "El backend devolverá el veredicto, la puntuación y la evidencia disponible.",
+    )
     if modo == "Analizar correos de Gmail":
-        if st.button("Conectar Gmail y analizar"):
+        if st.button(
+            "Conectar Gmail y analizar",
+            type="primary",
+            use_container_width=True,
+        ):
             try:
                 with st.spinner("Conectando con Gmail..."):
                     servicio = construir_servicio_gmail(GMAIL_CREDENTIALS_PATH, GMAIL_TOKEN_PATH)
@@ -728,7 +821,7 @@ def main():
             )
         return
 
-    if st.button("Analizar correo"):
+    if st.button("Analizar correo", type="primary", use_container_width=True):
         if not texto_para_analisis.strip():
             st.warning("Introduce texto o sube un archivo .eml antes de analizar.")
         else:

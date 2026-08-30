@@ -12,7 +12,12 @@ from sistema_phishing.model_config import (
     HiperparametrosModelo,
     cargar_hiperparametros_desde_env,
 )
-from ui_components import aplicar_estilos_base, estado_badge, render_html
+from ui_components import (
+    aplicar_estilos_base,
+    encabezado_pagina,
+    estado_badge,
+    render_html,
+)
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -224,7 +229,7 @@ def _training_tab(client: BackendClient) -> None:
             except BackendClientError as exc:
                 st.error(str(exc))
 
-    if col_train.button("Entrenar y activar", use_container_width=True):
+    if col_train.button("Entrenar y activar", use_container_width=True, type="primary"):
         if not files:
             st.error("Sube al menos un CSV.")
             return
@@ -273,7 +278,7 @@ def _evaluation_tab(client: BackendClient) -> None:
         format_func=lambda x: x.upper(),
         key="evaluation_language",
     )
-    if st.button("Evaluar en el servidor", use_container_width=True):
+    if st.button("Evaluar en el servidor", use_container_width=True, type="primary"):
         if file is None:
             st.error("Sube un CSV de prueba.")
             return
@@ -321,7 +326,7 @@ def _comparison_tab(client: BackendClient) -> None:
                 enabled_label="Personalizar esta configuración",
             )
             models.append({"name": name, "hyperparameters": hyperparameters})
-    if st.button("Comparar en el servidor", use_container_width=True):
+    if st.button("Comparar en el servidor", use_container_width=True, type="primary"):
         if not training_files or test_file is None:
             st.error("Sube entrenamiento y prueba.")
             return
@@ -381,10 +386,13 @@ def _models_tab(client: BackendClient, models: dict) -> None:
 def main() -> None:
     cargar_env_local(ROOT_DIR)
     aplicar_estilos_entrenamiento()
-    st.title("Administración de modelos")
-    st.caption(
-        "Cliente ligero: toda lectura de datasets, evaluación, entrenamiento y "
-        "persistencia se ejecuta en el backend central."
+    encabezado_pagina(
+        "Ciclo de vida del modelo",
+        "Administración de modelos",
+        "Entrena, evalúa y activa versiones centrales en español e inglés sin "
+        "distribuir artefactos entre los clientes.",
+        "Operaciones del servidor",
+        "Los CSV se procesan en el backend y la activación se realiza de forma atómica.",
     )
 
     training_password = os.getenv("TRAINING_PASSWORD", "")

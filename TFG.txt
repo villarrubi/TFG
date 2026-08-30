@@ -740,7 +740,7 @@ Los modelos entrenados se almacenan en disco mediante joblib, diferenciando entr
 
 Interfaz de usuario
 
-El cliente web se desarrolla con Streamlit y organiza cinco vistas: Inicio, Configuración, Detección, Monitor y Entrenamiento. Sus responsabilidades son recoger entradas, llamar mediante BackendClient y presentar la respuesta. Detección admite texto, EML o Gmail y los tres modos; Entrenamiento administra las versiones centrales sin cargar modelos en el proceso de interfaz.
+El cliente web se desarrolla con Streamlit y organiza cinco vistas: Inicio, Configuración, Detección, Monitor y Entrenamiento. Comparte un sistema visual adaptable con cabecera de marca, navegación compacta, tarjetas de estado y componentes coherentes. Detección ordena fuente, configuración y resultado en tres pasos; Configuración agrupa conexiones, monitor, backend y red neuronal en pestañas. Sus responsabilidades son recoger entradas, llamar mediante BackendClient y presentar la respuesta, sin cargar modelos ni exponer rutas locales completas de credenciales.
 
 El resultado se muestra mediante una puntuación de riesgo, una clasificación global y un panel de detalles. En el análisis heurístico, el usuario puede consultar qué señales se han activado y leer una explicación de cada una. Esta decisión busca mejorar la transparencia del sistema, evitando que el resultado sea una simple etiqueta opaca.
 

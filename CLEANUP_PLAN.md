@@ -1,6 +1,6 @@
 # Estado de puesta a punto y deuda restante
 
-Revisión actualizada el 29 de agosto de 2026 sobre `main`. Este documento sustituye
+Revisión actualizada el 30 de agosto de 2026 sobre `main`. Este documento sustituye
 el plan histórico de `feature/web`, que ya no describía el estado real de las
 ramas ni de la entrega.
 
@@ -19,6 +19,10 @@ ramas ni de la entrega.
   host. El proceso del puerto 8765 queda solo como proxy de compatibilidad.
 - La interfaz describe correctamente el fallback neuronal: si falta un idioma
   se crea un modelo sintético de ese mismo idioma, no se reutiliza el opuesto.
+- La interfaz Streamlit comparte un sistema visual adaptable a escritorio y
+  móvil, con navegación de marca, estados homogéneos y recorridos más claros.
+  Detección se ordena en tres pasos, Configuración usa pestañas y las vistas no
+  muestran rutas locales completas de credenciales.
 - Se separan calibración y evaluación: 40 casos controlados calibran la fusión y
   16 EML locales reservados verifican escenarios con cabeceras y MIME completos.
   Ambos conservan hashes, resultados por caso e informe de limitaciones.

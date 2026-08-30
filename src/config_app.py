@@ -34,7 +34,12 @@ from sistema_phishing.telegram_notifier import (
     TelegramNotificationError,
     TelegramNotifier,
 )
-from ui_components import aplicar_estilos_base, estado_badge, render_html
+from ui_components import (
+    aplicar_estilos_base,
+    encabezado_pagina,
+    estado_badge,
+    render_html,
+)
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 ENV_LOCAL_PATH = os.path.join(ROOT_DIR, ".env.local")
@@ -117,7 +122,7 @@ def _mostrar_config_gmail() -> None:
     col_info, col_actions = st.columns([2, 1])
 
     with col_info:
-        st.caption(f"Credenciales: `{GMAIL_CREDENTIALS_PATH}`")
+        st.caption(f"Credenciales locales: `{os.path.basename(GMAIL_CREDENTIALS_PATH)}`")
         try:
             perfil = _perfil_gmail()
             if perfil:
@@ -128,7 +133,7 @@ def _mostrar_config_gmail() -> None:
             st.error(f"No se pudo leer la cuenta conectada: {exc}")
 
     with col_actions:
-        if st.button("Conectar Gmail", use_container_width=True):
+        if st.button("Conectar Gmail", use_container_width=True, type="primary"):
             try:
                 servicio = construir_servicio_gmail(GMAIL_CREDENTIALS_PATH, GMAIL_TOKEN_PATH)
                 perfil = obtener_perfil_gmail(servicio)
@@ -164,7 +169,7 @@ def _mostrar_config_telegram(valores: dict) -> None:
     chat_id = st.text_input("Chat ID destino", value=chat_actual)
 
     col_guardar, col_probar = st.columns(2)
-    if col_guardar.button("Guardar Telegram", use_container_width=True):
+    if col_guardar.button("Guardar Telegram", use_container_width=True, type="primary"):
         nuevos_valores = {"TELEGRAM_CHAT_ID": chat_id.strip()}
         if token_nuevo.strip():
             nuevos_valores["TELEGRAM_BOT_TOKEN"] = token_nuevo.strip()
@@ -241,7 +246,7 @@ def _mostrar_config_monitor(valores: dict) -> None:
         key="monitor_mark_existing",
     )
 
-    if st.button("Guardar monitor", use_container_width=True):
+    if st.button("Guardar monitor", use_container_width=True, type="primary"):
         actualizar_env_local(
             ROOT_DIR,
             {
@@ -286,7 +291,7 @@ def _mostrar_config_backend(valores: dict) -> None:
     )
 
     col_save, col_test = st.columns(2)
-    if col_save.button("Guardar backend", use_container_width=True):
+    if col_save.button("Guardar backend", use_container_width=True, type="primary"):
         try:
             normalized = normalize_backend_url(backend_url)
         except ValueError as exc:
@@ -380,7 +385,11 @@ def _mostrar_config_neural(valores: dict) -> None:
             "Early stopping (parar antes si deja de mejorar)", value=actuales.mlp_early_stopping,
         )
 
-    if st.button("Guardar hiperparámetros de la red neuronal", use_container_width=True):
+    if st.button(
+        "Guardar hiperparámetros de la red neuronal",
+        use_container_width=True,
+        type="primary",
+    ):
         if ngram_min > ngram_max:
             st.error("El n-grama mínimo no puede ser mayor que el máximo.")
         else:
@@ -437,16 +446,26 @@ def main() -> None:
     cargar_env_local(ROOT_DIR)
     valores = leer_env_file(ENV_LOCAL_PATH)
 
-    st.title("Configuración")
-    st.caption("Gestiona Gmail, Telegram y los parámetros compartidos por la detección y el monitor.")
+    encabezado_pagina(
+        "Preferencias del sistema",
+        "Configuración",
+        "Gestiona conexiones, automatización y parámetros del backend desde un único lugar.",
+        "Configuración local",
+        "Los secretos permanecen en .env.local y nunca se muestran completos.",
+    )
     _mostrar_estado_general(valores)
 
-    _mostrar_config_gmail()
-    st.markdown("---")
-    _mostrar_config_telegram(valores)
-    st.markdown("---")
-    _mostrar_config_monitor(valores)
-    st.markdown("---")
-    _mostrar_config_backend(valores)
-    st.markdown("---")
-    _mostrar_config_neural(valores)
+    tab_conexiones, tab_monitor, tab_backend, tab_modelo = st.tabs(
+        ["Conexiones", "Monitor", "Backend", "Red neuronal"]
+    )
+    with tab_conexiones:
+        with st.container(border=True):
+            _mostrar_config_gmail()
+        with st.container(border=True):
+            _mostrar_config_telegram(valores)
+    with tab_monitor, st.container(border=True):
+        _mostrar_config_monitor(valores)
+    with tab_backend, st.container(border=True):
+        _mostrar_config_backend(valores)
+    with tab_modelo, st.container(border=True):
+        _mostrar_config_neural(valores)

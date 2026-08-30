@@ -292,8 +292,8 @@ def sync_memory() -> None:
                 "El sistema permite una versión activa en español y otra en inglés. La vista de entrenamiento serializa los CSV y los hiperparámetros y los envía al backend, que valida datos, entrena desde cero, guarda el artefacto de forma atómica e invalida la caché. Evaluación y comparación también se ejecutan en el servidor; los clientes reciben únicamente métricas y metadatos.",
             ),
             (
-                "La aplicación principal se desarrolla con Streamlit",
-                "El cliente web se desarrolla con Streamlit y organiza cinco vistas: Inicio, Configuración, Detección, Monitor y Entrenamiento. Sus responsabilidades son recoger entradas, llamar mediante BackendClient y presentar la respuesta. Detección admite texto, EML o Gmail y los tres modos; Entrenamiento administra las versiones centrales sin cargar modelos en el proceso de interfaz.",
+                "El cliente web se desarrolla con Streamlit",
+                "El cliente web se desarrolla con Streamlit y organiza cinco vistas: Inicio, Configuración, Detección, Monitor y Entrenamiento. Comparte un sistema visual adaptable con cabecera de marca, navegación compacta, tarjetas de estado y componentes coherentes. Detección ordena fuente, configuración y resultado en tres pasos; Configuración agrupa conexiones, monitor, backend y red neuronal en pestañas. Sus responsabilidades son recoger entradas, llamar mediante BackendClient y presentar la respuesta, sin cargar modelos ni exponer rutas locales completas de credenciales.",
             ),
             (
                 "La integración con Gmail se realiza",
@@ -496,7 +496,7 @@ def sync_full_guide() -> None:
         [
             (
                 "Versión revisada:",
-                "Versión revisada: 29 de agosto de 2026",
+                "Versión revisada: 30 de agosto de 2026",
             ),
             (
                 "Aplicación web local modular",
@@ -520,7 +520,7 @@ def sync_full_guide() -> None:
             ),
             (
                 "Streamlit reduce el trabajo de frontend",
-                "Streamlit reduce el trabajo de frontend y permite dedicar el TFG al motor. En esta arquitectura se limita a presentación y a llamadas con BackendClient; no importa ModelStorage ni ejecuta reglas. Cada interacción reejecuta el script de UI y el framework no aporta por sí solo autenticación multiusuario, por lo que sigue siendo apropiado para el prototipo y no basta para publicar un servicio abierto.",
+                "Streamlit reduce el trabajo de frontend y permite dedicar el TFG al motor. Un sistema visual compartido aporta una cabecera de marca, navegación adaptable, estados, tarjetas y formularios coherentes; Detección guía el flujo en tres pasos y Configuración lo organiza en pestañas. En esta arquitectura se limita a presentación y a llamadas con BackendClient; no importa ModelStorage, no ejecuta reglas ni muestra rutas locales completas de credenciales. Cada interacción reejecuta el script de UI y el framework no aporta por sí solo autenticación multiusuario, por lo que sigue siendo apropiado para el prototipo y no basta para publicar un servicio abierto.",
             ),
             (
                 "El recorrido siempre intenta",
@@ -755,9 +755,10 @@ def sync_full_guide() -> None:
         "La rejilla de calibración sobre 40 casos seleccionó 30 % heurístico",
         "La rejilla de calibración sobre 40 casos seleccionó 35 % heurístico y 65 % neuronal, reservando al menos 20 % a cada detector. El nivel 70 conserva una evidencia individual concluyente. Los 16 EML posteriores se evaluaron sin reajustar esos valores.",
     )
-    replace_fragment(doc, "26 de agosto de 2026", "29 de agosto de 2026")
-    replace_fragment(doc, "27 de agosto de 2026", "29 de agosto de 2026")
-    replace_fragment(doc, "28 de agosto de 2026", "29 de agosto de 2026")
+    replace_fragment(doc, "26 de agosto de 2026", "30 de agosto de 2026")
+    replace_fragment(doc, "27 de agosto de 2026", "30 de agosto de 2026")
+    replace_fragment(doc, "28 de agosto de 2026", "30 de agosto de 2026")
+    replace_fragment(doc, "29 de agosto de 2026", "30 de agosto de 2026")
     replace_fragment(doc, "propuesta híbrida", "arquitectura cliente-servidor")
     replace_fragment(
         doc,
