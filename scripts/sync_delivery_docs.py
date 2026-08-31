@@ -76,6 +76,25 @@ def insert_paragraph_after(paragraph: Paragraph, text: str) -> Paragraph:
     return inserted
 
 
+def insert_after_prefix_once(
+    doc: DocumentObject,
+    anchor_prefix: str,
+    unique_prefix: str,
+    text: str,
+) -> int:
+    """Inserta un párrafo una sola vez después de un ancla estable."""
+    if any(p.text.startswith(unique_prefix) for p in doc.paragraphs):
+        return 0
+    anchor = next(
+        (p for p in doc.paragraphs if p.text.startswith(anchor_prefix)),
+        None,
+    )
+    if anchor is None:
+        return 0
+    insert_paragraph_after(anchor, text)
+    return 1
+
+
 def _keep_table_rows_together(doc: DocumentObject) -> None:
     for table in doc.tables:
         for row in table.rows:
@@ -317,10 +336,6 @@ def sync_memory() -> None:
     replacements.extend(
         [
             (
-                "El phishing se ha consolidado",
-                "El phishing se ha consolidado como una de las ciberamenazas más persistentes y dañinas. Este Trabajo Fin de Grado diseña, implementa y evalúa un sistema cliente-servidor para detectar phishing en correo. Streamlit, la extensión y el monitor envían las entradas a una API central que combina heurística explicable y modelos TF-IDF + MLP en español e inglés. El servidor es el único responsable de parsear, analizar, entrenar y versionar los modelos, de modo que una actualización se aplica a todos los clientes. La memoria revisa el estado del arte y presenta una validación reproducible, delimitando expresamente sus límites frente a producción.",
-            ),
-            (
                 "El prototipo se centra en el análisis",
                 "El prototipo se centra en el análisis de mensajes desde varios clientes. El origen puede ser texto, EML, Gmail, la extensión o JSON. El cliente transporta la entrada y el backend central extrae cabeceras, remitente, asunto, cuerpo, HTML, enlaces, anclas y adjuntos para generar el riesgo heurístico, neuronal o combinado. La interfaz recibe un contrato ya calculado y se limita a presentarlo.",
             ),
@@ -384,6 +399,41 @@ def sync_memory() -> None:
             paragraph.text == replacement for paragraph in _all_paragraphs(doc)
         ):
             missing.append(prefix)
+    replace_next_nonempty(
+        doc,
+        "Resumen",
+        "El phishing se ha consolidado como una de las ciberamenazas más persistentes "
+        "y dañinas. Este Trabajo Fin de Grado diseña, implementa y evalúa un sistema "
+        "cliente-servidor para detectar phishing en correo. Streamlit, la extensión y "
+        "el monitor envían las entradas a una API central que combina heurística "
+        "explicable y modelos TF-IDF + MLP en español e inglés. El servidor es el único "
+        "responsable de parsear, analizar, entrenar y versionar los modelos, de modo que "
+        "una actualización se aplica a todos los clientes. La memoria revisa el estado "
+        "del arte y presenta una validación reproducible, delimitando expresamente sus "
+        "límites frente a producción.",
+    )
+    replace_next_nonempty(
+        doc,
+        "Concepto y contexto actual",
+        "El phishing se ha consolidado como una amenaza persistente porque combina "
+        "suplantación técnica e ingeniería social para inducir al usuario a revelar "
+        "información, ejecutar una acción o transferir dinero. Su análisis exige "
+        "considerar conjuntamente el canal, la identidad aparente, las cabeceras, el "
+        "contenido y el contexto humano; ninguna señal aislada resulta suficiente en "
+        "todos los casos.",
+    )
+    insert_after_prefix_once(
+        doc,
+        "La solución adopta una arquitectura cliente-servidor",
+        "En cuanto a concurrencia,",
+        "En cuanto a concurrencia, el backend usa ThreadingHTTPServer y crea un hilo "
+        "por petición, sin un máximo cerrado en el código. En este equipo se repitieron "
+        "pruebas de 8 y 16 análisis simultáneos sin fallos; con 16, el percentil 95 de "
+        "latencia quedó entre 0,58 y 0,66 s, mientras que a 32 aparecieron errores. Por "
+        "ello se recomiendan 4-8 solicitudes concurrentes para la configuración académica "
+        "y se presenta 16 solo como máximo comprobado localmente, no como capacidad de "
+        "producción. Entrenamiento y borrado de modelos se serializan mediante un bloqueo.",
+    )
     replace_fragment(
         doc,
         "python -m pip install -r requirements.txt",
@@ -765,6 +815,33 @@ def sync_full_guide() -> None:
             paragraph.text == replacement for paragraph in _all_paragraphs(doc)
         ):
             missing.append(prefix)
+    if not any(
+        paragraph.text.startswith("¿A cuántos clientes puede atender")
+        for paragraph in doc.paragraphs
+    ):
+        anchor = next(
+            (
+                paragraph
+                for paragraph in doc.paragraphs
+                if paragraph.text.startswith("Sí, Streamlit usa HTTP con el navegador")
+            ),
+            None,
+        )
+        if anchor is not None:
+            question = insert_paragraph_after(
+                anchor,
+                "¿A cuántos clientes puede atender el servidor a la vez?",
+            )
+            question.style = "Pregunta tribunal"
+            answer = insert_paragraph_after(
+                question,
+                "No hay un máximo fijo: ThreadingHTTPServer crea un hilo por petición. "
+                "En este equipo, 8 y 16 análisis simultáneos terminaron sin fallos en "
+                "varias rondas, aunque con 16 el P95 subió a 0,58-0,66 s; a 32 hubo "
+                "errores. Para la demo recomiendo 4-8. Dieciséis es un máximo comprobado "
+                "localmente, no un SLA ni capacidad de producción.",
+            )
+            answer.style = "Respuesta tribunal"
     replace_fragment(doc, "47 pruebas", "94 pruebas Python y 2 de navegador")
     replace_fragment(doc, "54 pruebas Python", "94 pruebas Python")
     replace_fragment(doc, "59 pruebas Python", "94 pruebas Python")
@@ -930,17 +1007,17 @@ def sync_full_guide() -> None:
     replace_fragment(doc, "feature/web", "main")
     replace_fragment(doc, "28 señales", "31 señales")
     replace_fragment(doc, "28 reglas", "31 reglas")
-    replace_fragment(doc, "superar 45", "superar 26")
-    replace_fragment(doc, "superar 36", "superar 26")
+    replace_fragment(doc, "superar 45", "superar 21")
+    replace_fragment(doc, "superar 36", "superar 21")
     replace_fragment(
         doc,
         "phishing_heuristico = riesgo_heuristico >= 45",
-        "phishing_heuristico = riesgo_heuristico >= 26",
+        "phishing_heuristico = riesgo_heuristico >= 21",
     )
     replace_fragment(
         doc,
         "phishing_heurístico = riesgo_heurístico >= 45",
-        "phishing_heurístico = riesgo_heurístico >= 26",
+        "phishing_heurístico = riesgo_heurístico >= 21",
     )
     replace_fragment(
         doc,
@@ -953,9 +1030,19 @@ def sync_full_guide() -> None:
         "Urgencia, saludo genérico, credenciales, asunto, referencias a archivos y patrones BEC.",
     )
     replace_fragment(
-        doc, "umbral habitual del combinado: 45", "umbral calibrado del combinado: 26"
+        doc, "umbral habitual del combinado: 45", "umbral calibrado del combinado: 21"
     )
-    replace_fragment(doc, "¿Por qué un umbral de 45?", "¿Por qué un umbral de 26?")
+    replace_fragment(doc, "¿Por qué un umbral de 45?", "¿Por qué un umbral de 21?")
+    replace_fragment(
+        doc,
+        "umbral calibrado del combinado: 26",
+        "umbral calibrado del combinado: 21",
+    )
+    replace_fragment(
+        doc,
+        "El valor 26 fue seleccionado por la rejilla estratificada",
+        "El valor 21 fue seleccionado por la rejilla estratificada",
+    )
     replace_fragment(
         doc, "Combinado con 60 % heurística", "Combinado con 45 % heurística"
     )

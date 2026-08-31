@@ -44,6 +44,26 @@ archivos. El servidor valida los umbrales, pesos e hiperparámetros antes de
 persistirlos. Los hiperparámetros guardados se utilizan en el siguiente
 entrenamiento; no alteran retroactivamente un modelo activo.
 
+## Concurrencia
+
+`http_api.py` utiliza un servidor HTTP con hilos. Cada petición se atiende en su
+propio hilo y no existe una constante que limite el número total de clientes.
+Eso no significa capacidad ilimitada: CPU, memoria, cola de conexiones, tamaño
+del correo y tareas de entrenamiento determinan la latencia real.
+
+En este equipo se validaron repetidamente 8 y 16 peticiones de análisis
+concurrentes sin errores. Con 16, el percentil 95 quedó entre 0,58 y 0,66 s; a
+32 solicitudes simultáneas ya se observaron fallos. Para la configuración
+académica se recomienda trabajar con 4-8 análisis simultáneos y presentar 16
+solo como máximo comprobado localmente, nunca como capacidad garantizada. Las
+instalaciones inactivas no consumen un hilo: la concurrencia cuenta peticiones,
+no clientes configurados.
+
+El entrenamiento y la eliminación de modelos se serializan para proteger la
+versión activa. Los análisis pueden continuar, aunque una tarea pesada puede
+aumentar su latencia. Un despliegue real necesitaría un pool acotado, cola,
+rate limiting, observabilidad y pruebas de carga en el hardware objetivo.
+
 ## Despliegues separados
 
 `PHISHING_CLIENT_DATA_DIR` y `PHISHING_SERVER_DATA_DIR` permiten ubicar ambos

@@ -22,6 +22,32 @@ Las diferencias de hasta ±3 % en aquella medición fueron variación de ejecuci
 La mejora material histórica está en el arranque, que era el cuello de botella
 observado.
 
+## Concurrencia del backend HTTP
+
+El 31 de agosto de 2026 se añadió una prueba de concurrencia sobre el backend
+real, con modelos calientes y peticiones de análisis combinado. El equipo de
+referencia usa Windows 11, Python 3.12.7 y 16 CPU lógicas. La prueba abre un
+servidor efímero en loopback y no utiliza credenciales ni servicios externos.
+
+| Clientes simultáneos | Peticiones por ronda | Fallos observados | P95 de latencia |
+| ---: | ---: | ---: | ---: |
+| 4 | 48 | 0 | 56,77 ms |
+| 8 | 96 | 0 | 83,36 ms |
+| 12 | 144 | 0 | 589,84 ms |
+| 16 | 192 | 0 | 615,44 ms |
+| 32 | 128 / 256 | 3 / 8 | 785,41 / 1.599,32 ms |
+
+Otras dos ejecuciones de 8 y 16 clientes tampoco produjeron fallos; con 16 el
+P95 osciló entre 582,35 y 664,52 ms. La conclusión no es que el sistema tenga
+una capacidad fija de 16 clientes. El servidor crea un hilo por petición y no
+impone un máximo explícito, pero la degradación y los fallos a 32 muestran que
+no debe presentarse como ilimitado. Para la demo local se recomienda 4-8
+análisis simultáneos; 16 es un máximo comprobado en este equipo, no un SLA.
+
+El entrenamiento y la eliminación de modelos se serializan con un bloqueo. Un
+despliegue multiusuario necesitaría un pool acotado, cola, límites de tasa y una
+prueba de carga específica del hardware y del tamaño de mensaje previstos.
+
 ## Revalidación tras la calibración
 
 El 28 de agosto de 2026 se repitió el comando documentado, con 200 operaciones y
@@ -84,6 +110,7 @@ distintos y valida una petición de análisis completa.
 
 ```powershell
 python scripts/benchmark_analysis.py --iterations 200 --repeats 5
+python scripts/benchmark_concurrency.py --clients 1,4,8,16,32
 $env:PYTHONPATH = "src"
 python -m unittest discover -s tests -p "test_*.py"
 python -m ruff check src tests browser_tests scripts

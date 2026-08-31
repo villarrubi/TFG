@@ -291,6 +291,29 @@ Las rutas administrativas pueden protegerse con `BACKEND_ADMIN_TOKEN`. Una URL
 de backend fuera de loopback debe usar HTTPS; el servidor incorporado no
 termina TLS.
 
+### Concurrencia y número de clientes
+
+El backend utiliza `ThreadingHTTPServer`: crea un hilo por petición y no fija
+un máximo cerrado de clientes. El dato relevante es el número de análisis
+simultáneos, no cuántas instalaciones permanecen configuradas pero inactivas.
+
+En la medición local de referencia (Windows 11, Python 3.12.7 y 16 CPU lógicas),
+8 y 16 clientes concurrentes completaron varias rondas sin fallos. Con 16, el
+percentil 95 de latencia estuvo entre 0,58 y 0,66 s; a 32 aparecieron errores y
+picos superiores. Por prudencia, la configuración académica se recomienda para
+4-8 análisis simultáneos. No es un límite contractual ni una estimación de
+producción: depende del equipo, el tamaño del correo, el modo y otras tareas.
+
+El entrenamiento y el borrado de modelos se serializan con un bloqueo. Para un
+servicio multiusuario real harían falta un servidor de producción con un pool
+acotado, cola, límites de tasa, métricas y pruebas de carga en el hardware final.
+
+La prueba puede repetirse sin credenciales ni conexiones externas:
+
+```powershell
+python scripts/benchmark_concurrency.py --clients 1,4,8,16,32
+```
+
 ## Desarrollo y pruebas
 
 Instala las dependencias de desarrollo y Chromium:
@@ -308,6 +331,7 @@ python -m unittest discover -s tests -p "test_*.py"
 python -m ruff check src tests scripts browser_tests
 python scripts/calibrate_combined.py --check
 python scripts/evaluate_models.py
+python scripts/benchmark_concurrency.py --clients 1,4,8,16,32
 python -m unittest discover -s browser_tests -p "test_*.py"
 ```
 
@@ -397,6 +421,7 @@ correspondiente. No presentes el fallback como un modelo evaluado.
 ## Documentación adicional
 
 - [Arquitectura y propiedad de los datos](docs/CLIENT_SERVER_STORAGE.md)
+- [Capturas recomendadas para memoria y defensa](docs/DEFENSE_SCREENSHOTS.md)
 - [Validación de Gmail y Telegram](docs/INTEGRATION_VALIDATION.md)
 - [Auditoría bibliográfica](docs/BIBLIOGRAPHY_AUDIT.md)
 - [Informe de rendimiento](PERFORMANCE_REPORT.md)

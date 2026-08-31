@@ -405,7 +405,7 @@ try {
     [void](Add-Line $s 480 142 480 443 $C.Line 1.2 $false "Metric vertical")
     [void](Add-Line $s 80 292 880 292 $C.Line 1.2 $false "Metric horizontal")
     $metrics = @(
-        @(90, 150, "89", "pruebas Python", "Componentes, API, modelos e integraciones"),
+        @(90, 150, "94", "pruebas Python", "Componentes, API, modelos e integraciones"),
         @(520, 150, "2", "recorridos Chromium", "Incluido navegador → Streamlit → backend"),
         @(90, 318, "96,6 %", "menos tiempo de importación", "Heurísticas tras diferir dependencias pesadas"),
         @(520, 318, "76,2 %", "menos arranque de la web", "Mejora medida; inferencia estable")

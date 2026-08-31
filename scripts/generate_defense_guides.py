@@ -601,6 +601,10 @@ def tecnologias():
     )
     _para(
         doc,
+        "La prueba de concurrencia usa el backend HTTP real y modelos calientes. En este equipo, 8 y 16 análisis simultáneos terminaron sin errores en varias rondas; con 16, el P95 quedó entre 0,58 y 0,66 s. A 32 aparecieron fallos. Por ello, 4-8 es la recomendación para la demo y 16 solo un máximo comprobado localmente, no un SLA.",
+    )
+    _para(
+        doc,
         "La validación automatizada reúne 94 pruebas Python y 2 pruebas con Chromium. Incluye idioma determinista y el recorrido local Gmail EML -> JSON -> HTTP -> backend -> Telegram. GitHub Actions instala versiones fijadas, ejecuta Ruff, verifica calibración, regenera la evaluación, comprueba el respaldo de defensa y recorre web-backend. OAuth real usa una lista E2E separada porque sus credenciales no pueden entrar en CI.",
     )
     _heading(doc, "7. Diferencias con la propuesta inicial", 1)
@@ -741,7 +745,7 @@ def guion():
     )
     _para(
         doc,
-        "En rendimiento, presenta solo mejoras medidas: la importación fría de heurísticas bajó un 96,6 % y el arranque de la aplicación un 76,2 %. Las rutas de inferencia variaron menos de un 3 %, por lo que no se atribuye una mejora que no esté respaldada por la medición.",
+        "En rendimiento, presenta solo mejoras medidas: la importación fría de heurísticas bajó un 96,6 % y el arranque de la aplicación un 76,2 %. Las rutas de inferencia variaron menos de un 3 %. En concurrencia, 8 y 16 análisis simultáneos terminaron sin fallos en varias rondas locales, pero a 32 hubo errores; se recomienda 4-8 para la demo y no se promete capacidad de producción.",
     )
     _heading(doc, "6. Preguntas previsibles y respuestas", 1)
     _table(
@@ -759,6 +763,10 @@ def guion():
             (
                 "¿Es cliente-servidor?",
                 "Sí. Streamlit, extensión y monitor son clientes HTTP; backend_server analiza y mantiene una versión activa por idioma. En local ambos lados están en el mismo equipo, pero siguen siendo procesos y responsabilidades separadas.",
+            ),
+            (
+                "¿A cuántos clientes atiende a la vez?",
+                "No hay un límite fijo: crea un hilo por petición. Se validaron 8 y 16 análisis simultáneos sin fallos; con 16 aumentó la latencia y a 32 hubo errores. Para la demo se recomiendan 4-8. Dieciséis no es un SLA.",
             ),
             (
                 "¿Puede entrar un móvil?",
@@ -807,7 +815,7 @@ def guion():
         "Regenerar EVALUATION_REPORT.md y explicar sus errores sin confundir el desafío sintético con producción.",
         "Ensayar el guion con cronómetro y dejar dos minutos de margen.",
         "Memorizar tres límites: sin reputación online, extensión local y necesidad de datos representativos.",
-        "Llevar capturas del flujo y de la matriz de confusión como respaldo.",
+        "Llevar las ocho capturas prioritarias de docs/DEFENSE_SCREENSHOTS.md; conservar la prueba de concurrencia solo como respaldo.",
     ]:
         _bullet(doc, text)
     doc.save(ROOT / "Guia_03_Guion_defensa.docx")
