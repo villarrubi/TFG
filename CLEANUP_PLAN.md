@@ -32,8 +32,9 @@ ramas ni de la entrega.
 - `constraints.txt` fija las versiones directas y transitivas validadas.
 - Se añade un checklist manual para OAuth/Telegram, ya que CI no debe contener
   secretos reales.
-- README, memoria y guías de defensa se alinean con la arquitectura cliente-servidor y
-  con la evidencia cuantitativa actual.
+- README, memoria y materiales locales de defensa se alinean con la arquitectura
+  cliente-servidor y con la evidencia cuantitativa actual. Las guías y la
+  presentación se conservan fuera del seguimiento de Git.
 - Los clientes ligeros ya no importan scikit-learn/joblib para configurar el
   entrenamiento; el modo heurístico no carga el detector neuronal y los hashes
   de versión se cachean mientras el artefacto no cambia.
@@ -56,8 +57,8 @@ ramas ni de la entrega.
 - Una prueba integral recorre EML de Gmail, serialización JSON, HTTP, backend,
   estado del monitor y Telegram. Corrige cabeceras enriquecidas/surrogateescape
   que antes impedían al monitor enviar determinados correos al servidor.
-- Las filas de las tablas de las guías no se dividen entre páginas y todos los
-  DOCX/PDF finales se renderizan e inspeccionan antes de entrega.
+- Las filas de las tablas de las guías locales no se dividen entre páginas y
+  todos los DOCX/PDF finales se renderizan e inspeccionan antes de entrega.
 - Antes del mantenimiento se guardaron una copia completa de `.git` y un
   bundle verificado. `git gc` eliminó los 717 objetos sueltos y dejó 473 objetos
   compactados, sin basura ni errores de integridad.

@@ -1,250 +1,378 @@
-# TFG · Detección de phishing en correo electrónico
+# Detector de phishing en correo electrónico
 
-Sistema cliente-servidor para analizar correos mediante reglas heurísticas y modelos neuronales TF-IDF + MLP. Streamlit, la extensión de Gmail y el monitor son clientes de una única API HTTP; solo el backend analiza, entrena y guarda los modelos activos.
+Aplicación cliente-servidor para analizar correos mediante reglas explicables y
+modelos TF-IDF + MLP en español e inglés. La web, la extensión de Gmail y el
+monitor utilizan el mismo backend, por lo que todos comparten los modelos que
+estén activos en el servidor.
 
-## Puesta en marcha
+## Qué ofrece
 
-Requisitos: Python 3.11 o posterior.
+- Análisis de texto pegado, ficheros EML y mensajes importados desde Gmail.
+- Modos heurístico, neuronal y combinado.
+- Explicación de las señales detectadas y de la puntuación de riesgo.
+- Un modelo activo por idioma, centralizado para todos los clientes.
+- Entrenamiento y evaluación desde la interfaz web.
+- Monitor opcional de Gmail con alertas de Telegram.
+- Extensión local de Chrome para analizar el correo visible en Gmail.
+- 89 pruebas Python, 2 recorridos reales con Chromium y validación continua.
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements-dev.txt -c constraints.txt
-python -m playwright install chromium
+## Arquitectura en un minuto
+
+El proyecto es cliente-servidor aunque todos los procesos se ejecuten, por
+defecto, en el mismo equipo:
+
+```text
+Navegador
+   │
+   ▼
+Streamlit :8501 ────── HTTP/JSON ──────► Backend central :8766
+                                           ├── parser MIME/EML
+Extensión Gmail ────── HTTP/JSON ──────────┤── reglas heurísticas
+Monitor Gmail ──────── HTTP/JSON ──────────┤── modelo ES activo
+                                           ├── modelo EN activo
+                                           └── entrenamiento y evaluación
 ```
 
-El sistema se arranca en dos terminales. Primero, el servidor central:
+Streamlit recoge entradas y presenta la respuesta. No carga modelos ni ejecuta
+reglas localmente. El backend es el único componente que normaliza el correo,
+calcula las señales, realiza la inferencia y activa nuevas versiones de los
+modelos.
+
+## Inicio rápido
+
+### Requisitos
+
+- Windows, Linux o macOS.
+- Python 3.11 o posterior; Python 3.12 es la versión validada.
+- Git.
+- Dos terminales para ejecutar backend y web por separado.
+
+### 1. Descargar y preparar el entorno
+
+```powershell
+git clone https://github.com/villarrubi/TFG.git
+cd TFG
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt -c constraints.txt
+```
+
+En Linux o macOS, la activación equivalente es:
+
+```bash
+source .venv/bin/activate
+```
+
+Los ejemplos siguientes usan PowerShell. En Bash, sustituye la asignación de
+`PYTHONPATH` por `export PYTHONPATH=src`.
+
+No se necesitan credenciales de Gmail ni Telegram para probar el análisis de
+texto y EML.
+
+### 2. Arrancar el backend
+
+En la primera terminal, con el entorno virtual activado:
 
 ```powershell
 $env:PYTHONPATH = "src"
 python src/backend_server.py
 ```
 
-Después, el cliente web:
+El servidor queda disponible en `http://127.0.0.1:8766`. Comprueba su estado
+desde otra terminal:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8766/health
+```
+
+### 3. Arrancar la web
+
+En una segunda terminal, activa el mismo entorno y ejecuta:
 
 ```powershell
 $env:PYTHONPATH = "src"
 streamlit run src/app.py
 ```
 
-La aplicación se abre en `http://127.0.0.1:8501` y consume por defecto el backend de `http://127.0.0.1:8766`. Si el backend no está levantado, la interfaz lo indica y no ejecuta un detector alternativo local.
+Abre `http://127.0.0.1:8501`. La pantalla de inicio debe mostrar el backend
+conectado y las versiones de los modelos español e inglés.
 
-La interfaz comparte un diseño visual adaptable a escritorio y móvil: cabecera de marca, navegación compacta, estados de conexión y tarjetas coherentes en las cinco vistas. Detección guía el recorrido en tres pasos —fuente, configuración y resultado— y Configuración agrupa conexiones, monitor, backend y red neuronal mediante pestañas. La capa web se limita a recoger datos y mostrar la respuesta del servidor; tampoco expone rutas locales completas de credenciales.
+### 4. Realizar el primer análisis
 
-### Acceso temporal desde otro dispositivo de la red local
+1. Entra en **Detección**.
+2. Elige **Texto** o **Archivo EML** como fuente.
+3. Selecciona el modo **Combinado**.
+4. Introduce el mensaje y pulsa **Analizar correo**.
+5. Revisa el riesgo, el veredicto, las señales activadas y su explicación.
 
-La configuración predeterminada solo acepta conexiones desde el propio equipo. Para una demostración desde un móvil o portátil conectado a la misma red Wi-Fi, mantén el backend en `127.0.0.1:8766` y cambia únicamente la escucha de Streamlit:
+Si el backend no está disponible, la interfaz muestra el error de conexión y no
+intenta ejecutar una copia local del detector.
+
+## Modos de análisis
+
+| Modo | Qué utiliza | Cuándo resulta útil |
+| --- | --- | --- |
+| `heuristico` | 31 señales de cabeceras, remitente, URLs, HTML, adjuntos, lenguaje y BEC | Para obtener una explicación técnica detallada |
+| `neural` | TF-IDF + `MLPClassifier`, con selección automática de español o inglés | Para reconocer patrones aprendidos del texto |
+| `combinado` | 45 % heurística y 55 % neuronal, umbral 21 y alta confianza 70 | Opción predeterminada para reunir ambos enfoques |
+
+SPF, DKIM y DMARC se interpretan de forma pasiva a partir de los resultados ya
+presentes en las cabeceras. El sistema no realiza consultas DNS ni una
+validación criptográfica completa.
+
+Los modelos incluidos son `modelo_neural_es.joblib` y
+`modelo_neural_en.joblib`. Si falta el artefacto de un idioma, el backend puede
+crear un fallback sintético de ese mismo idioma y lo comunica expresamente; ese
+fallback sirve para mantener la aplicación disponible, no como evidencia de
+calidad del modelo.
+
+## Configuración
+
+La configuración predeterminada funciona sin crear ningún archivo adicional.
+Para personalizarla, copia la plantilla:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+Variables principales:
+
+| Variable | Valor predeterminado | Uso |
+| --- | --- | --- |
+| `PHISHING_BACKEND_URL` | `http://127.0.0.1:8766` | Backend que utilizan los clientes |
+| `BACKEND_HOST` | `127.0.0.1` | Interfaz de escucha del servidor |
+| `BACKEND_PORT` | `8766` | Puerto del servidor |
+| `BACKEND_ADMIN_TOKEN` | vacío | Token para operaciones administrativas |
+| `BACKEND_MODE` | `combinado` | Modo predeterminado |
+| `BACKEND_THRESHOLD` | `21` | Umbral del modo combinado |
+| `BACKEND_HEUR_WEIGHT` | `45` | Peso heurístico |
+| `BACKEND_NEURAL_WEIGHT` | `55` | Peso neuronal |
+| `BACKEND_HIGH_CONFIDENCE_THRESHOLD` | `70` | Evidencia individual concluyente |
+
+No subas `.env.local`, `credentials.json`, `token.json` ni
+`estado_monitor.json`; todos están excluidos por `.gitignore`.
+
+## Acceso desde otro dispositivo de la red local
+
+Mantén el backend en `127.0.0.1:8766` y expón únicamente Streamlit:
 
 ```powershell
 $env:PYTHONPATH = "src"
 streamlit run src/app.py --server.address 0.0.0.0 --server.port 8501
 ```
 
-Consulta la IPv4 del equipo con `ipconfig` y abre desde el otro dispositivo `http://IP_DEL_EQUIPO:8501`; por ejemplo, `http://192.168.1.75:8501`. Si Windows lo solicita, permite Python o el puerto 8501 solo en **redes privadas**. Ambos dispositivos deben compartir una red que permita comunicación entre clientes; algunas redes de invitados aplican aislamiento. La dirección puede cambiar si el router asigna otra IP mediante DHCP.
+Consulta la IPv4 del equipo con `ipconfig` y abre desde el móvil o portátil
+`http://IP_DEL_EQUIPO:8501`. Ambos dispositivos deben estar en la misma red.
 
-Este modo mantiene la arquitectura cliente-servidor: el navegador móvil envía la interacción a Streamlit, el proceso Streamlit consulta localmente el backend central y devuelve la respuesta ya calculada para mostrarla. No hay que iniciar el backend con `--allow-remote`, abrir el puerto 8766 ni cambiar `PHISHING_BACKEND_URL`.
+Esto permite acceso dentro de la LAN, pero no convierte la aplicación en un
+servicio público seguro. Úsalo solo de forma temporal en una red privada, no
+abras puertos en el router y detén Streamlit con `Ctrl+C` cuando termines. El
+puerto 8766 del backend no necesita exponerse.
 
-Escuchar en `0.0.0.0` no publica por sí solo la aplicación en Internet, pero permite entrar a cualquier dispositivo con acceso a esa LAN. Como la web no incorpora autenticación multiusuario, úsalo solo de forma temporal en una red privada y de confianza, sin redirección de puertos en el router. Detén Streamlit con `Ctrl+C` al terminar y vuelve al comando normal para recuperar el acceso exclusivo desde el equipo.
+## Integraciones opcionales
 
-Validación automática:
+### Gmail desde la web
+
+1. Activa Gmail API en Google Cloud.
+2. Crea un cliente OAuth de tipo aplicación de escritorio.
+3. Guarda el fichero descargado como `credentials.json` en la raíz.
+4. Abre **Configuración > Gmail** y conecta una cuenta de pruebas.
+
+La aplicación solicita acceso de solo lectura y guarda el token localmente en
+`token.json`. Consulta [el checklist OAuth](docs/OAUTH_E2E_CHECKLIST.md) antes de
+usar una cuenta real.
+
+### Monitor y Telegram
+
+Configura en `.env.local`:
+
+```text
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+MONITOR_INTERVAL_SECONDS=120
+GMAIL_MONITOR_QUERY=in:inbox newer_than:1d
+```
+
+Para una única comprobación:
+
+```powershell
+$env:PYTHONPATH = "src"
+python src/monitor_gmail.py --once
+```
+
+El monitor solicita el análisis al backend, guarda los IDs procesados de forma
+atómica y reintenta los mensajes afectados por errores temporales.
+
+### Extensión de Gmail
+
+1. Abre `chrome://extensions`.
+2. Activa **Modo de desarrollador**.
+3. Pulsa **Cargar descomprimida** y selecciona `extension_gmail/`.
+4. En **Opciones**, usa `http://127.0.0.1:8766` como backend.
+
+`gmail_extension_server.py` conserva el puerto histórico 8765 únicamente como
+proxy de compatibilidad. La extensión actual llama directamente al backend.
+
+## Entrenamiento y evaluación
+
+La vista **Entrenamiento** envía los CSV al backend. El servidor valida las
+columnas, entrena un pipeline nuevo, guarda el artefacto de forma atómica e
+invalida la caché. Los clientes usarán la nueva versión en su siguiente
+petición, sin reinstalarse ni reiniciarse.
+
+Los CSV brutos no están en Git por tamaño, licencia y privacidad.
+`evaluation/training_sources.json` fija las fuentes, licencias y SHA-256. El
+protocolo reproducible utiliza:
+
+- 1.148 textos para entrenamiento ES y 209 para prueba oficial.
+- 65.661 textos para entrenamiento EN y 16.416 para prueba.
+- 40 casos separados para calibrar el modo combinado.
+- 16 EML reservados para comparar los tres modos con MIME y cabeceras.
+
+Las cifras y sus limitaciones están en
+[TRAINING_EVALUATION_REPORT.md](TRAINING_EVALUATION_REPORT.md),
+[EVALUATION_REPORT.md](EVALUATION_REPORT.md) y
+[EXTERNAL_EVALUATION_REPORT.md](EXTERNAL_EVALUATION_REPORT.md). Ninguna métrica
+se presenta como rendimiento garantizado en producción.
+
+## API HTTP
+
+Rutas principales:
+
+| Método | Ruta | Uso |
+| --- | --- | --- |
+| `GET` | `/health` | Estado y versiones activas |
+| `GET` | `/models` | Metadatos de modelos |
+| `POST` | `/analyze` | Analizar texto, campos o EML Base64 |
+| `POST` | `/datasets/summary` | Validar y resumir CSV |
+| `POST` | `/train` | Entrenar y activar un modelo |
+| `POST` | `/evaluate` | Evaluar el modelo activo |
+| `POST` | `/compare` | Comparar configuraciones sin activarlas |
+| `POST` | `/models/delete` | Eliminar un artefacto activo |
+
+Las rutas administrativas pueden protegerse con `BACKEND_ADMIN_TOKEN`. Una URL
+de backend fuera de loopback debe usar HTTPS; el servidor incorporado no
+termina TLS.
+
+## Desarrollo y pruebas
+
+Instala las dependencias de desarrollo y Chromium:
+
+```powershell
+python -m pip install -r requirements-dev.txt -c constraints.txt
+python -m playwright install chromium
+```
+
+Ejecuta las comprobaciones principales:
 
 ```powershell
 $env:PYTHONPATH = "src"
 python -m unittest discover -s tests -p "test_*.py"
 python -m ruff check src tests scripts browser_tests
-python scripts/benchmark_analysis.py
 python scripts/calibrate_combined.py --check
 python scripts/evaluate_models.py
+python -m unittest discover -s browser_tests -p "test_*.py"
+```
+
+La suite actual contiene 89 pruebas Python y 2 recorridos con Chromium. GitHub
+Actions repite pruebas, análisis estático, auditoría bibliográfica, calibración,
+evaluación reproducible y navegación real en cada `push` y `pull_request`.
+
+La evaluación externa requiere red y se ejecuta por separado:
+
+```powershell
+$env:PYTHONPATH = "src"
 python scripts/evaluate_external.py --download
 python scripts/evaluate_external.py --check
-python scripts/prepare_defense_demo.py --check
-python -m unittest discover -s browser_tests -p "test_*.py"
-python scripts/generate_defense_guides.py
 ```
 
-La validación actual contiene 89 pruebas unitarias y de integración en Python y 2 recorridos con Chromium. Uno de ellos levanta el backend y Streamlit en procesos separados, introduce un correo desde el navegador y comprueba que la respuesta HTTP se presenta en la web. Otra prueba recorre Gmail EML → cliente HTTP → backend → alerta Telegram sin usar secretos externos. Las advertencias de convergencia del MLP pertenecen únicamente a pruebas rápidas con pocas iteraciones. GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible y navegación real en cada `push` y `pull_request`.
-
-## Cómo está montado
-
-Sí es una arquitectura cliente-servidor, aunque cliente y servidor puedan ejecutarse en el mismo equipo:
-
-```text
-Navegador
-   │
-   ▼
-Streamlit (presentación; no carga modelos)
-   │ HTTP/JSON
-   ▼
-Backend central :8766
-   ├── parser MIME/EML
-   ├── análisis heurístico
-   ├── modelo neuronal ES activo
-   ├── modelo neuronal EN activo
-   └── entrenamiento, evaluación y versionado
-
-Extensión Gmail ────────────────HTTP/JSON──────────────► Backend
-Monitor Gmail ─────────────────HTTP/JSON──────────────► Backend
-Cliente de entrenamiento ──────HTTP/JSON──────────────► Backend
-```
-
-En Streamlit hay dos procesos de interfaz porque ese framework necesita un proceso Python para mantener la sesión web: el navegador habla con Streamlit y Streamlit actúa como cliente HTTP del backend. La frontera de aplicación sigue siendo cliente-servidor: ninguna vista de Streamlit importa `ModelStorage`, ejecuta heurísticas ni predice localmente.
-
-Hay una única versión activa por idioma en el servidor, compartida por todos los clientes. Al entrenar y activar una versión nueva, el backend sustituye el artefacto de forma atómica, invalida su caché y las siguientes peticiones de web, extensión y monitor usan ese mismo modelo sin actualizar ni reiniciar los clientes.
-
-Gmail y Telegram son servicios externos: Gmail aporta mensajes y Telegram recibe alertas. No son el servidor del detector.
-
-## Componentes
-
-| Componente | Comando | Responsabilidad |
-| --- | --- | --- |
-| Backend central | `python src/backend_server.py` | Análisis, modelos, datasets, entrenamiento, evaluación y versiones |
-| Cliente web | `streamlit run src/app.py` | Recoger entradas y presentar respuestas del backend |
-| Extensión Gmail | Cargar `extension_gmail/` sin empaquetar | Enviar el correo visible directamente a `/analyze` y mostrar el resultado |
-| Monitor | `python src/monitor_gmail.py` | Obtener Gmail, pedir análisis al backend y alertar por Telegram |
-| Proxy antiguo opcional | `python src/gmail_extension_server.py` | Reenviar del puerto histórico 8765 al backend; no carga modelos |
-
-La extensión actual debe apuntar en **Opciones** a `http://127.0.0.1:8766`; no necesita el proxy histórico. El acceso móvil descrito anteriormente expone solo Streamlit en el puerto 8501 y no hace accesible esta API.
-
-## Contrato del backend
-
-Rutas públicas de lectura e inferencia:
-
-| Método | Ruta | Uso |
-| --- | --- | --- |
-| `GET` | `/health` | Estado, contrato y versiones activas |
-| `GET` | `/models` | Metadatos de modelos, nunca los artefactos |
-| `POST` | `/analyze` | Texto, campos de correo o EML en Base64 |
-
-Rutas de administración:
-
-| Método | Ruta | Uso |
-| --- | --- | --- |
-| `POST` | `/datasets/summary` | Validar y resumir CSV en el servidor |
-| `POST` | `/train` | Entrenar y activar una versión central |
-| `POST` | `/evaluate` | Evaluar el modelo activo |
-| `POST` | `/compare` | Comparar hasta tres configuraciones sin activarlas |
-| `POST` | `/models/delete` | Eliminar un artefacto activo |
-
-Ejemplo:
-
-```powershell
-curl http://127.0.0.1:8766/health
-curl -X POST http://127.0.0.1:8766/analyze `
-  -H "Content-Type: application/json" `
-  -d '{"email":{"subject":"Verificación de cuenta","from":"soporte@ejemplo.com","body":"Haga clic para confirmar su cuenta."},"options":{"mode":"combinado","threshold":26}}'
-```
-
-`/analyze` admite hasta 16 MiB y las operaciones con datasets hasta 256 MiB. Todas exigen JSON UTF-8, validan tamaños y tipos, devuelven errores sin trazas internas y usan `Cache-Control: no-store`. CORS se restringe a Gmail Web y extensiones de Chrome autorizadas.
-
-En loopback, las rutas administrativas pueden funcionar sin token. Si se configura `BACKEND_ADMIN_TOKEN`, el cliente lo envía como Bearer únicamente en entrenamiento, evaluación, comparación y borrado. `--allow-remote` exige un token de al menos 24 caracteres. Las rutas administrativas rechazan peticiones con cabecera `Origin`, incluso con token, para que no puedan invocarse desde una página o extensión; el cliente Streamlit las realiza de servidor a servidor.
-
-Los clientes solo admiten HTTP sobre loopback; una URL remota debe ser HTTPS. La extensión solicita de forma explícita el permiso del origen HTTPS configurado. El servidor incorporado no termina TLS ni constituye por sí solo un despliegue público seguro: para separarlo físicamente hacen falta un proxy inverso HTTPS, autenticación también para inferencia, rate limiting, gestión de secretos y monitorización.
-
-## Modos y modelos
-
-- `heuristico`: 31 señales de cabeceras, remitente, URLs, dominios, HTML, adjuntos, lenguaje y fraude BEC sin enlaces. Para SPF, DKIM y DMARC interpreta de forma pasiva los resultados ya escritos por los servidores de correo en `Received-SPF`, `Authentication-Results` y cabeceras ARC; no consulta DNS ni valida firmas criptográficas.
-- `neural`: clasificador TF-IDF + `MLPClassifier`; selecciona el modelo español o inglés según el mensaje.
-- `combinado`: media calibrada 45 % heurística + 55 % neuronal; si cualquiera alcanza 70 % de alta confianza se conserva esa evidencia para que el otro detector no la diluya. El umbral de decisión es 21 % por defecto.
-
-Los artefactos centrales son `modelo_neural_es.joblib` y `modelo_neural_en.joblib`. Si falta uno, el backend puede construir un fallback sintético del mismo idioma y lo declara como tal; los clientes no crean copias. Los ficheros `.joblib` son artefactos de confianza y no deben sustituirse por descargas no verificadas, porque su carga usa deserialización de Python.
-
-## Entrenamiento y evaluación centralizados
-
-La vista **Entrenamiento** es un cliente ligero. Sube uno o varios CSV al backend, que valida columnas, entrena desde cero, persiste el modelo de forma atómica y devuelve versión, fecha, tamaño y métricas. Las etiquetas aceptadas incluyen `1`/`phishing` y `0`/`legitimate`/`safe`. Los artefactos nuevos no serializan los textos brutos del dataset.
-
-La evaluación usa un CSV distinto y muestra accuracy, precisión, recall, F1, accuracy balanceada y matriz de confusión. La comparación entrena hasta tres configuraciones en memoria y no modifica el modelo activo.
-
-Los artefactos entregados conservan metadatos y huellas del protocolo, pero no los mensajes originales. El modelo ES se entrena con 1.148 muestras limpias (613 phishing/spam y 535 legítimas) y se prueba con las 209 filas oficiales separadas de `softecapps/spam_ham_spanish`. El modelo EN usa solo el CSV agregado `phishing_email.csv`: tras retirar 408 duplicados quedan 82.077 textos, divididos de forma estratificada y determinista en 65.661 para entrenamiento y 16.416 para prueba. Los seis corpus que componen el agregado no se vuelven a añadir.
-
-Los CSV permanecen fuera de Git por tamaño, licencia y privacidad. `evaluation/training_sources.json` fija URLs, licencias y SHA-256, mientras `scripts/retrain_reproducible.py` verifica los archivos, elimina duplicados y contradicciones, evita solapamientos, reentrena ambos modelos y regenera las métricas. La evidencia completa está en [TRAINING_EVALUATION_REPORT.md](TRAINING_EVALUATION_REPORT.md).
-
-| Uso | Fuente pública | Licencia indicada por la ficha |
-| --- | --- | --- |
-| Entrenamiento y prueba ES | [softecapps/spam_ham_spanish](https://huggingface.co/datasets/softecapps/spam_ham_spanish), DOI 10.57967/hf/2264 | Apache-2.0 |
-| Entrenamiento ES adicional | [SMS Spam Mexico](https://www.kaggle.com/datasets/aldoivan/sms-spam-mexico-dataset-en-espaol-mexicano) | CC BY-SA 4.0 |
-| Entrenamiento y holdout EN | [Phishing Email Dataset](https://www.kaggle.com/datasets/naserabdullahalam/phishing-email-dataset) | CC BY-SA 4.0 |
-| Diagnóstico EN secundario | [Phishing validation emails dataset](https://zenodo.org/records/13474746), DOI 10.5281/zenodo.13474746 | No indicada en la ficha pública consultada |
-
-El script offline `scripts/calibrate_combined.py` selecciona pesos, umbral y nivel de alta confianza sobre 40 casos controlados mediante cinco particiones estratificadas. Ese conjunto no se reutiliza para la comprobación final. `scripts/evaluate_models.py` evalúa después 16 archivos EML locales reservados, equilibrados por idioma y clase, con escenarios de credenciales, BEC, enlaces, adjuntos y mensajes legítimos. El heurístico obtiene 100,0 % de accuracy; el combinado, 87,5 % con 100,0 % de recall; y el neuronal, 81,2 % de accuracy. Los resultados y límites están en [EVALUATION_REPORT.md](EVALUATION_REPORT.md).
-
-Como diagnóstico adicional, `scripts/evaluate_external.py` comprueba 1.528 textos del split de prueba de phishing de DIFrauD, con revisión y SHA-256 fijados y corpus bruto excluido de Git. El combinado obtiene 89,0 % de accuracy y 93,4 % de recall. [El informe externo](EXTERNAL_EVALUATION_REPORT.md) no lo presenta como validación independiente: el origen es histórico, carece de MIME completo y no puede descartarse solapamiento entre sus fuentes primarias y el agregado inglés.
-
-## Gmail y Telegram
-
-1. Levanta el backend central.
-2. Activa Gmail API en Google Cloud y crea un cliente OAuth de escritorio.
-3. Guarda el fichero descargado como `credentials.json` en la raíz.
-4. Conecta Gmail desde Configuración; el flujo crea `token.json` local.
-5. Para Telegram, configura `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en `.env.local`.
-
-El monitor admite `python src/monitor_gmail.py --once` para una comprobación puntual. Guarda IDs procesados en `estado_monitor.json` con escritura atómica; un correo corrupto o un fallo temporal del backend no interrumpe el resto del lote y queda pendiente de reintento.
-
-La integración local automatizada valida el contrato simulado de Gmail, la serialización del EML completo, el análisis por HTTP, la persistencia del estado y una única alerta Telegram para el mensaje malicioso. La conexión real no se ejecuta sin `credentials.json`, `token.json`, `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID`; consulta [docs/INTEGRATION_VALIDATION.md](docs/INTEGRATION_VALIDATION.md) y el checklist OAuth antes de la defensa.
-
-## Configuración
-
-Las variables pueden declararse en `.env.local`; `.env.example` sirve de plantilla:
-
-```text
-PHISHING_BACKEND_URL=http://127.0.0.1:8766
-BACKEND_HOST=127.0.0.1
-BACKEND_PORT=8766
-BACKEND_ADMIN_TOKEN=
-PHISHING_THRESHOLD=21
-MONITOR_ANALYSIS_MODE=combinado
-MONITOR_HEUR_WEIGHT=45
-MONITOR_NEURAL_WEIGHT=55
-BACKEND_HIGH_CONFIDENCE_THRESHOLD=70
-```
-
-Para apuntar los clientes a otro equipo o a un despliegue posterior, publica primero el backend detrás de HTTPS y cambia `PHISHING_BACKEND_URL` a ese origen seguro. El modelo permanece únicamente en el servidor seleccionado.
-
-No se versionan credenciales, tokens, estado del monitor, `Propuestaformato.pdf` ni los artefactos temporales de revisión visual. La memoria, las cuatro guías finales y la presentación de defensa sí se versionan como entregables reproducibles. `constraints.txt` fija el entorno completo validado sobre Python 3.12.
-
-## Presentación de defensa
-
-La presentación editable está en [`Presentacion_defensa_TFG.pptx`](Presentacion_defensa_TFG.pptx). Resume en 14 diapositivas el problema, los objetivos, la arquitectura cliente-servidor, el flujo de análisis, el modelo centralizado, la evaluación, la demostración, las limitaciones y las conclusiones. Todas las diapositivas incluyen notas del orador y las fuentes internas utilizadas.
-
-Se puede regenerar en Windows con Microsoft PowerPoint instalado:
-
-```powershell
-pwsh -NoProfile -File scripts/generate_defense_presentation.ps1
-```
-
-## Organización
+## Estructura del repositorio
 
 ```text
 src/
-├── app.py, detect_app.py, config_app.py, monitor_app.py, train_app.py
-├── backend_server.py, gmail_extension_server.py, monitor_gmail.py
+├── app.py                         # entrada del cliente Streamlit
+├── backend_server.py              # servidor HTTP central
+├── detect_app.py                  # vista de detección
+├── config_app.py                  # configuración e integraciones
+├── monitor_app.py                 # vista del monitor
+├── train_app.py                   # entrenamiento y evaluación
 └── sistema_phishing/
-    ├── backend_client.py         # cliente HTTP común, sin lógica de dominio
-    ├── backend_service.py        # análisis, modelos y administración central
-    ├── http_api.py               # contrato y servidor HTTP
-    ├── analysis_service.py       # coordinación interna del backend
-    ├── model_config.py           # hiperparámetros sin importar scikit-learn en clientes
-    ├── file_utils.py             # escritura atómica de configuración y tokens
-    ├── network.py                # política de bind y loopback
-    ├── analizador_email.py       # MIME/EML seguro y normalizado
-    ├── gmail_monitor.py          # lote, estado y cliente remoto
-    ├── metrics.py                # métricas binarias reproducibles
-    ├── modelo_neural.py          # TF-IDF, MLP y persistencia del servidor
-    └── ...                       # señales, URLs, HTML y explicaciones
-extension_gmail/                  # cliente Manifest V3
-tests/                            # 89 pruebas unitarias/de integración
-browser_tests/                    # 2 recorridos reales con Chromium
-evaluation/                       # calibración separada, EML reservados y resultados
-defense_demo/                     # respuestas reproducibles para el plan B
+    ├── backend_client.py          # cliente HTTP común
+    ├── backend_service.py         # casos de uso del servidor
+    ├── http_api.py                # contrato y rutas HTTP
+    ├── analysis_service.py        # coordinación de detectores
+    ├── analizador_email.py        # normalización MIME/EML
+    ├── signal_builder.py          # construcción de señales
+    ├── scorer.py                  # puntuación heurística
+    ├── explanations.py            # explicaciones del resultado
+    ├── modelo_neural.py           # pipeline TF-IDF + MLP
+    └── gmail_monitor.py           # procesamiento por lotes
+extension_gmail/                   # extensión Manifest V3
+tests/                             # pruebas unitarias e integración
+browser_tests/                     # recorridos reales con Chromium
+evaluation/                        # datasets controlados y resultados
+scripts/                           # evaluación, benchmarks y utilidades
+docs/                              # documentación técnica adicional
 ```
 
-La lista ordenada de capturas está en [docs/DEFENSE_SCREENSHOTS.md](docs/DEFENSE_SCREENSHOTS.md) y el respaldo offline en [defense_demo/README.md](defense_demo/README.md). Las dos evidencias incorporadas a la memoria se pueden regenerar con `python scripts/capture_tfg_screenshots.py` levantando un backend y un cliente reales sobre puertos libres de loopback.
+## Problemas habituales
 
-La correspondencia con las observaciones del tutor está en [docs/TUTOR_FEEDBACK_CHECKLIST.md](docs/TUTOR_FEEDBACK_CHECKLIST.md), la comprobación bibliográfica en [docs/BIBLIOGRAPHY_AUDIT.md](docs/BIBLIOGRAPHY_AUDIT.md) y el borrador de respuesta en [docs/RESPUESTA_TUTOR.md](docs/RESPUESTA_TUTOR.md).
+### La web indica que el backend está desconectado
+
+Comprueba que `backend_server.py` sigue ejecutándose, que `/health` responde y
+que `PHISHING_BACKEND_URL` apunta a `http://127.0.0.1:8766`.
+
+### Python no encuentra `sistema_phishing`
+
+Ejecuta los comandos desde la raíz y define `PYTHONPATH`:
+
+```powershell
+$env:PYTHONPATH = "src"
+```
+
+### PowerShell bloquea la activación del entorno virtual
+
+Puedes activar la política solo para la terminal actual:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\.venv\Scripts\Activate.ps1
+```
+
+### El móvil no abre Streamlit
+
+Comprueba que ambos equipos están en la misma LAN, que Streamlit escucha en
+`0.0.0.0` y que el firewall permite el puerto 8501 únicamente en el perfil de
+red privada. Las redes de invitados pueden aislar sus dispositivos.
+
+### Aparece un aviso de modelo sintético
+
+El backend no encontró un artefacto persistido válido para ese idioma. Revisa
+la vista **Entrenamiento > Modelos guardados** o restaura el `.joblib`
+correspondiente. No presentes el fallback como un modelo evaluado.
+
+## Documentación adicional
+
+- [Validación de Gmail y Telegram](docs/INTEGRATION_VALIDATION.md)
+- [Auditoría bibliográfica](docs/BIBLIOGRAPHY_AUDIT.md)
+- [Informe de rendimiento](PERFORMANCE_REPORT.md)
+- [Fuentes y protocolo de entrenamiento](evaluation/README.md)
+- [Memoria del proyecto](TFG.pdf)
 
 ## Uso de herramientas de IA
 
-Durante el desarrollo se emplearon herramientas de IA generativa como apoyo para consultas técnicas puntuales, diagnóstico de errores, revisión de fragmentos de código, asistencia en el CSS y revisión de documentación. Los cambios se comprobaron antes de incorporarlos y las decisiones técnicas, la interpretación de los resultados y la responsabilidad final corresponden al autor. La IA no se utiliza como fuente académica: la parte teórica se contrasta y cita mediante referencias originales.
+Durante el desarrollo se emplearon herramientas de IA generativa como apoyo
+para consultas técnicas puntuales, diagnóstico de errores, revisión de código,
+CSS y documentación. Los cambios se comprobaron antes de incorporarlos y la
+responsabilidad técnica final corresponde al autor. La IA no se utiliza como
+fuente académica; la parte teórica se contrasta y cita mediante referencias
+originales.
 
-## Alcance
+## Alcance y seguridad
 
-El sistema es cliente-servidor en ejecución, pero su configuración predeterminada mantiene ambos lados en el mismo equipo y en loopback para facilitar la defensa y proteger el contenido del correo. Se puede separar físicamente cambiando la URL del backend; convertirlo en un servicio multiusuario de producción requiere la capa operativa y de seguridad indicada anteriormente. No sustituye una pasarela antispam ni garantiza detectar campañas nuevas sin reentrenamiento y validación externa.
+El repositorio contiene un prototipo académico, no una pasarela antispam ni un
+servicio multiusuario listo para Internet. Un despliegue público requeriría TLS,
+autenticación también para inferencia, rate limiting, gestión de secretos,
+aislamiento de usuarios, registro seguro y validación con correo real reciente e
+independiente.

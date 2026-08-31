@@ -23,9 +23,11 @@ datos/_entrenamiento/
 ~$*.docx
 ~$*.pptx
 
-# Documentación local de propuesta y QA. Las guías finales sí se versionan.
+# Documentación personal de entrega y artefactos temporales de QA.
 Propuestaformato.pdf
 Guia_defensa_TFG.txt
+/Guia_*.docx
+/Presentacion_defensa_TFG.pptx
 _docx_qa/
 _docx_qa_*/
 _pptx_qa_*/
