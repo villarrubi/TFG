@@ -692,7 +692,7 @@ Git y GitHub	Control de versiones, trazabilidad y respaldo del desarrollo.
 
 Validación y control de calidad
 
-La validación del sistema se realiza en seis niveles complementarios: 89 pruebas Python de componentes e integración, 2 recorridos reales con Chromium, un benchmark reproducible, una calibración bilingüe de 40 casos, 16 EML locales reservados y un diagnóstico de 1.528 textos externos DIFrauD. Un recorrido levanta cliente web y backend separados; otro prueba Gmail, HTTP y Telegram de extremo a extremo con dobles externos. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento con fuentes de entrenamiento; ninguna cifra se extrapola a producción.
+La validación del sistema se realiza en seis niveles complementarios: 94 pruebas Python de componentes e integración, 2 recorridos reales con Chromium, un benchmark reproducible, una calibración bilingüe de 40 casos, 16 EML locales reservados y un diagnóstico de 1.528 textos externos DIFrauD. Un recorrido levanta cliente web y backend separados; otro prueba Gmail, HTTP y Telegram de extremo a extremo con dobles externos. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento con fuentes de entrenamiento; ninguna cifra se extrapola a producción.
 
 En segundo lugar, la aplicación permite evaluar el clasificador neuronal con un CSV de prueba independiente, separado del conjunto de entrenamiento. La interfaz calcula exactitud, precisión, recall, F1, accuracy balanceada y la matriz de confusión; no se fija una partición automática 70/30 ni se presentan resultados estadísticos sin indicar el conjunto utilizado. En tercer lugar, se comprobaron los flujos funcionales de la aplicación web: análisis de texto pegado y archivos .eml, selección del modelo por idioma, importación mediante Gmail y navegación entre las vistas de detección y entrenamiento. Los resultados reproducibles se presentan en la sección de pruebas y discusión.
 
@@ -730,9 +730,9 @@ Estos cambios no alteran el objetivo académico de estudiar, implementar y evalu
 
 Arquitectura general
 
-La solución adopta una arquitectura cliente-servidor. El navegador se comunica con Streamlit, que actúa como capa de presentación y cliente HTTP del backend central; la extensión y el monitor consumen esa misma API. Solo backend_server.py normaliza, analiza, entrena y mantiene los modelos activos. En la configuración académica ambos lados se ejecutan en el mismo equipo y sobre loopback, pero son procesos y responsabilidades independientes. Para una demostración en la red local puede exponerse temporalmente solo Streamlit en 0.0.0.0:8501; el backend permanece en 127.0.0.1:8766 y no se publica.
+La solución adopta una arquitectura cliente-servidor. El navegador se comunica con Streamlit, que actúa como capa de presentación y cliente HTTP del backend central; la extensión y el monitor consumen esa misma API. Solo backend_server.py normaliza, analiza, entrena y mantiene los modelos activos. Cada instalación conserva credenciales y preferencias en runtime/client, mientras el backend es propietario de los ajustes y modelos de runtime/server; la interfaz administra los valores centrales por API, no mediante acceso directo al disco. En la configuración académica ambos lados se ejecutan en el mismo equipo y sobre loopback, pero son procesos y responsabilidades independientes. Para una demostración en la red local puede exponerse temporalmente solo Streamlit en 0.0.0.0:8501; el backend permanece en 127.0.0.1:8766 y no se publica.
 
-A nivel interno, backend_client.py implementa el transporte común de los clientes y http_api.py define las rutas. backend_service.py concentra análisis, datasets, evaluación, entrenamiento, metadatos y activación de versiones. Dentro del servidor, analysis_service.py coordina los modos y la caché lingüística; analizador_email.py normaliza EML; signal_builder.py, scorer.py y explanations.py construyen el resultado; modelo_neural.py encapsula TF-IDF + MLP. Las vistas Streamlit no importan almacenamiento ni ejecutan inferencia.
+A nivel interno, backend_client.py implementa el transporte común de los clientes y http_api.py define las rutas, incluidas las operaciones administrativas de ajustes. backend_service.py concentra análisis, configuración central, datasets, evaluación, entrenamiento, metadatos y activación de versiones. runtime_paths.py impone las rutas separadas: credenciales, token y estado en runtime/client; configuración y modelos en runtime/server. Dentro del servidor, analysis_service.py coordina los modos y la caché lingüística; analizador_email.py normaliza EML; signal_builder.py, scorer.py y explanations.py construyen el resultado; modelo_neural.py encapsula TF-IDF + MLP. Las vistas Streamlit no importan almacenamiento de modelos ni ejecutan inferencia.
 
 Las reglas heurísticas se han dividido en módulos especializados: header_signals.py para cabeceras y autenticación, content_signals.py para contenido textual y adjuntos, html_signals.py para estructuras HTML sospechosas y url_utils.py para extracción y análisis de URLs y dominios. La detección del idioma está centralizada en idioma.py, de modo que la aplicación y la monitorización seleccionan el modelo neuronal con el mismo criterio. Esta división mejora la mantenibilidad y facilita añadir nuevas reglas sin modificar el núcleo del analizador.
 
@@ -760,11 +760,11 @@ Por último, se analizan rasgos de ingeniería social presentes en el texto, com
 
 Clasificador neuronal
 
-Además del sistema heurístico, se ha implementado un clasificador neuronal basado en scikit-learn. El modelo utiliza un pipeline formado por un vectorizador TF-IDF y un clasificador MLPClassifier. El vectorizador transforma el texto del correo en una representación numérica basada en n-gramas (por defecto unigramas y bigramas) con un máximo de características configurable. Los hiperparámetros de la red (capas ocultas, función de activación, regularización, learning rate, early stopping, etc.) están centralizados en la clase HiperparametrosModelo y pueden ajustarse desde el entorno (.env.local) o desde la interfaz de entrenamiento.
+Además del sistema heurístico, se ha implementado un clasificador neuronal basado en scikit-learn. El modelo utiliza un pipeline formado por un vectorizador TF-IDF y un MLPClassifier. Los hiperparámetros están centralizados en HiperparametrosModelo y sus valores predeterminados se persisten en runtime/server/.env.local. La interfaz los consulta y modifica mediante la API administrativa; un cliente puede enviar una excepción explícita al comparar o entrenar, pero no escribe el sistema de archivos del servidor.
 
-El sistema permite una versión activa en español y otra en inglés. La vista de entrenamiento serializa los CSV y los hiperparámetros y los envía al backend, que valida datos, entrena desde cero, guarda el artefacto de forma atómica e invalida la caché. Evaluación y comparación también se ejecutan en el servidor; los clientes reciben únicamente métricas y metadatos.
+El sistema permite una versión activa en español y otra en inglés. La vista de entrenamiento serializa los CSV y, solo cuando se solicita una excepción, los hiperparámetros; de lo contrario, el backend usa sus valores centrales persistidos. El servidor valida datos, entrena desde cero, guarda el artefacto de forma atómica en runtime/server/models e invalida la caché. Evaluación y comparación también se ejecutan en el servidor; los clientes reciben únicamente métricas y metadatos.
 
-Los modelos entrenados se almacenan en disco mediante joblib, diferenciando entre el modelo en español (modelo_neural_es.joblib) y el modelo en inglés (modelo_neural_en.joblib). Durante el análisis, el sistema detecta el idioma del correo con langdetect y reutiliza un detector cacheado por idioma, no uno fijado para toda la sesión. Si el modelo del idioma esperado no existe, está corrupto o tiene metadatos incompatibles, se entrena un modelo sintético del mismo idioma; nunca se reutiliza silenciosamente el modelo de la lengua opuesta.
+Los modelos entrenados se almacenan mediante joblib en runtime/server/models, diferenciando el artefacto español del inglés. Solo el backend accede a esas rutas. Durante el análisis, el servidor detecta el idioma con langdetect y reutiliza un detector cacheado por idioma. Si el modelo esperado no existe, está corrupto o tiene metadatos incompatibles, se entrena un modelo sintético del mismo idioma; nunca se reutiliza silenciosamente el modelo de la lengua opuesta.
 
 Interfaz de usuario
 
@@ -776,11 +776,11 @@ La integración con Gmail usa OAuth de solo lectura. La vista de detección obti
 
 Diseño modular
 
-Durante el desarrollo se ha realizado una refactorización orientada a SOLID y a una frontera cliente-servidor explícita. La presentación depende de BackendClient; el servidor separa transporte, casos de uso, señales, puntuación, explicaciones, datasets y aprendizaje. Así, los detalles del modelo permanecen fuera de Streamlit, extensión y monitor.
+Durante el desarrollo se ha realizado una refactorización orientada a SOLID y a una frontera cliente-servidor explícita. La presentación depende de BackendClient; el servidor separa transporte, casos de uso, señales, puntuación, explicaciones, datasets y aprendizaje. El almacenamiento sigue la misma frontera: runtime/client contiene secretos y preferencias propios de cada instalación, mientras runtime/server contiene configuración y modelos centrales. Así, los detalles del modelo permanecen fuera de Streamlit, extensión y monitor.
 
 Esta organización permite que cada módulo tenga una responsabilidad principal. Por ejemplo, SignalBuilder no calcula puntuaciones, sino que únicamente construye señales; RiskScorer no conoce cómo se han obtenido las señales, solo calcula el riesgo; y ExplanationBuilder no decide si un correo es phishing, sino que transforma resultados técnicos en texto comprensible.
 
-Esta separación facilita la evolución del prototipo. Pueden añadirse reglas o sustituirse el clasificador en el servidor sin redistribuir los clientes. La versión revisada ejecuta correctamente 89 pruebas Python y 2 recorridos reales con Chromium; GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible, respaldo de defensa y navegación de interfaz.
+Esta separación facilita la evolución del prototipo. Pueden añadirse reglas o sustituirse el clasificador en el servidor sin redistribuir los clientes. La versión revisada ejecuta correctamente 94 pruebas Python y 2 recorridos reales con Chromium; GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible, respaldo de defensa y navegación de interfaz.
 
 Limitaciones
 
@@ -794,7 +794,7 @@ Pruebas, resultados y discusión
 
 Pruebas unitarias y de integración
 
-La versión revisada ejecuta 89 pruebas unitarias y de integración mediante unittest. Cubren EML, señales BEC, combinación calibrada, selección determinista de idioma, cliente HTTP, entrenamiento central, Gmail, monitor, heurísticas, clasificador, persistencia, API, autenticación administrativa, extensión, evaluación externa, respaldo de defensa y Telegram. Una prueba integral recorre Gmail EML, JSON, HTTP, backend, estado y alerta Telegram. Además, 2 pruebas con Chromium recorren la extensión y un análisis real entre Streamlit y backend. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.
+La versión revisada ejecuta 94 pruebas unitarias y de integración mediante unittest. Cubren EML, señales BEC, combinación calibrada, selección determinista de idioma, cliente HTTP, entrenamiento central, Gmail, monitor, heurísticas, clasificador, persistencia separada, ajustes por API, autenticación administrativa, extensión, evaluación externa, respaldo de defensa y Telegram. Una prueba integral recorre Gmail EML, JSON, HTTP, backend, estado y alerta Telegram. Además, 2 pruebas con Chromium recorren la extensión y un análisis real entre Streamlit y backend. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.
 
 Rendimiento y eficiencia de arranque
 
@@ -862,7 +862,7 @@ La mezcla ponderada original podía diluir una evidencia fuerte. Con los modelos
 
 Prueba funcional de la aplicación web
 
-Se realizaron 89 pruebas Python y 2 recorridos Chromium. Las comprobaciones verifican los tres modos, calibración, idioma determinista, EML serializable, Gmail a backend y Telegram, cliente HTTP, entrenamiento y versión central, caché, señales BEC, API, límites, token administrativo, evaluación externa, respaldo, extensión y Streamlit. Los 16 EML y DIFrauD añaden medición separada con sus límites expresos; no se presentan como evaluación estadística de producción.
+Se realizaron 94 pruebas Python y 2 recorridos Chromium. Las comprobaciones verifican los tres modos, calibración, idioma determinista, EML serializable, Gmail a backend y Telegram, cliente HTTP, entrenamiento y versión central, separación de datos, ajustes centrales, caché, señales BEC, API, límites, token administrativo, evaluación externa, respaldo, extensión y Streamlit. Los 16 EML y DIFrauD añaden medición separada con sus límites expresos; no se presentan como evaluación estadística de producción.
 
 Evidencia visual del prototipo
 
@@ -896,7 +896,7 @@ El cuarto objetivo, diseñar e implementar un sistema heurístico explicable y u
 
 El quinto objetivo, integrar la aplicación con Gmail y proporcionar alertas mediante Telegram, se cumple mediante OAuth de solo lectura y el monitor opcional. Los mensajes autorizados se envían al backend central y Telegram recibe únicamente la alerta configurada; ni Streamlit ni el monitor duplican la lógica de análisis.
 
-El sexto objetivo, evaluar el comportamiento del sistema, se aborda con 89 pruebas Python, 2 recorridos Chromium —incluido web a backend—, benchmark reproducible, calibración separada de 40 casos, 16 EML reservados y 1.528 textos externos con hashes, matriz de confusión y errores por identificador. La estimación independiente sobre correo real reciente sigue delimitada como trabajo pendiente.
+El sexto objetivo, evaluar el comportamiento del sistema, se aborda con 94 pruebas Python, 2 recorridos Chromium —incluido web a backend—, benchmark reproducible, calibración separada de 40 casos, 16 EML reservados y 1.528 textos externos con hashes, matriz de confusión y errores por identificador. La estimación independiente sobre correo real reciente sigue delimitada como trabajo pendiente.
 
 Entre los logros principales destacan la arquitectura cliente-servidor, una versión activa por idioma compartida por todos los clientes, activación atómica, Gmail/Telegram, pruebas Python y de navegador, CI, reentrenamiento reproducible, calibración separada, detección BEC y evaluación trazable local/externa. La carga diferida reduce históricamente el arranque de heurísticas un 96,6 % y el de la aplicación un 76,2 %. La fusión 45/55 conserva evidencia de alta confianza.
 
@@ -1116,7 +1116,17 @@ TFG/
 
 ├── credentials.example.json
 
-└── .env.example
+├── .env.example                    # Aviso de migración
+
+├── config/                            # Plantillas cliente/servidor
+
+└── runtime/                           # Datos persistentes separados
+
+    ├── client/                       # Secretos y preferencias (Git ignora)
+
+    └── server/                       # Ajustes y modelos centrales
+
+        └── models/                   # Artefactos ES/EN
 
 Anexo B: Fragmentos de código fuente
 
@@ -1380,7 +1390,7 @@ Anexo D: Lista de verificación de la validación
 
 La siguiente lista resume las comprobaciones realizadas sobre el prototipo durante la fase de validación, tal y como se detalla en el capítulo de pruebas y resultados.
 
-Verificado: 89 pruebas Python y 2 recorridos reales con Chromium, incluido cliente web a backend.
+Verificado: 94 pruebas Python y 2 recorridos reales con Chromium, incluido cliente web a backend.
 
 Verificado: Benchmark reproducible de arranque e inferencia con comparación antes/después.
 
@@ -1406,4 +1416,6 @@ Anexo E: Resumen de arquitectura y evidencia
 
 El sistema es cliente-servidor. Streamlit, la extensión y el monitor son clientes HTTP; backend_server.py centraliza parser, análisis, entrenamiento y una versión activa por idioma. En la configuración de defensa todos los procesos están en el mismo equipo y loopback, pero el servidor es obligatorio y puede separarse cambiando PHISHING_BACKEND_URL.
 
-La evidencia reproducible comprende 89 pruebas Python, 2 recorridos con Chromium, integración continua, benchmark, calibración separada de 40 casos, evaluación de 16 EML reservados y diagnóstico de 1.528 textos DIFrauD. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento; ninguna cifra estima producción.
+La evidencia reproducible comprende 94 pruebas Python, 2 recorridos con Chromium, integración continua, benchmark, calibración separada de 40 casos, evaluación de 16 EML reservados y diagnóstico de 1.528 textos DIFrauD. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento; ninguna cifra estima producción.
+
+La persistencia se separa por propietario: runtime/client guarda las credenciales OAuth, el token, el estado del monitor y las preferencias de cada instalación; runtime/server guarda los ajustes centrales y los modelos ES/EN. GET/POST /settings permite administrarlos sin compartir el sistema de archivos del servidor.

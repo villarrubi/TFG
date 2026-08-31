@@ -29,8 +29,8 @@ class TestGmailTelegramIntegration(unittest.TestCase):
     def setUp(self):
         service = AnalysisBackendService(
             AnalysisBackendConfig(
-                model_path_es=str(ROOT / "modelo_neural_es.joblib"),
-                model_path_en=str(ROOT / "modelo_neural_en.joblib"),
+                model_path_es=str(ROOT / "runtime" / "server" / "models" / "modelo_neural_es.joblib"),
+                model_path_en=str(ROOT / "runtime" / "server" / "models" / "modelo_neural_en.joblib"),
             )
         )
         self.server = crear_servidor_http("127.0.0.1", 0, service)

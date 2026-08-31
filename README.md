@@ -14,7 +14,7 @@ estén activos en el servidor.
 - Entrenamiento y evaluación desde la interfaz web.
 - Monitor opcional de Gmail con alertas de Telegram.
 - Extensión local de Chrome para analizar el correo visible en Gmail.
-- 89 pruebas Python, 2 recorridos reales con Chromium y validación continua.
+- Pruebas Python, recorridos reales con Chromium y validación continua.
 
 ## Arquitectura en un minuto
 
@@ -37,6 +37,22 @@ Streamlit recoge entradas y presenta la respuesta. No carga modelos ni ejecuta
 reglas localmente. El backend es el único componente que normaliza el correo,
 calcula las señales, realiza la inferencia y activa nuevas versiones de los
 modelos.
+
+Los datos persistentes tampoco se mezclan:
+
+```text
+runtime/client/                  runtime/server/
+├── .env.local                  ├── .env.local
+├── credentials.json            └── models/
+├── token.json                      ├── modelo_neural_es.joblib
+└── estado_monitor.json              └── modelo_neural_en.joblib
+```
+
+Cada instalación cliente conserva sus credenciales, conexión al backend y
+preferencias de monitorización. El servidor conserva los valores centrales de
+análisis, los hiperparámetros predeterminados y los dos modelos activos. Los
+ajustes del servidor se consultan y modifican por la API administrativa: el
+cliente no abre ni escribe directamente los archivos del backend.
 
 ## Inicio rápido
 
@@ -69,6 +85,16 @@ Los ejemplos siguientes usan PowerShell. En Bash, sustituye la asignación de
 
 No se necesitan credenciales de Gmail ni Telegram para probar el análisis de
 texto y EML.
+
+Si quieres materializar la configuración predeterminada antes de arrancar:
+
+```powershell
+New-Item -ItemType Directory -Force runtime/client,runtime/server | Out-Null
+Copy-Item config/client.env.example runtime/client/.env.local
+Copy-Item config/server.env.example runtime/server/.env.local
+```
+
+Ambos destinos son privados y están ignorados por Git.
 
 ### 2. Arrancar el backend
 
@@ -121,37 +147,45 @@ SPF, DKIM y DMARC se interpretan de forma pasiva a partir de los resultados ya
 presentes en las cabeceras. El sistema no realiza consultas DNS ni una
 validación criptográfica completa.
 
-Los modelos incluidos son `modelo_neural_es.joblib` y
-`modelo_neural_en.joblib`. Si falta el artefacto de un idioma, el backend puede
+Los modelos incluidos están en `runtime/server/models/`, uno para español y
+otro para inglés. Si falta el artefacto de un idioma, el backend puede
 crear un fallback sintético de ese mismo idioma y lo comunica expresamente; ese
 fallback sirve para mantener la aplicación disponible, no como evidencia de
 calidad del modelo.
 
-## Configuración
+## Configuración y propiedad de los datos
 
-La configuración predeterminada funciona sin crear ningún archivo adicional.
-Para personalizarla, copia la plantilla:
+La configuración predeterminada funciona sin crear archivos adicionales. Para
+personalizarla existen dos plantillas deliberadamente separadas:
+
+| Ámbito | Plantilla | Destino privado | Contenido |
+| --- | --- | --- | --- |
+| Cliente | `config/client.env.example` | `runtime/client/.env.local` | URL y credencial del backend, Gmail, Telegram y monitor |
+| Servidor | `config/server.env.example` | `runtime/server/.env.local` | host/puerto, valores centrales e hiperparámetros |
+
+`BACKEND_ADMIN_TOKEN` aparece en ambos lados por motivos distintos: en el
+servidor es el secreto con el que se validan operaciones administrativas y en
+el cliente es la credencial que se presenta. Sus valores deben coincidir. El
+token no se envía al analizar correos, solo al administrar ajustes, datasets y
+modelos.
+
+Las rutas completas pueden externalizarse mediante
+`PHISHING_CLIENT_DATA_DIR` y `PHISHING_SERVER_DATA_DIR`, por ejemplo para montar
+volúmenes distintos en dos equipos o contenedores. También existen overrides
+por archivo en las plantillas.
+
+Si vienes de una versión antigua que guardaba todo en la raíz, ejecuta primero
+una vista previa y después la migración:
 
 ```powershell
-Copy-Item .env.example .env.local
+$env:PYTHONPATH = "src"
+python scripts/migrate_runtime_data.py
+python scripts/migrate_runtime_data.py --apply
 ```
 
-Variables principales:
-
-| Variable | Valor predeterminado | Uso |
-| --- | --- | --- |
-| `PHISHING_BACKEND_URL` | `http://127.0.0.1:8766` | Backend que utilizan los clientes |
-| `BACKEND_HOST` | `127.0.0.1` | Interfaz de escucha del servidor |
-| `BACKEND_PORT` | `8766` | Puerto del servidor |
-| `BACKEND_ADMIN_TOKEN` | vacío | Token para operaciones administrativas |
-| `BACKEND_MODE` | `combinado` | Modo predeterminado |
-| `BACKEND_THRESHOLD` | `21` | Umbral del modo combinado |
-| `BACKEND_HEUR_WEIGHT` | `45` | Peso heurístico |
-| `BACKEND_NEURAL_WEIGHT` | `55` | Peso neuronal |
-| `BACKEND_HIGH_CONFIDENCE_THRESHOLD` | `70` | Evidencia individual concluyente |
-
-No subas `.env.local`, `credentials.json`, `token.json` ni
-`estado_monitor.json`; todos están excluidos por `.gitignore`.
+La utilidad separa las claves, mueve los archivos privados del cliente y
+archiva el `.env.local` antiguo como copia local. Nunca imprime los valores de
+los secretos.
 
 ## Acceso desde otro dispositivo de la red local
 
@@ -176,16 +210,16 @@ puerto 8766 del backend no necesita exponerse.
 
 1. Activa Gmail API en Google Cloud.
 2. Crea un cliente OAuth de tipo aplicación de escritorio.
-3. Guarda el fichero descargado como `credentials.json` en la raíz.
+3. Guarda el fichero descargado como `runtime/client/credentials.json`.
 4. Abre **Configuración > Gmail** y conecta una cuenta de pruebas.
 
 La aplicación solicita acceso de solo lectura y guarda el token localmente en
-`token.json`. Consulta [el checklist OAuth](docs/OAUTH_E2E_CHECKLIST.md) antes de
-usar una cuenta real.
+`runtime/client/token.json`. Consulta
+[el checklist OAuth](docs/OAUTH_E2E_CHECKLIST.md) antes de usar una cuenta real.
 
 ### Monitor y Telegram
 
-Configura en `.env.local`:
+Configura en `runtime/client/.env.local`:
 
 ```text
 TELEGRAM_BOT_TOKEN=
@@ -244,12 +278,14 @@ Rutas principales:
 | --- | --- | --- |
 | `GET` | `/health` | Estado y versiones activas |
 | `GET` | `/models` | Metadatos de modelos |
+| `GET` | `/settings` | Ajustes centrales (administrativa) |
 | `POST` | `/analyze` | Analizar texto, campos o EML Base64 |
 | `POST` | `/datasets/summary` | Validar y resumir CSV |
 | `POST` | `/train` | Entrenar y activar un modelo |
 | `POST` | `/evaluate` | Evaluar el modelo activo |
 | `POST` | `/compare` | Comparar configuraciones sin activarlas |
 | `POST` | `/models/delete` | Eliminar un artefacto activo |
+| `POST` | `/settings` | Validar y guardar ajustes centrales |
 
 Las rutas administrativas pueden protegerse con `BACKEND_ADMIN_TOKEN`. Una URL
 de backend fuera de loopback debe usar HTTPS; el servidor incorporado no
@@ -275,9 +311,9 @@ python scripts/evaluate_models.py
 python -m unittest discover -s browser_tests -p "test_*.py"
 ```
 
-La suite actual contiene 89 pruebas Python y 2 recorridos con Chromium. GitHub
-Actions repite pruebas, análisis estático, auditoría bibliográfica, calibración,
-evaluación reproducible y navegación real en cada `push` y `pull_request`.
+GitHub Actions repite pruebas, análisis estático, auditoría bibliográfica,
+calibración, evaluación reproducible y navegación real en cada `push` y
+`pull_request`.
 
 La evaluación externa requiere red y se ejecuta por separado:
 
@@ -313,6 +349,12 @@ tests/                             # pruebas unitarias e integración
 browser_tests/                     # recorridos reales con Chromium
 evaluation/                        # datasets controlados y resultados
 scripts/                           # evaluación, benchmarks y utilidades
+config/                            # plantillas separadas de cliente y servidor
+runtime/
+├── client/                        # secretos y preferencias locales (ignorado)
+└── server/
+    ├── .env.local                 # ajustes centrales (ignorado)
+    └── models/                    # artefactos que solo consume el backend
 docs/                              # documentación técnica adicional
 ```
 
@@ -354,6 +396,7 @@ correspondiente. No presentes el fallback como un modelo evaluado.
 
 ## Documentación adicional
 
+- [Arquitectura y propiedad de los datos](docs/CLIENT_SERVER_STORAGE.md)
 - [Validación de Gmail y Telegram](docs/INTEGRATION_VALIDATION.md)
 - [Auditoría bibliográfica](docs/BIBLIOGRAPHY_AUDIT.md)
 - [Informe de rendimiento](PERFORMANCE_REPORT.md)

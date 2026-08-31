@@ -1,5 +1,7 @@
 import base64
+import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -10,6 +12,7 @@ from sistema_phishing.backend_service import (
     AnalysisBackendConfig,
     AnalysisBackendService,
 )
+from sistema_phishing.env_loader import leer_env_file
 
 
 class BackendServiceTests(unittest.TestCase):
@@ -20,8 +23,8 @@ class BackendServiceTests(unittest.TestCase):
             mode="heuristico",
             heur_weight=60,
             neural_weight=40,
-            model_path_es=str(root_dir / "modelo_neural_es.joblib"),
-            model_path_en=str(root_dir / "modelo_neural_en.joblib"),
+            model_path_es=str(root_dir / "runtime" / "server" / "models" / "modelo_neural_es.joblib"),
+            model_path_en=str(root_dir / "runtime" / "server" / "models" / "modelo_neural_en.joblib"),
         )
         service = AnalysisBackendService(config)
 
@@ -196,6 +199,43 @@ class BackendServiceTests(unittest.TestCase):
             self.assertIsNotNone(response["model"]["artifact_version"])
         finally:
             invalid_path.unlink(missing_ok=True)
+
+    def test_ajustes_centrales_se_validan_y_persisten_en_el_servidor(self):
+        with tempfile.TemporaryDirectory() as tmpdir, mock.patch.dict(
+            os.environ,
+            {},
+            clear=False,
+        ):
+            settings_path = Path(tmpdir) / ".env.local"
+            service = AnalysisBackendService(
+                AnalysisBackendConfig(),
+                settings_path=str(settings_path),
+            )
+
+            response = service.update_settings_payload(
+                {
+                    "analysis_defaults": {
+                        "mode": "neural",
+                        "threshold": 35,
+                        "heur_weight": 40,
+                        "neural_weight": 60,
+                        "high_confidence_threshold": 75,
+                    },
+                    "training_defaults": {
+                        "tfidf_ngram_range": [1, 1],
+                        "tfidf_max_features": 1200,
+                        "tfidf_min_df": 2,
+                        "mlp_hidden_layer_sizes": [32, 16],
+                        "mlp_max_iter": 300,
+                    },
+                }
+            )
+            persisted = leer_env_file(str(settings_path))
+
+        self.assertEqual(response["analysis_defaults"]["mode"], "neural")
+        self.assertEqual(response["training_defaults"]["tfidf_max_features"], 1200)
+        self.assertEqual(persisted["BACKEND_THRESHOLD"], "35.0")
+        self.assertEqual(persisted["NEURAL_HIDDEN_LAYERS"], "32,16")
 
 
 if __name__ == "__main__":

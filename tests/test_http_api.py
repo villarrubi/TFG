@@ -22,6 +22,9 @@ class _ProtectedFakeService(_FakeService):
     def summarize_payload(self, payload):
         return {"ok": True, "datasets": len(payload.get("datasets", []))}
 
+    def settings_payload(self):
+        return {"analysis_defaults": {"mode": "combinado"}}
+
 
 class TestHTTPApi(unittest.TestCase):
     def setUp(self):
@@ -158,6 +161,15 @@ class TestHTTPApi(unittest.TestCase):
             with self.assertRaises(HTTPError) as error:
                 urlopen(browser_request)
             self.assertEqual(error.exception.code, 403)
+
+            settings_request = Request(
+                f"http://127.0.0.1:{server.server_port}/settings",
+                headers={"Authorization": "Bearer secreto"},
+                method="GET",
+            )
+            with urlopen(settings_request) as response:
+                settings = json.loads(response.read())
+            self.assertEqual(settings["analysis_defaults"]["mode"], "combinado")
         finally:
             server.shutdown()
             server.server_close()

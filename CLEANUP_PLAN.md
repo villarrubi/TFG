@@ -26,7 +26,7 @@ ramas ni de la entrega.
 - Se separan calibración y evaluación: 40 casos controlados calibran la fusión y
   16 EML locales reservados verifican escenarios con cabeceras y MIME completos.
   Ambos conservan hashes, resultados por caso e informe de limitaciones.
-- La suite crece a 89 pruebas Python y 2 recorridos Chromium. Uno levanta web y
+- La suite crece a 94 pruebas Python y 2 recorridos Chromium. Uno levanta web y
   backend separados y comprueba el intercambio HTTP real. GitHub Actions
   ejecuta pruebas, Ruff, evaluación reproducible y navegación real.
 - `constraints.txt` fija las versiones directas y transitivas validadas.

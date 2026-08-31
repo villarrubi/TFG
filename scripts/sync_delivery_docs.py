@@ -184,7 +184,8 @@ def _sync_experimental_literals(doc: DocumentObject) -> None:
     """Retira cifras de calibraciones y artefactos anteriores."""
 
     replacements = [
-        ("87 pruebas", "89 pruebas"),
+        ("87 pruebas", "94 pruebas"),
+        ("89 pruebas", "94 pruebas"),
         ("35/65", "45/55"),
         ("35 % heurística y 65 % neuronal", "45 % heurística y 55 % neuronal"),
         ("35 % heurístico y 65 % neuronal", "45 % heurístico y 55 % neuronal"),
@@ -218,11 +219,11 @@ def sync_memory() -> None:
     replacements = [
         (
             "La solución adopta una arquitectura",
-            "La solución adopta una arquitectura cliente-servidor. El navegador se comunica con Streamlit, que actúa como capa de presentación y cliente HTTP del backend central; la extensión y el monitor consumen esa misma API. Solo backend_server.py normaliza, analiza, entrena y mantiene los modelos activos. En la configuración académica ambos lados se ejecutan en el mismo equipo y sobre loopback, pero son procesos y responsabilidades independientes. Para una demostración en la red local puede exponerse temporalmente solo Streamlit en 0.0.0.0:8501; el backend permanece en 127.0.0.1:8766 y no se publica.",
+            "La solución adopta una arquitectura cliente-servidor. El navegador se comunica con Streamlit, que actúa como capa de presentación y cliente HTTP del backend central; la extensión y el monitor consumen esa misma API. Solo backend_server.py normaliza, analiza, entrena y mantiene los modelos activos. Cada instalación conserva credenciales y preferencias en runtime/client, mientras el backend es propietario de los ajustes y modelos de runtime/server; la interfaz administra los valores centrales por API, no mediante acceso directo al disco. En la configuración académica ambos lados se ejecutan en el mismo equipo y sobre loopback, pero son procesos y responsabilidades independientes. Para una demostración en la red local puede exponerse temporalmente solo Streamlit en 0.0.0.0:8501; el backend permanece en 127.0.0.1:8766 y no se publica.",
         ),
         (
             "La validación del sistema",
-            "La validación del sistema se realiza en seis niveles complementarios: 89 pruebas Python de componentes e integración, 2 recorridos reales con Chromium, un benchmark reproducible, una calibración bilingüe de 40 casos, 16 EML locales reservados y un diagnóstico de 1.528 textos externos DIFrauD. Un recorrido levanta cliente web y backend separados; otro prueba Gmail, HTTP y Telegram de extremo a extremo con dobles externos. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento con fuentes de entrenamiento; ninguna cifra se extrapola a producción.",
+            "La validación del sistema se realiza en seis niveles complementarios: 94 pruebas Python de componentes e integración, 2 recorridos reales con Chromium, un benchmark reproducible, una calibración bilingüe de 40 casos, 16 EML locales reservados y un diagnóstico de 1.528 textos externos DIFrauD. Un recorrido levanta cliente web y backend separados; otro prueba Gmail, HTTP y Telegram de extremo a extremo con dobles externos. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento con fuentes de entrenamiento; ninguna cifra se extrapola a producción.",
         ),
         (
             "La metodología seguida ha combinado",
@@ -266,11 +267,11 @@ def sync_memory() -> None:
         ),
         (
             "Esta separación facilita la evolución del prototipo.",
-            "Esta separación facilita la evolución del prototipo. Pueden añadirse reglas o sustituirse el clasificador en el servidor sin redistribuir los clientes. La versión revisada ejecuta correctamente 89 pruebas Python y 2 recorridos reales con Chromium; GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible, respaldo de defensa y navegación de interfaz.",
+            "Esta separación facilita la evolución del prototipo. Pueden añadirse reglas o sustituirse el clasificador en el servidor sin redistribuir los clientes. La versión revisada ejecuta correctamente 94 pruebas Python y 2 recorridos reales con Chromium; GitHub Actions repite pruebas, Ruff, calibración, evaluación reproducible, respaldo de defensa y navegación de interfaz.",
         ),
         (
             "La versión revisada ejecuta",
-            "La versión revisada ejecuta 89 pruebas unitarias y de integración mediante unittest. Cubren EML, señales BEC, combinación calibrada, selección determinista de idioma, cliente HTTP, entrenamiento central, Gmail, monitor, heurísticas, clasificador, persistencia, API, autenticación administrativa, extensión, evaluación externa, respaldo de defensa y Telegram. Una prueba integral recorre Gmail EML, JSON, HTTP, backend, estado y alerta Telegram. Además, 2 pruebas con Chromium recorren la extensión y un análisis real entre Streamlit y backend. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.",
+            "La versión revisada ejecuta 94 pruebas unitarias y de integración mediante unittest. Cubren EML, señales BEC, combinación calibrada, selección determinista de idioma, cliente HTTP, entrenamiento central, Gmail, monitor, heurísticas, clasificador, persistencia separada, ajustes por API, autenticación administrativa, extensión, evaluación externa, respaldo de defensa y Telegram. Una prueba integral recorre Gmail EML, JSON, HTTP, backend, estado y alerta Telegram. Además, 2 pruebas con Chromium recorren la extensión y un análisis real entre Streamlit y backend. Todas finalizaron correctamente; los avisos de convergencia proceden de iteraciones reducidas del MLP en pruebas rápidas.",
         ),
         (
             "La metodología cuantitativa separa",
@@ -282,7 +283,7 @@ def sync_memory() -> None:
         ),
         (
             "Se realizaron",
-            "Se realizaron 89 pruebas Python y 2 recorridos Chromium. Las comprobaciones verifican los tres modos, calibración, idioma determinista, EML serializable, Gmail a backend y Telegram, cliente HTTP, entrenamiento y versión central, caché, señales BEC, API, límites, token administrativo, evaluación externa, respaldo, extensión y Streamlit. Los 16 EML y DIFrauD añaden medición separada con sus límites expresos; no se presentan como evaluación estadística de producción.",
+            "Se realizaron 94 pruebas Python y 2 recorridos Chromium. Las comprobaciones verifican los tres modos, calibración, idioma determinista, EML serializable, Gmail a backend y Telegram, cliente HTTP, entrenamiento y versión central, separación de datos, ajustes centrales, caché, señales BEC, API, límites, token administrativo, evaluación externa, respaldo, extensión y Streamlit. Los 16 EML y DIFrauD añaden medición separada con sus límites expresos; no se presentan como evaluación estadística de producción.",
         ),
         (
             "Los resultados confirman el diseño como base funcional",
@@ -290,7 +291,7 @@ def sync_memory() -> None:
         ),
         (
             "El sexto objetivo, evaluar el comportamiento",
-            "El sexto objetivo, evaluar el comportamiento del sistema, se aborda con 89 pruebas Python, 2 recorridos Chromium —incluido web a backend—, benchmark reproducible, calibración separada de 40 casos, 16 EML reservados y 1.528 textos externos con hashes, matriz de confusión y errores por identificador. La estimación independiente sobre correo real reciente sigue delimitada como trabajo pendiente.",
+            "El sexto objetivo, evaluar el comportamiento del sistema, se aborda con 94 pruebas Python, 2 recorridos Chromium —incluido web a backend—, benchmark reproducible, calibración separada de 40 casos, 16 EML reservados y 1.528 textos externos con hashes, matriz de confusión y errores por identificador. La estimación independiente sobre correo real reciente sigue delimitada como trabajo pendiente.",
         ),
         (
             "Entre los logros principales destacan",
@@ -305,8 +306,8 @@ def sync_memory() -> None:
             "Este anexo resume la ejecución cliente-servidor local. Primero se inicia el backend obligatorio en 127.0.0.1:8766 y después Streamlit en 127.0.0.1:8501. Para una demostración desde un móvil de la misma red privada se mantiene la API en loopback y se inicia solo la web con streamlit run src/app.py --server.address 0.0.0.0 --server.port 8501; se accede mediante http://IP_DEL_EQUIPO:8501 y puede ser necesario permitir el puerto 8501 en el perfil privado del firewall. No requiere --allow-remote ni abrir 8766. Como Streamlit no incorpora autenticación multiusuario, este acceso LAN debe ser temporal, en una red de confianza y sin redirección de puertos. La extensión apunta directamente al backend desde Opciones y el monitor usa PHISHING_BACKEND_URL. El puerto 8765 queda como proxy antiguo opcional. Un despliegue remoto real exige HTTPS y controles operativos adicionales.",
         ),
         (
-            "Verificado: 87 pruebas Python",
-            "Verificado: 89 pruebas Python y 2 recorridos reales con Chromium, incluido cliente web a backend.",
+            "Verificado: 89 pruebas Python",
+            "Verificado: 94 pruebas Python y 2 recorridos reales con Chromium, incluido cliente web a backend.",
         ),
         (
             "Verificado: holdout controlado bilingüe",
@@ -323,13 +324,13 @@ def sync_memory() -> None:
                 "El prototipo se centra en el análisis",
                 "El prototipo se centra en el análisis de mensajes desde varios clientes. El origen puede ser texto, EML, Gmail, la extensión o JSON. El cliente transporta la entrada y el backend central extrae cabeceras, remitente, asunto, cuerpo, HTML, enlaces, anclas y adjuntos para generar el riesgo heurístico, neuronal o combinado. La interfaz recibe un contrato ya calculado y se limita a presentarlo.",
             ),
-            (
-                "A nivel interno, el paquete sistema_phishing",
-                "A nivel interno, backend_client.py implementa el transporte común de los clientes y http_api.py define las rutas. backend_service.py concentra análisis, datasets, evaluación, entrenamiento, metadatos y activación de versiones. Dentro del servidor, analysis_service.py coordina los modos y la caché lingüística; analizador_email.py normaliza EML; signal_builder.py, scorer.py y explanations.py construyen el resultado; modelo_neural.py encapsula TF-IDF + MLP. Las vistas Streamlit no importan almacenamiento ni ejecutan inferencia.",
+        (
+            "A nivel interno,",
+            "A nivel interno, backend_client.py implementa el transporte común de los clientes y http_api.py define las rutas, incluidas las operaciones administrativas de ajustes. backend_service.py concentra análisis, configuración central, datasets, evaluación, entrenamiento, metadatos y activación de versiones. runtime_paths.py impone las rutas separadas: credenciales, token y estado en runtime/client; configuración y modelos en runtime/server. Dentro del servidor, analysis_service.py coordina los modos y la caché lingüística; analizador_email.py normaliza EML; signal_builder.py, scorer.py y explanations.py construyen el resultado; modelo_neural.py encapsula TF-IDF + MLP. Las vistas Streamlit no importan almacenamiento de modelos ni ejecutan inferencia.",
             ),
-            (
-                "El sistema permite entrenar modelos en español",
-                "El sistema permite una versión activa en español y otra en inglés. La vista de entrenamiento serializa los CSV y los hiperparámetros y los envía al backend, que valida datos, entrena desde cero, guarda el artefacto de forma atómica e invalida la caché. Evaluación y comparación también se ejecutan en el servidor; los clientes reciben únicamente métricas y metadatos.",
+        (
+            "El sistema permite",
+            "El sistema permite una versión activa en español y otra en inglés. La vista de entrenamiento serializa los CSV y, solo cuando se solicita una excepción, los hiperparámetros; de lo contrario, el backend usa sus valores centrales persistidos. El servidor valida datos, entrena desde cero, guarda el artefacto de forma atómica en runtime/server/models e invalida la caché. Evaluación y comparación también se ejecutan en el servidor; los clientes reciben únicamente métricas y metadatos.",
             ),
             (
                 "El cliente web se desarrolla con Streamlit",
@@ -339,9 +340,9 @@ def sync_memory() -> None:
                 "La integración con Gmail se realiza",
                 "La integración con Gmail usa OAuth de solo lectura. La vista de detección obtiene EML autorizados y los remite al backend; el proceso monitor_gmail.py hace lo mismo periódicamente y puede notificar por Telegram. Ambos consumen la misma versión central y un fallo temporal queda controlado para reintento.",
             ),
-            (
-                "Durante el desarrollo se ha realizado una refactorización",
-                "Durante el desarrollo se ha realizado una refactorización orientada a SOLID y a una frontera cliente-servidor explícita. La presentación depende de BackendClient; el servidor separa transporte, casos de uso, señales, puntuación, explicaciones, datasets y aprendizaje. Así, los detalles del modelo permanecen fuera de Streamlit, extensión y monitor.",
+        (
+            "Durante el desarrollo se ha realizado una refactorización",
+            "Durante el desarrollo se ha realizado una refactorización orientada a SOLID y a una frontera cliente-servidor explícita. La presentación depende de BackendClient; el servidor separa transporte, casos de uso, señales, puntuación, explicaciones, datasets y aprendizaje. El almacenamiento sigue la misma frontera: runtime/client contiene secretos y preferencias propios de cada instalación, mientras runtime/server contiene configuración y modelos centrales. Así, los detalles del modelo permanecen fuera de Streamlit, extensión y monitor.",
             ),
             (
                 "El sistema es híbrido y local.",
@@ -354,6 +355,14 @@ def sync_memory() -> None:
             (
                 "El clasificador neuronal asigna",
                 "El clasificador neuronal del backend asigna la probabilidad y selecciona el modelo por idioma. Streamlit recibe conjuntamente la puntuación neuronal y las señales heurísticas; no carga el pipeline ni recalcula la decisión.",
+            ),
+            (
+                "Además del sistema heurístico",
+                "Además del sistema heurístico, se ha implementado un clasificador neuronal basado en scikit-learn. El modelo utiliza un pipeline formado por un vectorizador TF-IDF y un MLPClassifier. Los hiperparámetros están centralizados en HiperparametrosModelo y sus valores predeterminados se persisten en runtime/server/.env.local. La interfaz los consulta y modifica mediante la API administrativa; un cliente puede enviar una excepción explícita al comparar o entrenar, pero no escribe el sistema de archivos del servidor.",
+            ),
+            (
+                "Los modelos entrenados se almacenan",
+                "Los modelos entrenados se almacenan mediante joblib en runtime/server/models, diferenciando el artefacto español del inglés. Solo el backend accede a esas rutas. Durante el análisis, el servidor detecta el idioma con langdetect y reutiliza un detector cacheado por idioma. Si el modelo esperado no existe, está corrupto o tiene metadatos incompatibles, se entrena un modelo sintético del mismo idioma; nunca se reutiliza silenciosamente el modelo de la lengua opuesta.",
             ),
             (
                 "Desde la vista Monitor",
@@ -385,11 +394,11 @@ def sync_memory() -> None:
         "pip install -r requirements.txt",
         "python -m pip install -r requirements-dev.txt -c constraints.txt",
     )
-    replace_fragment(doc, "54 pruebas Python", "89 pruebas Python")
-    replace_fragment(doc, "59 pruebas Python", "89 pruebas Python")
-    replace_fragment(doc, "60 pruebas Python", "89 pruebas Python")
-    replace_fragment(doc, "72 pruebas Python", "89 pruebas Python")
-    replace_fragment(doc, "81 pruebas Python", "89 pruebas Python")
+    replace_fragment(doc, "54 pruebas Python", "94 pruebas Python")
+    replace_fragment(doc, "59 pruebas Python", "94 pruebas Python")
+    replace_fragment(doc, "60 pruebas Python", "94 pruebas Python")
+    replace_fragment(doc, "72 pruebas Python", "94 pruebas Python")
+    replace_fragment(doc, "81 pruebas Python", "94 pruebas Python")
     replace_fragment(
         doc,
         "API: Interfaz de operaciones que permite a un cliente local enviar datos",
@@ -451,6 +460,32 @@ def sync_memory() -> None:
             ):
                 anchor = insert_paragraph_after(anchor, line)
             break
+    if not any("runtime_paths.py" in paragraph.text for paragraph in doc.paragraphs):
+        for paragraph in doc.paragraphs:
+            if "network.py" in paragraph.text and "Política de loopback" in paragraph.text:
+                insert_paragraph_after(
+                    paragraph,
+                    "│       ├── runtime_paths.py          # Frontera de datos cliente/servidor",
+                )
+                break
+    if not any(
+        "config/" in paragraph.text and "plantillas cliente/servidor" in paragraph.text
+        for paragraph in doc.paragraphs
+    ):
+        for paragraph in doc.paragraphs:
+            if paragraph.text.strip() != "└── .env.example":
+                continue
+            _set_text(paragraph, "├── .env.example                    # Aviso de migración")
+            anchor = paragraph
+            for line in (
+                "├── config/                            # Plantillas cliente/servidor",
+                "└── runtime/                           # Datos persistentes separados",
+                "    ├── client/                       # Secretos y preferencias (Git ignora)",
+                "    └── server/                       # Ajustes y modelos centrales",
+                "        └── models/                   # Artefactos ES/EN",
+            ):
+                anchor = insert_paragraph_after(anchor, line)
+            break
     replace_prefix(
         doc,
         "# 3. Ejecutar la aplicación web",
@@ -490,14 +525,25 @@ def sync_memory() -> None:
             "En la defensa se ejecuta sobre loopback, aunque puede separarse por configuración."
         )
         doc.add_paragraph(
-            "La evidencia reproducible comprende 89 pruebas Python, 2 recorridos con Chromium, "
+            "La evidencia reproducible comprende 94 pruebas Python, 2 recorridos con Chromium, "
             "integración continua, benchmark, calibración separada de 40 casos, evaluación de "
             "16 EML reservados y diagnóstico de 1.528 textos DIFrauD con riesgo de solapamiento."
+        )
+    if not any(
+        paragraph.text.startswith("La persistencia se separa")
+        for paragraph in doc.paragraphs
+    ):
+        doc.add_paragraph(
+            "La persistencia se separa por propietario: runtime/client guarda las "
+            "credenciales OAuth, el token, el estado del monitor y las preferencias "
+            "de cada instalación; runtime/server guarda los ajustes centrales y los "
+            "modelos ES/EN. GET/POST /settings permite administrarlos sin compartir "
+            "el sistema de archivos del servidor."
         )
     replace_prefix(
         doc,
         "La evidencia reproducible comprende",
-        "La evidencia reproducible comprende 89 pruebas Python, 2 recorridos con Chromium, integración continua, benchmark, calibración separada de 40 casos, evaluación de 16 EML reservados y diagnóstico de 1.528 textos DIFrauD. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento; ninguna cifra estima producción.",
+        "La evidencia reproducible comprende 94 pruebas Python, 2 recorridos con Chromium, integración continua, benchmark, calibración separada de 40 casos, evaluación de 16 EML reservados y diagnóstico de 1.528 textos DIFrauD. Los EML son sintéticos y DIFrauD conserva riesgo de solapamiento; ninguna cifra estima producción.",
     )
     _keep_table_rows_together(doc)
     _sync_experimental_literals(doc)
@@ -542,11 +588,11 @@ def sync_full_guide() -> None:
         ),
         (
             "La validación actual",
-            "La validación actual ejecuta 89 pruebas Python y 2 recorridos reales con Chromium. Todas pasan. Incluye web-backend, señales BEC, respaldo de defensa y el recorrido local Gmail EML-JSON-HTTP-backend-Telegram. Las pruebas neuronales rápidas pueden generar ConvergenceWarning esperado; no es un fallo funcional.",
+            "La validación actual ejecuta 94 pruebas Python y 2 recorridos reales con Chromium. Todas pasan. Incluye web-backend, separación de persistencia, ajustes centrales, señales BEC, respaldo de defensa y el recorrido local Gmail EML-JSON-HTTP-backend-Telegram. Las pruebas neuronales rápidas pueden generar ConvergenceWarning esperado; no es un fallo funcional.",
         ),
         (
             "La formulación rigurosa es:",
-            "La formulación rigurosa es: 'La rama main ejecuta 89 pruebas Python, 2 recorridos Chromium —incluido cliente web a backend—, CI, calibración y evaluaciones reproducibles'. Los 16 EML son sintéticos y DIFrauD puede solaparse con fuentes del modelo; no demuestran eficacia universal.",
+            "La formulación rigurosa es: 'La rama main ejecuta 94 pruebas Python, 2 recorridos Chromium —incluido cliente web a backend—, CI, calibración y evaluaciones reproducibles'. Los 16 EML son sintéticos y DIFrauD puede solaparse con fuentes del modelo; no demuestran eficacia universal.",
         ),
         (
             "El repositorio separa 40 casos de calibración",
@@ -554,7 +600,7 @@ def sync_full_guide() -> None:
         ),
         (
             "normalizar_etiqueta",
-            "normalizar_etiqueta acepta formas habituales de phishing y correo legítimo, con error para valores desconocidos. La rama main ejecuta 89 pruebas Python, 2 pruebas de navegador, CI, calibración, evaluaciones reproducibles, respaldo de defensa y benchmark.",
+            "normalizar_etiqueta acepta formas habituales de phishing y correo legítimo, con error para valores desconocidos. La rama main ejecuta 94 pruebas Python, 2 pruebas de navegador, CI, calibración, evaluaciones reproducibles, respaldo de defensa y benchmark.",
         ),
     ]
     replacements.extend(
@@ -719,12 +765,12 @@ def sync_full_guide() -> None:
             paragraph.text == replacement for paragraph in _all_paragraphs(doc)
         ):
             missing.append(prefix)
-    replace_fragment(doc, "47 pruebas", "89 pruebas Python y 2 de navegador")
-    replace_fragment(doc, "54 pruebas Python", "89 pruebas Python")
-    replace_fragment(doc, "59 pruebas Python", "89 pruebas Python")
-    replace_fragment(doc, "60 pruebas Python", "89 pruebas Python")
-    replace_fragment(doc, "72 pruebas Python", "89 pruebas Python")
-    replace_fragment(doc, "81 pruebas Python", "89 pruebas Python")
+    replace_fragment(doc, "47 pruebas", "94 pruebas Python y 2 de navegador")
+    replace_fragment(doc, "54 pruebas Python", "94 pruebas Python")
+    replace_fragment(doc, "59 pruebas Python", "94 pruebas Python")
+    replace_fragment(doc, "60 pruebas Python", "94 pruebas Python")
+    replace_fragment(doc, "72 pruebas Python", "94 pruebas Python")
+    replace_fragment(doc, "81 pruebas Python", "94 pruebas Python")
     replace_fragment(
         doc,
         "¿Por qué pesos 60/40?",
@@ -869,7 +915,12 @@ def sync_full_guide() -> None:
     replace_fragment(
         doc,
         ".env.local, token.json, estado_monitor.json, *.joblib",
+        "Cliente: runtime/client (env, OAuth y estado); servidor: runtime/server (ajustes y modelos)",
+    )
+    replace_fragment(
+        doc,
         "Cliente: .env.local/token/estado; servidor: *.joblib",
+        "Cliente: runtime/client (env, OAuth y estado); servidor: runtime/server (ajustes y modelos)",
     )
     replace_fragment(
         doc,

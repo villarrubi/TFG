@@ -1,8 +1,10 @@
-"""Carga sencilla de variables de entorno desde archivos locales."""
+"""Carga y persistencia de configuración local con límites cliente-servidor."""
 
 import os
+from pathlib import Path
 
 from .file_utils import atomic_write_text
+from .runtime_paths import client_env_path, server_env_path
 
 
 def env_int(name: str, default: int) -> int:
@@ -38,9 +40,27 @@ def cargar_env_file(path: str) -> None:
 
 
 def cargar_env_local(root_dir: str) -> None:
-    """Carga .env.local y después .env si existen en la raíz del proyecto."""
-    cargar_env_file(os.path.join(root_dir, ".env.local"))
+    """Alias compatible: carga la configuración de la instalación cliente."""
+    cargar_env_cliente(root_dir)
+
+
+def _cargar_env_scoped(root_dir: str, scoped_path: Path) -> None:
+    """Carga un ámbito; usa el fichero antiguo solo si aún no se ha migrado."""
+    if scoped_path.exists():
+        cargar_env_file(str(scoped_path))
+    else:
+        cargar_env_file(os.path.join(root_dir, ".env.local"))
     cargar_env_file(os.path.join(root_dir, ".env"))
+
+
+def cargar_env_cliente(root_dir: str) -> None:
+    """Carga secretos y preferencias de esta instalación cliente."""
+    _cargar_env_scoped(root_dir, client_env_path(root_dir))
+
+
+def cargar_env_servidor(root_dir: str) -> None:
+    """Carga únicamente la configuración persistente del backend."""
+    _cargar_env_scoped(root_dir, server_env_path(root_dir))
 
 
 def leer_env_file(path: str) -> dict[str, str]:
@@ -74,8 +94,23 @@ def guardar_env_file(path: str, valores: dict[str, str]) -> None:
 
 
 def actualizar_env_local(root_dir: str, nuevos_valores: dict[str, str]) -> None:
-    """Actualiza .env.local conservando valores previos no modificados."""
-    path = os.path.join(root_dir, ".env.local")
+    """Alias compatible: actualiza la configuración del cliente."""
+    actualizar_env_cliente(root_dir, nuevos_valores)
+
+
+def actualizar_env_file(path: str | os.PathLike[str], nuevos_valores: dict[str, str]) -> None:
+    """Actualiza un fichero env concreto conservando las demás claves."""
+    path = str(path)
     valores = leer_env_file(path)
     valores.update({key: value for key, value in nuevos_valores.items() if value is not None})
     guardar_env_file(path, valores)
+
+
+def actualizar_env_cliente(root_dir: str, nuevos_valores: dict[str, str]) -> None:
+    """Persiste credenciales y preferencias propias del cliente."""
+    actualizar_env_file(client_env_path(root_dir), nuevos_valores)
+
+
+def actualizar_env_servidor(root_dir: str, nuevos_valores: dict[str, str]) -> None:
+    """Persiste ajustes centrales propiedad del backend."""
+    actualizar_env_file(server_env_path(root_dir), nuevos_valores)

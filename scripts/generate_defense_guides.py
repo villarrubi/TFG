@@ -450,7 +450,7 @@ def flujo():
     )
     _bullet(
         doc,
-        "El análisis apoya decisiones y las 89 pruebas más 2 recorridos validan el flujo, no la eficacia en producción; "
+        "El análisis apoya decisiones y las 94 pruebas más 2 recorridos validan el flujo, no la eficacia en producción; "
         "el MLP requiere datos representativos y evaluación separada.",
     )
     doc.save(ROOT / "Guia_01_Flujo_y_funcionamiento.docx")
@@ -601,7 +601,7 @@ def tecnologias():
     )
     _para(
         doc,
-        "La validación automatizada reúne 89 pruebas Python y 2 pruebas con Chromium. Incluye idioma determinista y el recorrido local Gmail EML -> JSON -> HTTP -> backend -> Telegram. GitHub Actions instala versiones fijadas, ejecuta Ruff, verifica calibración, regenera la evaluación, comprueba el respaldo de defensa y recorre web-backend. OAuth real usa una lista E2E separada porque sus credenciales no pueden entrar en CI.",
+        "La validación automatizada reúne 94 pruebas Python y 2 pruebas con Chromium. Incluye idioma determinista y el recorrido local Gmail EML -> JSON -> HTTP -> backend -> Telegram. GitHub Actions instala versiones fijadas, ejecuta Ruff, verifica calibración, regenera la evaluación, comprueba el respaldo de defensa y recorre web-backend. OAuth real usa una lista E2E separada porque sus credenciales no pueden entrar en CI.",
     )
     _heading(doc, "7. Diferencias con la propuesta inicial", 1)
     _table(
@@ -698,7 +698,7 @@ def guion():
             (
                 "15:00–17:00",
                 "Pruebas y resultados",
-                "89 pruebas Python, 2 de navegador, calibración, 16 EML y diagnóstico externo",
+                "94 pruebas Python, 2 de navegador, calibración, 16 EML y diagnóstico externo",
             ),
             (
                 "17:00–19:00",

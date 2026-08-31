@@ -18,13 +18,13 @@ Resultado: superado. También se prueba por separado el contrato de listado,
 descarga `raw` y perfil de Gmail, además de errores de red y escape HTML de
 Telegram. Esta ejecución descubrió y corrigió la falta de serialización JSON de
 cabeceras enriquecidas y bytes SMTPUTF8 conservados como `surrogateescape`.
-La suite completa que incluye este recorrido contiene 89 pruebas Python.
+La suite completa que incluye este recorrido contiene 94 pruebas Python.
 
 ## Preparación de servicios reales
 
 - Dependencias de Google instaladas: sí.
-- `credentials.json`: no disponible.
-- `token.json`: no disponible.
+- `runtime/client/credentials.json`: no disponible.
+- `runtime/client/token.json`: no disponible.
 - `TELEGRAM_BOT_TOKEN`: no configurado.
 - `TELEGRAM_CHAT_ID`: no configurado.
 

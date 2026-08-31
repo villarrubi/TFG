@@ -78,7 +78,7 @@ class NeuralPhishingClassifier:
             raise ValueError("El idioma del modelo debe ser 'spanish' o 'english'.")
         self.language = language
         # Si no se pasa una configuración explícita, se leen los valores
-        # guardados en .env.local (pestaña "Configuración" de la app); si no
+        # guardados en runtime/server/.env.local mediante la API; si no
         # hay ninguno guardado, se usan los valores por defecto de
         # HiperparametrosModelo. Esto permite cambiar los hiperparámetros
         # desde la interfaz sin tocar código y que se apliquen la próxima

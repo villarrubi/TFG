@@ -16,6 +16,7 @@ MAX_ANALYSIS_REQUEST_BYTES = 16 * 1024 * 1024
 MAX_TRAINING_REQUEST_BYTES = 256 * 1024 * 1024
 DEFAULT_ALLOWED_ORIGINS = {"https://mail.google.com"}
 ADMIN_PATHS = {
+    "/settings",
     "/datasets/summary",
     "/train",
     "/evaluate",
@@ -73,6 +74,15 @@ def crear_handler(
                 else:
                     self._send_json(200, models_payload())
                 return
+            if path == "/settings":
+                if not self._check_origin() or not self._check_admin(path):
+                    return
+                settings_payload = getattr(service, "settings_payload", None)
+                if settings_payload is None:
+                    self._send_json(404, {"error": "Ruta no disponible."})
+                else:
+                    self._send_json(200, settings_payload())
+                return
             self._send_json(404, {"error": "Ruta no encontrada."})
 
         def do_OPTIONS(self) -> None:
@@ -91,6 +101,7 @@ def crear_handler(
                 "/evaluate": ("evaluate_payload", MAX_TRAINING_REQUEST_BYTES),
                 "/compare": ("compare_payload", MAX_TRAINING_REQUEST_BYTES),
                 "/models/delete": ("delete_model_payload", MAX_ANALYSIS_REQUEST_BYTES),
+                "/settings": ("update_settings_payload", MAX_ANALYSIS_REQUEST_BYTES),
             }
             route = handlers.get(path)
             if route is None:

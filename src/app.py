@@ -5,7 +5,8 @@ import os
 import streamlit as st
 
 from sistema_phishing.backend_client import BackendClient
-from sistema_phishing.env_loader import cargar_env_local, leer_env_file
+from sistema_phishing.env_loader import cargar_env_cliente, leer_env_file
+from sistema_phishing.runtime_paths import client_env_path, gmail_token_path
 from ui_components import (
     aplicar_estilos_base,
     encabezado_pagina,
@@ -16,8 +17,9 @@ from ui_components import (
 )
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-ENV_LOCAL_PATH = os.path.join(ROOT_DIR, ".env.local")
-GMAIL_TOKEN_PATH = os.path.join(ROOT_DIR, "token.json")
+cargar_env_cliente(ROOT_DIR)
+ENV_LOCAL_PATH = str(client_env_path(ROOT_DIR))
+GMAIL_TOKEN_PATH = str(gmail_token_path(ROOT_DIR))
 VISTA_INICIO = "inicio"
 VISTA_CONFIGURACION = "configuracion"
 VISTA_DETECCION = "deteccion"
@@ -79,7 +81,7 @@ def aplicar_estilos_globales() -> None:
 
 def _mostrar_estado_inicio() -> None:
     """Muestra el estado general del sistema en la pantalla de inicio."""
-    cargar_env_local(ROOT_DIR)
+    cargar_env_cliente(ROOT_DIR)
     valores = leer_env_file(ENV_LOCAL_PATH)
     gmail_ok = os.path.exists(GMAIL_TOKEN_PATH)
     telegram_ok = bool(

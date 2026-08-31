@@ -23,7 +23,7 @@ from sistema_phishing.defaults import (
     DEFAULT_NEURAL_WEIGHT,
     DEFAULT_PHISHING_THRESHOLD,
 )
-from sistema_phishing.env_loader import cargar_env_local, env_float, env_int
+from sistema_phishing.env_loader import cargar_env_cliente, env_float, env_int
 from sistema_phishing.gmail_monitor import MonitorConfig
 from sistema_phishing.http_api import crear_handler as crear_handler_http
 from sistema_phishing.http_api import crear_servidor_http
@@ -237,7 +237,7 @@ class _ExtensionBackendAdapter:
 
 
 def parse_args() -> argparse.Namespace:
-    cargar_env_local(ROOT_DIR)
+    cargar_env_cliente(ROOT_DIR)
     parser = argparse.ArgumentParser(
         description="Proxy opcional entre la extensión antigua y el backend central.",
         epilog="Ejemplo: python src/gmail_extension_server.py --backend-url http://127.0.0.1:8766",

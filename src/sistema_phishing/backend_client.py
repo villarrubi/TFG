@@ -86,6 +86,25 @@ class BackendClient:
     def models(self) -> dict[str, Any]:
         return self._request("GET", "/models")
 
+    def settings(self) -> dict[str, Any]:
+        """Obtiene los ajustes centrales sin exponer el fichero del servidor."""
+        return self._request("GET", "/settings", admin=True)
+
+    def update_settings(
+        self,
+        *,
+        analysis_defaults: Mapping[str, Any] | None = None,
+        training_defaults: Any = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {}
+        if analysis_defaults is not None:
+            payload["analysis_defaults"] = dict(analysis_defaults)
+        if training_defaults is not None:
+            payload["training_defaults"] = self._serialize_hyperparameters(
+                training_defaults
+            )
+        return self._request("POST", "/settings", payload, admin=True)
+
     def analyze(
         self,
         email: str | bytes | Mapping[str, Any],

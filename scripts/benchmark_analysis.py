@@ -99,8 +99,8 @@ def ejecutar_benchmarks(iteraciones: int, repeticiones: int) -> dict[str, dict[s
         mode="combinado",
         heur_weight=defaults.DEFAULT_HEUR_WEIGHT,
         neural_weight=defaults.DEFAULT_NEURAL_WEIGHT,
-        model_path_es=str(ROOT_DIR / "modelo_neural_es.joblib"),
-        model_path_en=str(ROOT_DIR / "modelo_neural_en.joblib"),
+        model_path_es=str(ROOT_DIR / "runtime" / "server" / "models" / "modelo_neural_es.joblib"),
+        model_path_en=str(ROOT_DIR / "runtime" / "server" / "models" / "modelo_neural_en.joblib"),
     )
 
     # Calentamiento: evita atribuir la inicialización interna de langdetect a

@@ -294,7 +294,7 @@ def save_models(models: dict[str, NeuralPhishingClassifier]) -> None:
     temporary: dict[str, Path] = {}
     try:
         for language, model in models.items():
-            target = ROOT / f"modelo_neural_{language}.joblib"
+            target = ROOT / "runtime" / "server" / "models" / f"modelo_neural_{language}.joblib"
             temp = target.with_suffix(target.suffix + ".tmp")
             model.save(str(temp))
             loaded = ModelStorage(str(temp)).load()
@@ -305,7 +305,10 @@ def save_models(models: dict[str, NeuralPhishingClassifier]) -> None:
                 )
             temporary[language] = temp
         for language, temp in temporary.items():
-            os.replace(temp, ROOT / f"modelo_neural_{language}.joblib")
+            os.replace(
+                temp,
+                ROOT / "runtime" / "server" / "models" / f"modelo_neural_{language}.joblib",
+            )
     finally:
         for temp in temporary.values():
             temp.unlink(missing_ok=True)
@@ -371,7 +374,7 @@ def evaluate_text_dataset(
 def model_payload(
     language: str, model: NeuralPhishingClassifier
 ) -> dict[str, object]:
-    path = ROOT / f"modelo_neural_{language}.joblib"
+    path = ROOT / "runtime" / "server" / "models" / f"modelo_neural_{language}.joblib"
     return {
         "sha256": file_sha256(path),
         "format_version": model.model_format_version,
@@ -568,7 +571,13 @@ def main() -> None:
     if args.evaluate_only or args.check:
         models = {
             language: ModelStorage(
-                str(ROOT / f"modelo_neural_{language}.joblib")
+                str(
+                    ROOT
+                    / "runtime"
+                    / "server"
+                    / "models"
+                    / f"modelo_neural_{language}.joblib"
+                )
             ).load()
             for language in ("es", "en")
         }

@@ -346,8 +346,8 @@ def main() -> None:
     models = {
         language: model_payload(path)
         for language, path in {
-            "es": ROOT / "modelo_neural_es.joblib",
-            "en": ROOT / "modelo_neural_en.joblib",
+            "es": ROOT / "runtime" / "server" / "models" / "modelo_neural_es.joblib",
+            "en": ROOT / "runtime" / "server" / "models" / "modelo_neural_en.joblib",
         }.items()
     }
     high_confidence_threshold = float(

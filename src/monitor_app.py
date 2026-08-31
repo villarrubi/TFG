@@ -10,7 +10,7 @@ from sistema_phishing.defaults import (
     DEFAULT_HEUR_WEIGHT,
     DEFAULT_PHISHING_THRESHOLD,
 )
-from sistema_phishing.env_loader import cargar_env_local, leer_env_file
+from sistema_phishing.env_loader import cargar_env_cliente, leer_env_file
 from sistema_phishing.gmail_client import (
     GmailIntegrationError,
     construir_servicio_gmail,
@@ -19,6 +19,12 @@ from sistema_phishing.gmail_client import (
     obtener_ultimos_correos,
 )
 from sistema_phishing.gmail_monitor import MonitorConfig, analizar_correos_nuevos
+from sistema_phishing.runtime_paths import (
+    client_env_path,
+    gmail_credentials_path,
+    gmail_token_path,
+    monitor_state_path,
+)
 from sistema_phishing.telegram_notifier import (
     TelegramNotificationError,
     TelegramNotifier,
@@ -32,11 +38,11 @@ from ui_components import (
 )
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-cargar_env_local(ROOT_DIR)
-GMAIL_CREDENTIALS_PATH = os.path.join(ROOT_DIR, "credentials.json")
-GMAIL_TOKEN_PATH = os.path.join(ROOT_DIR, "token.json")
-MONITOR_STATE_PATH = os.path.join(ROOT_DIR, "estado_monitor.json")
-ENV_LOCAL_PATH = os.path.join(ROOT_DIR, ".env.local")
+cargar_env_cliente(ROOT_DIR)
+GMAIL_CREDENTIALS_PATH = str(gmail_credentials_path(ROOT_DIR))
+GMAIL_TOKEN_PATH = str(gmail_token_path(ROOT_DIR))
+MONITOR_STATE_PATH = str(monitor_state_path(ROOT_DIR))
+ENV_LOCAL_PATH = str(client_env_path(ROOT_DIR))
 
 
 def aplicar_estilos_monitor() -> None:
@@ -195,7 +201,7 @@ def _mostrar_resultado_monitor(resultado) -> None:
 def main():
     """Renderiza la pantalla de monitorización."""
     aplicar_estilos_monitor()
-    cargar_env_local(ROOT_DIR)
+    cargar_env_cliente(ROOT_DIR)
     valores = leer_env_file(ENV_LOCAL_PATH)
     encabezado_pagina(
         "Vigilancia automatizada",

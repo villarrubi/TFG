@@ -4,13 +4,15 @@ import unittest
 from unittest import mock
 
 from sistema_phishing.env_loader import (
-    actualizar_env_local,
+    actualizar_env_cliente,
+    actualizar_env_servidor,
     cargar_env_file,
     env_float,
     env_int,
     guardar_env_file,
     leer_env_file,
 )
+from sistema_phishing.runtime_paths import client_env_path, server_env_path
 
 
 class TestEnvLoader(unittest.TestCase):
@@ -41,14 +43,15 @@ class TestEnvLoader(unittest.TestCase):
 
     def test_actualizar_env_local_conserva_valores_previos(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = os.path.join(tmpdir, ".env.local")
+            path = client_env_path(tmpdir)
+            path.parent.mkdir(parents=True)
             with open(path, "w", encoding="utf-8") as env_file:
                 env_file.write("A=1\nB=2\n")
 
             old_value = os.environ.pop("B", None)
             try:
-                actualizar_env_local(tmpdir, {"B": "nuevo", "C": "3"})
-                valores = leer_env_file(path)
+                actualizar_env_cliente(tmpdir, {"B": "nuevo", "C": "3"})
+                valores = leer_env_file(str(path))
 
                 self.assertEqual(valores["A"], "1")
                 self.assertEqual(valores["B"], "nuevo")
@@ -59,6 +62,25 @@ class TestEnvLoader(unittest.TestCase):
                 os.environ.pop("C", None)
                 if old_value is not None:
                     os.environ["B"] = old_value
+
+    def test_cliente_y_servidor_se_guardan_en_ficheros_distintos(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "PHISHING_CLIENT_DATA_DIR": "",
+                    "PHISHING_SERVER_DATA_DIR": "",
+                },
+                clear=False,
+            ):
+                actualizar_env_cliente(tmpdir, {"TELEGRAM_CHAT_ID": "cliente"})
+                actualizar_env_servidor(tmpdir, {"BACKEND_MODE": "neural"})
+
+                client_values = leer_env_file(str(client_env_path(tmpdir)))
+                server_values = leer_env_file(str(server_env_path(tmpdir)))
+
+            self.assertEqual(client_values, {"TELEGRAM_CHAT_ID": "cliente"})
+            self.assertEqual(server_values, {"BACKEND_MODE": "neural"})
 
     def test_guardar_env_rechaza_saltos_de_linea(self):
         with tempfile.TemporaryDirectory() as tmpdir:

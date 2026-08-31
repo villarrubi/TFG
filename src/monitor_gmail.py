@@ -11,19 +11,24 @@ from sistema_phishing.defaults import (
     DEFAULT_NEURAL_WEIGHT,
     DEFAULT_PHISHING_THRESHOLD,
 )
-from sistema_phishing.env_loader import cargar_env_local, env_float, env_int
+from sistema_phishing.env_loader import cargar_env_cliente, env_float, env_int
 from sistema_phishing.gmail_client import (
     construir_servicio_gmail,
     obtener_ultimos_correos,
 )
 from sistema_phishing.gmail_monitor import MonitorConfig, analizar_correos_nuevos
+from sistema_phishing.runtime_paths import (
+    gmail_credentials_path,
+    gmail_token_path,
+    monitor_state_path,
+)
 from sistema_phishing.telegram_notifier import TelegramNotifier
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-cargar_env_local(ROOT_DIR)
-DEFAULT_CREDENTIALS_PATH = os.path.join(ROOT_DIR, "credentials.json")
-DEFAULT_TOKEN_PATH = os.path.join(ROOT_DIR, "token.json")
-DEFAULT_STATE_PATH = os.path.join(ROOT_DIR, "estado_monitor.json")
+cargar_env_cliente(ROOT_DIR)
+DEFAULT_CREDENTIALS_PATH = str(gmail_credentials_path(ROOT_DIR))
+DEFAULT_TOKEN_PATH = str(gmail_token_path(ROOT_DIR))
+DEFAULT_STATE_PATH = str(monitor_state_path(ROOT_DIR))
 ASCII_TITLE = r"""
  __  __  ___  _   _ ___ _____ ___  ____     ____ __  __    _    ___ _
 |  \/  |/ _ \| \ | |_ _|_   _/ _ \|  _ \   / ___|  \/  |  / \  |_ _| |

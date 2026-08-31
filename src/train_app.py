@@ -7,10 +7,9 @@ import os
 import streamlit as st
 
 from sistema_phishing.backend_client import BackendClient, BackendClientError
-from sistema_phishing.env_loader import cargar_env_local
+from sistema_phishing.env_loader import cargar_env_cliente
 from sistema_phishing.model_config import (
     HiperparametrosModelo,
-    cargar_hiperparametros_desde_env,
 )
 from ui_components import (
     aplicar_estilos_base,
@@ -54,14 +53,13 @@ def _columns(prefix: str, dataset_format: str) -> dict[str, str]:
 def _hyperparameters_form(
     prefix: str,
     *,
+    defaults: HiperparametrosModelo,
     enabled_label: str = "Usar hiperparámetros personalizados",
-) -> HiperparametrosModelo | None:
-    defaults = cargar_hiperparametros_desde_env()
+) -> tuple[bool, HiperparametrosModelo | None]:
     enabled = st.checkbox(enabled_label, value=False, key=f"{prefix}_enabled")
     if not enabled:
-        # Se envían explícitamente para que el resultado no dependa del entorno
-        # del proceso servidor, que puede estar en otro equipo.
-        return defaults
+        # None indica al backend que use su configuración central persistente.
+        return True, None
 
     col1, col2, col3 = st.columns(3)
     ngram_min = col1.number_input(
@@ -142,7 +140,7 @@ def _hyperparameters_form(
     )
     try:
         layers = tuple(int(value.strip()) for value in layers_text.split(",") if value.strip())
-        return HiperparametrosModelo(
+        return True, HiperparametrosModelo(
             tfidf_ngram_range=(int(ngram_min), int(ngram_max)),
             tfidf_max_features=int(max_features),
             tfidf_min_df=int(min_df),
@@ -155,7 +153,16 @@ def _hyperparameters_form(
         )
     except (TypeError, ValueError) as exc:
         st.error(f"Hiperparámetros no válidos: {exc}")
-        return None
+        return False, None
+
+
+def _training_defaults(payload: dict) -> HiperparametrosModelo:
+    """Convierte el contrato JSON del servidor al tipo ligero del formulario."""
+    values = dict(payload)
+    for key in ("tfidf_ngram_range", "mlp_hidden_layer_sizes"):
+        if key in values:
+            values[key] = tuple(int(item) for item in values[key])
+    return HiperparametrosModelo(**values)
 
 
 def _show_metrics(metrics: dict) -> None:
@@ -196,7 +203,7 @@ def _show_model_cards(models: dict) -> None:
     render_html(f'<div class="ui-grid ui-grid-2">{"".join(cards)}</div>')
 
 
-def _training_tab(client: BackendClient) -> None:
+def _training_tab(client: BackendClient, defaults: HiperparametrosModelo) -> None:
     st.markdown("### Entrenar y activar un modelo central")
     st.info(
         "Los CSV se envían al backend. El servidor entrena, guarda de forma atómica "
@@ -216,7 +223,10 @@ def _training_tab(client: BackendClient) -> None:
     columns = _columns("train", dataset_format)
     language = st.selectbox("Idioma", ["es", "en"], format_func=lambda x: x.upper())
     with st.expander("Hiperparámetros", expanded=False):
-        hyperparameters = _hyperparameters_form("train_hp")
+        hyperparameters_valid, hyperparameters = _hyperparameters_form(
+            "train_hp",
+            defaults=defaults,
+        )
 
     col_summary, col_train = st.columns(2)
     if col_summary.button("Resumir en el servidor", use_container_width=True):
@@ -233,7 +243,7 @@ def _training_tab(client: BackendClient) -> None:
         if not files:
             st.error("Sube al menos un CSV.")
             return
-        if hyperparameters is None:
+        if not hyperparameters_valid:
             st.error("Corrige los hiperparámetros antes de entrenar.")
             return
         with st.spinner("El backend está entrenando el modelo..."):
@@ -291,7 +301,7 @@ def _evaluation_tab(client: BackendClient) -> None:
         _show_metrics(response["metrics"])
 
 
-def _comparison_tab(client: BackendClient) -> None:
+def _comparison_tab(client: BackendClient, defaults: HiperparametrosModelo) -> None:
     st.markdown("### Comparar configuraciones sin cambiar el modelo activo")
     training_files = st.file_uploader(
         "CSV de entrenamiento",
@@ -314,6 +324,7 @@ def _comparison_tab(client: BackendClient) -> None:
     )
     model_count = st.number_input("Configuraciones", 1, 3, 1)
     models = []
+    models_valid = True
     for index in range(int(model_count)):
         with st.expander(f"Modelo {index + 1}", expanded=index == 0):
             name = st.text_input(
@@ -321,16 +332,18 @@ def _comparison_tab(client: BackendClient) -> None:
                 value=f"Modelo {chr(65 + index)}",
                 key=f"compare_name_{index}",
             )
-            hyperparameters = _hyperparameters_form(
+            hyperparameters_valid, hyperparameters = _hyperparameters_form(
                 f"compare_hp_{index}",
+                defaults=defaults,
                 enabled_label="Personalizar esta configuración",
             )
+            models_valid = models_valid and hyperparameters_valid
             models.append({"name": name, "hyperparameters": hyperparameters})
     if st.button("Comparar en el servidor", use_container_width=True, type="primary"):
         if not training_files or test_file is None:
             st.error("Sube entrenamiento y prueba.")
             return
-        if any(model["hyperparameters"] is None for model in models):
+        if not models_valid:
             st.error("Corrige los hiperparámetros antes de comparar.")
             return
         try:
@@ -384,7 +397,7 @@ def _models_tab(client: BackendClient, models: dict) -> None:
 
 
 def main() -> None:
-    cargar_env_local(ROOT_DIR)
+    cargar_env_cliente(ROOT_DIR)
     aplicar_estilos_entrenamiento()
     encabezado_pagina(
         "Ciclo de vida del modelo",
@@ -406,6 +419,7 @@ def main() -> None:
     try:
         health = client.health()
         models = client.models()["models"]
+        settings = client.settings()
     except BackendClientError as exc:
         st.error(str(exc))
         st.code("python src/backend_server.py", language="powershell")
@@ -413,16 +427,17 @@ def main() -> None:
 
     st.success(f"Backend central conectado: `{client.base_url}`")
     st.caption(f"Contrato API {health.get('api_version', 'desconocido')}")
+    defaults = _training_defaults(settings["training_defaults"])
     _show_model_cards(models)
     tab_train, tab_eval, tab_compare, tab_models = st.tabs(
         ["Entrenar", "Evaluar", "Comparar", "Modelos activos"]
     )
     with tab_train:
-        _training_tab(client)
+        _training_tab(client, defaults)
     with tab_eval:
         _evaluation_tab(client)
     with tab_compare:
-        _comparison_tab(client)
+        _comparison_tab(client, defaults)
     with tab_models:
         _models_tab(client, models)
 

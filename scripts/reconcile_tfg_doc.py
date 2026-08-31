@@ -131,15 +131,15 @@ def reconcile_prose(doc) -> None:
         ),
         (
             "Los modelos entrenados se almacenan",
-            "Los modelos entrenados se almacenan en disco mediante joblib, diferenciando entre el modelo en español (modelo_neural_es.joblib) y el modelo en inglés (modelo_neural_en.joblib). Durante el análisis, el sistema detecta el idioma del correo con langdetect y reutiliza un detector cacheado por idioma, no uno fijado para toda la sesión. Si el modelo del idioma esperado no existe, está corrupto o tiene metadatos incompatibles, se entrena un modelo sintético del mismo idioma; nunca se reutiliza silenciosamente el modelo de la lengua opuesta.",
+            "Los modelos entrenados se almacenan en runtime/server/models mediante joblib, diferenciando entre el artefacto español y el inglés. Solo el backend accede a esas rutas; los clientes administran ajustes y solicitan inferencias mediante la API. Durante el análisis, el sistema detecta el idioma del correo con langdetect y reutiliza un detector cacheado por idioma, no uno fijado para toda la sesión. Si el modelo del idioma esperado no existe, está corrupto o tiene metadatos incompatibles, se entrena un modelo sintético del mismo idioma; nunca se reutiliza silenciosamente el modelo de la lengua opuesta.",
         ),
         (
             "La revisión actual de la rama web ejecuta correctamente 44 pruebas",
-            "La rama main ejecuta 89 pruebas automatizadas que protegen los componentes, el contrato cliente-servidor y sus integraciones.",
+            "La rama main ejecuta 94 pruebas automatizadas que protegen los componentes, el contrato cliente-servidor y sus integraciones.",
         ),
         (
             "La revisión actual de la rama web ejecuta 44 pruebas unitarias",
-            "La rama main ejecuta 89 pruebas unitarias y de integración mediante unittest. Cubren EML, BEC, combinación, configuración, Gmail, monitor, heurísticas, clasificador, persistencia, cliente y API HTTP, seguridad, evaluación externa, respaldo, extensión y Telegram. Todas finalizaron correctamente; los avisos corresponden a iteraciones reducidas del MLP en pruebas rápidas.",
+            "La rama main ejecuta 94 pruebas unitarias y de integración mediante unittest. Cubren EML, BEC, combinación, configuración, Gmail, monitor, heurísticas, clasificador, persistencia, cliente y API HTTP, seguridad, evaluación externa, respaldo, extensión y Telegram. Todas finalizaron correctamente; los avisos corresponden a iteraciones reducidas del MLP en pruebas rápidas.",
         ),
         (
             "En segundo lugar, se evaluó el clasificador neuronal",
@@ -155,7 +155,7 @@ def reconcile_prose(doc) -> None:
         ),
         (
             "Se realizó una prueba funcional del análisis",
-            "Se realizaron comprobaciones funcionales sobre mensajes sintéticos en español e inglés y sobre un correo legítimo de control. Las comprobaciones verificaron los tres modos, el umbral, la selección por idioma y las explicaciones. La suite de 89 pruebas añade contrato HTTP, límites, caché, artefactos inválidos y entradas malformadas; no se presenta como evaluación estadística de producción.",
+            "Se realizaron comprobaciones funcionales sobre mensajes sintéticos en español e inglés y sobre un correo legítimo de control. Las comprobaciones verificaron los tres modos, el umbral, la selección por idioma y las explicaciones. La suite de 94 pruebas añade contrato HTTP, límites, caché, artefactos inválidos y entradas malformadas; no se presenta como evaluación estadística de producción.",
         ),
         (
             "Los resultados confirman el diseño",
@@ -336,7 +336,7 @@ def main() -> None:
         doc,
         "├── tests/                            # Suite unittest",
         [
-            "├── backend_server.py # API HTTP local (/health y /analyze)",
+            "├── backend_server.py # API HTTP central (análisis, ajustes y modelos)",
             "├── gmail_extension_server.py # Adaptador local de la extensión Gmail",
             "└── sistema_phishing/http_api.py # Transporte HTTP compartido",
         ],

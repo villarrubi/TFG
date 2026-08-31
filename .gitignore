@@ -13,6 +13,11 @@ token.json
 estado_monitor.json
 config/credentials.json
 config/token.json
+/runtime/client/
+/runtime/server/.env.local
+/runtime/server/*.tmp
+/runtime/server/models/*.tmp
+/runtime/server/models/*.joblib.tmp
 # Corpus brutos: se verifican por SHA-256 desde una carpeta externa.
 datos_entrenamiento/
 datos/_entrenamiento/

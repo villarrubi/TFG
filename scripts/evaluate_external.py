@@ -137,7 +137,7 @@ def training_metadata() -> dict[str, object]:
     """Registra fuentes declaradas y si existen textos para deduplicar."""
     models: dict[str, object] = {}
     for language in ("es", "en"):
-        path = ROOT / f"modelo_neural_{language}.joblib"
+        path = ROOT / "runtime" / "server" / "models" / f"modelo_neural_{language}.joblib"
         model = ModelStorage(str(path)).load()
         snapshots = list(getattr(model, "training_texts", []) or [])
         models[language] = {

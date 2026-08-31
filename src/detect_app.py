@@ -15,6 +15,7 @@ from sistema_phishing.defaults import (
     DEFAULT_NEURAL_WEIGHT,
     DEFAULT_PHISHING_THRESHOLD,
 )
+from sistema_phishing.env_loader import cargar_env_cliente
 from sistema_phishing.gmail_client import (
     GmailIntegrationError,
     construir_servicio_gmail,
@@ -22,6 +23,7 @@ from sistema_phishing.gmail_client import (
     obtener_perfil_gmail,
     obtener_ultimos_correos,
 )
+from sistema_phishing.runtime_paths import gmail_credentials_path, gmail_token_path
 from ui_components import (
     aplicar_estilos_base,
     encabezado_pagina,
@@ -31,8 +33,9 @@ from ui_components import (
 
 # La interfaz solo necesita rutas de OAuth; los modelos pertenecen al backend.
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-GMAIL_CREDENTIALS_PATH = os.path.join(ROOT_DIR, "credentials.json")
-GMAIL_TOKEN_PATH = os.path.join(ROOT_DIR, "token.json")
+cargar_env_cliente(ROOT_DIR)
+GMAIL_CREDENTIALS_PATH = str(gmail_credentials_path(ROOT_DIR))
+GMAIL_TOKEN_PATH = str(gmail_token_path(ROOT_DIR))
 ANALYSIS_MODES = {
     "Heurístico": "heuristico",
     "Red neuronal": "neural",

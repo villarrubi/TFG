@@ -3,7 +3,7 @@
 Hazlas con la ventana maximizada, zoom legible y la misma resolución. Usa
 cuentas de laboratorio y oculta direcciones personales, identificadores de
 chat, tokens, rutas de usuario y cualquier correo real. No captures nunca
-`.env.local`, `credentials.json` ni `token.json`.
+`runtime/client/.env.local`, `credentials.json` ni `token.json`.
 
 ## Capturas imprescindibles
 

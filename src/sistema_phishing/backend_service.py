@@ -8,7 +8,7 @@ import hmac
 import os
 import uuid
 from collections.abc import Mapping
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from io import StringIO
 from pathlib import Path
@@ -30,14 +30,17 @@ from .defaults import (
     DEFAULT_NEURAL_WEIGHT,
     DEFAULT_PHISHING_THRESHOLD,
 )
+from .env_loader import actualizar_env_file
 from .idioma import detectar_idioma_correo
 from .metrics import calcular_metricas_clasificacion
+from .model_config import cargar_hiperparametros_desde_env
 from .modelo_neural import (
     HiperparametrosModelo,
     ModelStorage,
     NeuralModelTrainer,
     NeuralPhishingClassifier,
 )
+from .runtime_paths import server_env_path, server_model_path
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 MAX_TEXT_CHARS = 200_000
@@ -56,8 +59,12 @@ class AnalysisBackendConfig:
     heur_weight: int = DEFAULT_HEUR_WEIGHT
     neural_weight: int = DEFAULT_NEURAL_WEIGHT
     high_confidence_threshold: float = DEFAULT_HIGH_CONFIDENCE_THRESHOLD
-    model_path_es: str = os.path.join(ROOT_DIR, "modelo_neural_es.joblib")
-    model_path_en: str = os.path.join(ROOT_DIR, "modelo_neural_en.joblib")
+    model_path_es: str = field(
+        default_factory=lambda: str(server_model_path(ROOT_DIR, "es"))
+    )
+    model_path_en: str = field(
+        default_factory=lambda: str(server_model_path(ROOT_DIR, "en"))
+    )
 
 
 class AnalysisBackendService:
@@ -68,11 +75,14 @@ class AnalysisBackendService:
         config: AnalysisBackendConfig | None = None,
         *,
         admin_token: str | None = None,
+        settings_path: str | None = None,
     ):
         self.config = config or AnalysisBackendConfig()
         self.admin_token = (
             os.getenv("BACKEND_ADMIN_TOKEN", "") if admin_token is None else admin_token
         )
+        self.settings_path = settings_path or str(server_env_path(ROOT_DIR))
+        self.training_defaults = cargar_hiperparametros_desde_env()
         self._service = EmailAnalysisService(self.config)
         self._training_lock = Lock()
         self._metadata_lock = Lock()
@@ -113,6 +123,86 @@ class AnalysisBackendService:
                 for language in ("es", "en")
             },
         }
+
+    def settings_payload(self) -> dict[str, Any]:
+        """Expone solo ajustes operativos; nunca secretos ni rutas físicas."""
+        return {
+            "api_version": API_VERSION,
+            "analysis_defaults": {
+                "mode": self.config.mode,
+                "threshold": self.config.threshold,
+                "heur_weight": self.config.heur_weight,
+                "neural_weight": self.config.neural_weight,
+                "high_confidence_threshold": self.config.high_confidence_threshold,
+            },
+            "training_defaults": asdict(self.training_defaults),
+        }
+
+    def update_settings_payload(self, payload: Mapping[str, Any]) -> dict[str, Any]:
+        """Valida, aplica y guarda los ajustes centrales del backend."""
+        analysis = payload.get("analysis_defaults", {})
+        if analysis is None:
+            analysis = {}
+        if not isinstance(analysis, Mapping):
+            raise TypeError("analysis_defaults debe ser un objeto JSON.")
+
+        mode = str(analysis.get("mode", self.config.mode)).lower()
+        threshold = float(analysis.get("threshold", self.config.threshold))
+        heur_weight = int(analysis.get("heur_weight", self.config.heur_weight))
+        neural_weight = int(analysis.get("neural_weight", self.config.neural_weight))
+        high_confidence = float(
+            analysis.get(
+                "high_confidence_threshold",
+                self.config.high_confidence_threshold,
+            )
+        )
+        if mode not in VALID_MODES:
+            raise ValueError("El modo de análisis no es válido.")
+        if not 0 <= threshold <= 100 or not 0 <= high_confidence <= 100:
+            raise ValueError("Los umbrales deben estar entre 0 y 100.")
+        if heur_weight < 0 or neural_weight < 0:
+            raise ValueError("Los pesos no pueden ser negativos.")
+        if mode == MODO_COMBINADO and heur_weight + neural_weight == 0:
+            raise ValueError("El modo combinado necesita al menos un peso positivo.")
+
+        raw_training = payload.get("training_defaults")
+        training_defaults = (
+            self.training_defaults
+            if raw_training is None
+            else self._hyperparameters(raw_training)
+        )
+        if training_defaults is None:
+            raise ValueError("training_defaults no puede estar vacío.")
+
+        updates = {
+            "BACKEND_MODE": mode,
+            "BACKEND_THRESHOLD": str(threshold),
+            "BACKEND_HEUR_WEIGHT": str(heur_weight),
+            "BACKEND_NEURAL_WEIGHT": str(neural_weight),
+            "BACKEND_HIGH_CONFIDENCE_THRESHOLD": str(high_confidence),
+            "NEURAL_NGRAM_MIN": str(training_defaults.tfidf_ngram_range[0]),
+            "NEURAL_NGRAM_MAX": str(training_defaults.tfidf_ngram_range[1]),
+            "NEURAL_MAX_FEATURES": str(training_defaults.tfidf_max_features),
+            "NEURAL_MIN_DF": str(training_defaults.tfidf_min_df),
+            "NEURAL_HIDDEN_LAYERS": ",".join(
+                str(value) for value in training_defaults.mlp_hidden_layer_sizes
+            ),
+            "NEURAL_ACTIVATION": training_defaults.mlp_activation,
+            "NEURAL_ALPHA": str(training_defaults.mlp_alpha),
+            "NEURAL_LEARNING_RATE": str(training_defaults.mlp_learning_rate_init),
+            "NEURAL_MAX_ITER": str(training_defaults.mlp_max_iter),
+            "NEURAL_EARLY_STOPPING": (
+                "1" if training_defaults.mlp_early_stopping else "0"
+            ),
+        }
+        actualizar_env_file(self.settings_path, updates)
+        self.config.mode = mode
+        self.config.threshold = threshold
+        self.config.heur_weight = heur_weight
+        self.config.neural_weight = neural_weight
+        self.config.high_confidence_threshold = high_confidence
+        self.training_defaults = training_defaults
+        return self.settings_payload()
 
     def analyze_payload(self, payload: Mapping[str, Any]) -> dict[str, Any]:
         """Analiza en el servidor y devuelve un contrato listo para la UI."""
@@ -196,7 +286,10 @@ class AnalysisBackendService:
         """Entrena y activa una versión para todos los clientes de forma atómica."""
         language, language_name = self._language(payload)
         columns = self._columns(payload)
-        hyperparameters = self._hyperparameters(payload.get("hyperparameters"))
+        hyperparameters = (
+            self._hyperparameters(payload.get("hyperparameters"))
+            or self.training_defaults
+        )
         sources = self._datasets(payload)
         path = self._model_path(language)
 
@@ -256,7 +349,10 @@ class AnalysisBackendService:
                 raise TypeError("Cada modelo debe ser un objeto JSON.")
             classifier = NeuralPhishingClassifier(
                 language=language_name,
-                hiperparametros=self._hyperparameters(model.get("hyperparameters")),
+                hiperparametros=(
+                    self._hyperparameters(model.get("hyperparameters"))
+                    or self.training_defaults
+                ),
             )
             classifier.fit(train_texts, train_labels)
             metrics = calcular_metricas_clasificacion(

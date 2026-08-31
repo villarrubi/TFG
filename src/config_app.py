@@ -17,8 +17,8 @@ from sistema_phishing.defaults import (
     DEFAULT_PHISHING_THRESHOLD,
 )
 from sistema_phishing.env_loader import (
-    actualizar_env_local,
-    cargar_env_local,
+    actualizar_env_cliente,
+    cargar_env_cliente,
     leer_env_file,
 )
 from sistema_phishing.gmail_client import (
@@ -28,7 +28,12 @@ from sistema_phishing.gmail_client import (
 )
 from sistema_phishing.model_config import (
     DEFAULT_HIPERPARAMETROS,
-    cargar_hiperparametros_desde_env,
+    HiperparametrosModelo,
+)
+from sistema_phishing.runtime_paths import (
+    client_env_path,
+    gmail_credentials_path,
+    gmail_token_path,
 )
 from sistema_phishing.telegram_notifier import (
     TelegramNotificationError,
@@ -42,9 +47,10 @@ from ui_components import (
 )
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-ENV_LOCAL_PATH = os.path.join(ROOT_DIR, ".env.local")
-GMAIL_CREDENTIALS_PATH = os.path.join(ROOT_DIR, "credentials.json")
-GMAIL_TOKEN_PATH = os.path.join(ROOT_DIR, "token.json")
+cargar_env_cliente(ROOT_DIR)
+ENV_LOCAL_PATH = str(client_env_path(ROOT_DIR))
+GMAIL_CREDENTIALS_PATH = str(gmail_credentials_path(ROOT_DIR))
+GMAIL_TOKEN_PATH = str(gmail_token_path(ROOT_DIR))
 
 
 def aplicar_estilos_configuracion() -> None:
@@ -173,11 +179,11 @@ def _mostrar_config_telegram(valores: dict) -> None:
         nuevos_valores = {"TELEGRAM_CHAT_ID": chat_id.strip()}
         if token_nuevo.strip():
             nuevos_valores["TELEGRAM_BOT_TOKEN"] = token_nuevo.strip()
-        actualizar_env_local(ROOT_DIR, nuevos_valores)
+        actualizar_env_cliente(ROOT_DIR, nuevos_valores)
         st.success("Configuración de Telegram guardada.")
 
     if col_probar.button("Probar Telegram", use_container_width=True):
-        cargar_env_local(ROOT_DIR)
+        cargar_env_cliente(ROOT_DIR)
         token = os.getenv("TELEGRAM_BOT_TOKEN", "")
         chat = chat_id.strip() or os.getenv("TELEGRAM_CHAT_ID", "")
         try:
@@ -247,7 +253,7 @@ def _mostrar_config_monitor(valores: dict) -> None:
     )
 
     if st.button("Guardar monitor", use_container_width=True, type="primary"):
-        actualizar_env_local(
+        actualizar_env_cliente(
             ROOT_DIR,
             {
                 "MONITOR_INTERVAL_SECONDS": str(int(interval)),
@@ -300,7 +306,7 @@ def _mostrar_config_backend(valores: dict) -> None:
             updates = {"PHISHING_BACKEND_URL": normalized}
             if admin_token.strip():
                 updates["BACKEND_ADMIN_TOKEN"] = admin_token.strip()
-            actualizar_env_local(ROOT_DIR, updates)
+            actualizar_env_cliente(ROOT_DIR, updates)
             st.success(
                 "Backend guardado. Configura la misma URL en Opciones de la extensión."
             )
@@ -321,137 +327,189 @@ def _mostrar_config_backend(valores: dict) -> None:
             st.error(str(exc))
 
 
-def _mostrar_config_neural(valores: dict) -> None:
-    """Muestra y guarda los hiperparámetros de las redes neuronales (ES/EN).
+def _hiperparametros_desde_payload(payload: dict) -> HiperparametrosModelo:
+    values = dict(payload)
+    for key in ("tfidf_ngram_range", "mlp_hidden_layer_sizes"):
+        if key in values:
+            values[key] = tuple(int(item) for item in values[key])
+    return HiperparametrosModelo(**values)
 
-    Estos valores se guardan en .env.local. El cliente de entrenamiento los
-    envía explícitamente al backend en la siguiente petición de entrenamiento.
-    No afectan a modelos ya entrenados: hay que volver a entrenar.
-    """
-    st.markdown("### Red neuronal (avanzado)")
-    st.caption(
-        "Estos valores se aplican la PRÓXIMA vez que entrenes un modelo en la pestaña "
-        "'Entrenar' de la app de entrenamiento. Los modelos ya entrenados no cambian solos."
+
+def _cliente_backend(valores: dict) -> BackendClient:
+    return BackendClient(
+        valores.get("PHISHING_BACKEND_URL", DEFAULT_BACKEND_URL),
+        admin_token=valores.get("BACKEND_ADMIN_TOKEN", ""),
     )
 
-    actuales = cargar_hiperparametros_desde_env()
 
+def _mostrar_config_neural(valores: dict) -> None:
+    """Administra por API los ajustes que pertenecen al servidor central."""
+    st.markdown("### Ajustes centrales del servidor")
+    st.caption(
+        "Se guardan en el backend, no en este cliente. Sus cambios afectan a todos "
+        "los clientes; los hiperparámetros se aplican al siguiente entrenamiento."
+    )
+    client = _cliente_backend(valores)
+    try:
+        settings = client.settings()
+    except (ValueError, BackendClientError) as exc:
+        st.error(f"No se pueden leer los ajustes centrales: {exc}")
+        return
+
+    analysis = settings["analysis_defaults"]
+    mode_options = ["combinado", "heuristico", "neural"]
+    mode = st.selectbox(
+        "Modo predeterminado del servidor",
+        mode_options,
+        index=mode_options.index(analysis["mode"]),
+        key="server_default_mode",
+    )
+    threshold = st.slider(
+        "Umbral predeterminado",
+        0,
+        100,
+        int(float(analysis["threshold"])),
+        key="server_default_threshold",
+    )
+    heur_weight = st.slider(
+        "Peso heurístico predeterminado (%)",
+        0,
+        100,
+        int(analysis["heur_weight"]),
+        disabled=mode != "combinado",
+        key="server_default_heur_weight",
+    )
+    neural_weight = 100 - heur_weight if mode == "combinado" else int(
+        analysis["neural_weight"]
+    )
+    high_confidence = st.slider(
+        "Umbral de evidencia individual concluyente",
+        0,
+        100,
+        int(float(analysis["high_confidence_threshold"])),
+        key="server_high_confidence_threshold",
+    )
+    if st.button("Guardar ajustes de análisis en el servidor", use_container_width=True):
+        try:
+            client.update_settings(
+                analysis_defaults={
+                    "mode": mode,
+                    "threshold": threshold,
+                    "heur_weight": heur_weight,
+                    "neural_weight": neural_weight,
+                    "high_confidence_threshold": high_confidence,
+                }
+            )
+        except BackendClientError as exc:
+            st.error(str(exc))
+        else:
+            st.success("Ajustes centrales guardados en el servidor.")
+
+    st.markdown("### Red neuronal (avanzado)")
+    actuales = _hiperparametros_desde_payload(settings["training_defaults"])
     with st.expander("Vectorizador de texto (TF-IDF)", expanded=False):
         col1, col2, col3 = st.columns(3)
         ngram_min = col1.number_input(
-            "N-grama mínimo", min_value=1, max_value=3, value=actuales.tfidf_ngram_range[0],
-            help="1 = palabras sueltas.",
+            "N-grama mínimo", 1, 3, actuales.tfidf_ngram_range[0]
         )
         ngram_max = col2.number_input(
-            "N-grama máximo", min_value=1, max_value=3, value=actuales.tfidf_ngram_range[1],
-            help="2 = incluye también parejas de palabras seguidas (bigramas). Súbelo a 3 para trigramas.",
+            "N-grama máximo", 1, 3, actuales.tfidf_ngram_range[1]
         )
         max_features = col3.number_input(
-            "Vocabulario máximo (max_features)", min_value=100, max_value=50000, step=100,
-            value=actuales.tfidf_max_features,
-            help="Nº máximo de términos distintos que aprende el modelo. Más alto = más detalle, más lento.",
+            "Vocabulario máximo", 100, 50000, actuales.tfidf_max_features, step=100
         )
         min_df = st.number_input(
-            "min_df (frecuencia mínima)", min_value=1, max_value=20, value=actuales.tfidf_min_df,
-            help="Ignora palabras que aparecen en menos de N correos del dataset. Súbelo para reducir ruido.",
+            "Frecuencia mínima (min_df)", 1, 20, actuales.tfidf_min_df
         )
 
     with st.expander("Red neuronal (MLP)", expanded=False):
         capas_texto = st.text_input(
             "Neuronas por capa oculta",
             value=",".join(str(n) for n in actuales.mlp_hidden_layer_sizes),
-            help="Separadas por comas. Ej: '64,32' = dos capas ocultas de 64 y 32 neuronas. '100' = una sola capa.",
         )
         col4, col5 = st.columns(2)
+        activations = ["relu", "tanh", "logistic"]
         activation = col4.selectbox(
-            "Función de activación", ["relu", "tanh", "logistic"],
-            index=["relu", "tanh", "logistic"].index(actuales.mlp_activation)
-            if actuales.mlp_activation in ["relu", "tanh", "logistic"] else 0,
+            "Función de activación",
+            activations,
+            index=activations.index(actuales.mlp_activation),
         )
         max_iter = col5.number_input(
-            "Épocas máximas (max_iter)", min_value=50, max_value=5000, step=50, value=actuales.mlp_max_iter,
+            "Épocas máximas", 50, 5000, actuales.mlp_max_iter, step=50
         )
         col6, col7 = st.columns(2)
         alpha = col6.number_input(
-            "Regularización (alpha)", min_value=0.0, max_value=1.0, value=float(actuales.mlp_alpha),
-            step=0.0001, format="%.4f",
-            help="Súbelo si el modelo memoriza el entrenamiento pero falla con correos nuevos (overfitting).",
+            "Regularización (alpha)",
+            0.0,
+            1.0,
+            float(actuales.mlp_alpha),
+            step=0.0001,
+            format="%.4f",
         )
         learning_rate = col7.number_input(
-            "Velocidad de aprendizaje (learning_rate_init)", min_value=0.00001, max_value=1.0,
-            value=float(actuales.mlp_learning_rate_init), step=0.0001, format="%.5f",
+            "Velocidad de aprendizaje",
+            0.00001,
+            1.0,
+            float(actuales.mlp_learning_rate_init),
+            step=0.0001,
+            format="%.5f",
         )
         early_stopping = st.checkbox(
-            "Early stopping (parar antes si deja de mejorar)", value=actuales.mlp_early_stopping,
+            "Early stopping", value=actuales.mlp_early_stopping
         )
 
     if st.button(
-        "Guardar hiperparámetros de la red neuronal",
+        "Guardar hiperparámetros en el servidor",
         use_container_width=True,
         type="primary",
     ):
-        if ngram_min > ngram_max:
-            st.error("El n-grama mínimo no puede ser mayor que el máximo.")
+        try:
+            capas = tuple(
+                int(parte.strip())
+                for parte in capas_texto.split(",")
+                if parte.strip()
+            )
+            nuevos = HiperparametrosModelo(
+                tfidf_ngram_range=(int(ngram_min), int(ngram_max)),
+                tfidf_max_features=int(max_features),
+                tfidf_min_df=int(min_df),
+                mlp_hidden_layer_sizes=capas,
+                mlp_activation=activation,
+                mlp_alpha=float(alpha),
+                mlp_learning_rate_init=float(learning_rate),
+                mlp_max_iter=int(max_iter),
+                mlp_early_stopping=bool(early_stopping),
+            )
+            client.update_settings(training_defaults=nuevos)
+        except (TypeError, ValueError, BackendClientError) as exc:
+            st.error(str(exc))
         else:
-            try:
-                capas = tuple(int(parte.strip()) for parte in capas_texto.split(",") if parte.strip())
-                if not capas:
-                    raise ValueError("Debes indicar al menos una capa.")
-            except ValueError:
-                st.error("Las neuronas por capa deben ser números enteros separados por comas, p.ej. '64,32'.")
-            else:
-                actualizar_env_local(
-                    ROOT_DIR,
-                    {
-                        "NEURAL_NGRAM_MIN": str(int(ngram_min)),
-                        "NEURAL_NGRAM_MAX": str(int(ngram_max)),
-                        "NEURAL_MAX_FEATURES": str(int(max_features)),
-                        "NEURAL_MIN_DF": str(int(min_df)),
-                        "NEURAL_HIDDEN_LAYERS": ",".join(str(n) for n in capas),
-                        "NEURAL_ACTIVATION": activation,
-                        "NEURAL_MAX_ITER": str(int(max_iter)),
-                        "NEURAL_ALPHA": str(alpha),
-                        "NEURAL_LEARNING_RATE": str(learning_rate),
-                        "NEURAL_EARLY_STOPPING": "1" if early_stopping else "0",
-                    },
-                )
-                st.success(
-                    "Hiperparámetros guardados. Ve a Entrenamiento y pulsa "
-                    "'Entrenar y activar' para crear la versión central con estos valores."
-                )
+            st.success(
+                "Hiperparámetros centrales guardados. Vuelve a entrenar para "
+                "generar una nueva versión de los modelos."
+            )
 
-    if st.button("Restaurar valores por defecto", use_container_width=True):
-        d = DEFAULT_HIPERPARAMETROS
-        actualizar_env_local(
-            ROOT_DIR,
-            {
-                "NEURAL_NGRAM_MIN": str(d.tfidf_ngram_range[0]),
-                "NEURAL_NGRAM_MAX": str(d.tfidf_ngram_range[1]),
-                "NEURAL_MAX_FEATURES": str(d.tfidf_max_features),
-                "NEURAL_MIN_DF": str(d.tfidf_min_df),
-                "NEURAL_HIDDEN_LAYERS": ",".join(str(n) for n in d.mlp_hidden_layer_sizes),
-                "NEURAL_ACTIVATION": d.mlp_activation,
-                "NEURAL_MAX_ITER": str(d.mlp_max_iter),
-                "NEURAL_ALPHA": str(d.mlp_alpha),
-                "NEURAL_LEARNING_RATE": str(d.mlp_learning_rate_init),
-                "NEURAL_EARLY_STOPPING": "1" if d.mlp_early_stopping else "0",
-            },
-        )
-        st.success("Restaurados los valores por defecto. Recuerda volver a entrenar para aplicarlos.")
-        st.rerun()
+    if st.button("Restaurar hiperparámetros centrales", use_container_width=True):
+        try:
+            client.update_settings(training_defaults=DEFAULT_HIPERPARAMETROS)
+        except BackendClientError as exc:
+            st.error(str(exc))
+        else:
+            st.success("Valores centrales restaurados.")
+            st.rerun()
 
 def main() -> None:
     """Renderiza la pantalla de configuración."""
     aplicar_estilos_configuracion()
-    cargar_env_local(ROOT_DIR)
+    cargar_env_cliente(ROOT_DIR)
     valores = leer_env_file(ENV_LOCAL_PATH)
 
     encabezado_pagina(
         "Preferencias del sistema",
         "Configuración",
-        "Gestiona conexiones, automatización y parámetros del backend desde un único lugar.",
-        "Configuración local",
-        "Los secretos permanecen en .env.local y nunca se muestran completos.",
+        "Gestiona las preferencias del cliente y, por API, los ajustes del backend.",
+        "Almacenamiento separado",
+        "Los secretos del cliente permanecen en runtime/client y nunca se muestran completos.",
     )
     _mostrar_estado_general(valores)
 

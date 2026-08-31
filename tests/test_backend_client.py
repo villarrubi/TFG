@@ -37,6 +37,16 @@ class _ContractService:
         self.last_payload = payload
         return {"datasets": [{"rows": 2}]}
 
+    def settings_payload(self):
+        return {
+            "analysis_defaults": {"mode": "combinado"},
+            "training_defaults": {"tfidf_max_features": 3000},
+        }
+
+    def update_settings_payload(self, payload):
+        self.last_payload = payload
+        return payload
+
 
 class BackendClientTests(unittest.TestCase):
     def setUp(self):
@@ -80,6 +90,19 @@ class BackendClientTests(unittest.TestCase):
             columns={"label": "label", "text": "text"},
         )
         self.assertEqual(result["datasets"][0]["rows"], 2)
+
+    def test_ajustes_del_servidor_viajan_por_la_api_administrativa(self):
+        client = BackendClient(self.url, admin_token="secreto")
+
+        settings = client.settings()
+        updated = client.update_settings(
+            analysis_defaults={"mode": "neural"},
+            training_defaults={"tfidf_max_features": 1500},
+        )
+
+        self.assertEqual(settings["analysis_defaults"]["mode"], "combinado")
+        self.assertEqual(updated["analysis_defaults"]["mode"], "neural")
+        self.assertEqual(updated["training_defaults"]["tfidf_max_features"], 1500)
 
     def test_http_remoto_se_rechaza_y_https_remoto_se_admite(self):
         with self.assertRaisesRegex(ValueError, "HTTPS"):

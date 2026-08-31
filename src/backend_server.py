@@ -16,9 +16,10 @@ from sistema_phishing.defaults import (
     DEFAULT_NEURAL_WEIGHT,
     DEFAULT_PHISHING_THRESHOLD,
 )
-from sistema_phishing.env_loader import cargar_env_local, env_float, env_int
+from sistema_phishing.env_loader import cargar_env_servidor, env_float, env_int
 from sistema_phishing.http_api import crear_servidor_http
 from sistema_phishing.network import validar_host_local
+from sistema_phishing.runtime_paths import server_env_path, server_model_path
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 MIN_REMOTE_ADMIN_TOKEN_CHARS = 24
@@ -37,7 +38,7 @@ def validar_token_remoto(allow_remote: bool, admin_token: str) -> None:
 
 def parse_args() -> argparse.Namespace:
     """Lee la configuración del proceso sin ocultar errores de validación."""
-    cargar_env_local(ROOT_DIR)
+    cargar_env_servidor(ROOT_DIR)
     parser = argparse.ArgumentParser(
         description="Servidor HTTP local para centralizar el análisis de phishing."
     )
@@ -74,10 +75,14 @@ def main() -> None:
         heur_weight=args.heur_weight,
         neural_weight=args.neural_weight,
         high_confidence_threshold=args.high_confidence_threshold,
-        model_path_es=os.getenv("BACKEND_MODEL_ES", os.path.join(ROOT_DIR, "modelo_neural_es.joblib")),
-        model_path_en=os.getenv("BACKEND_MODEL_EN", os.path.join(ROOT_DIR, "modelo_neural_en.joblib")),
+        model_path_es=str(server_model_path(ROOT_DIR, "es")),
+        model_path_en=str(server_model_path(ROOT_DIR, "en")),
     )
-    service = AnalysisBackendService(config, admin_token=admin_token)
+    service = AnalysisBackendService(
+        config,
+        admin_token=admin_token,
+        settings_path=str(server_env_path(ROOT_DIR)),
+    )
     server = crear_servidor_http(args.host, args.port, service)
     print(f"Backend central escuchando en http://{args.host}:{args.port}")
     print("Clientes: Streamlit, extensión Gmail y monitor.")
