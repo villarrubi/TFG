@@ -241,6 +241,10 @@ La lista ordenada de capturas está en [docs/DEFENSE_SCREENSHOTS.md](docs/DEFENS
 
 La correspondencia con las observaciones del tutor está en [docs/TUTOR_FEEDBACK_CHECKLIST.md](docs/TUTOR_FEEDBACK_CHECKLIST.md), la comprobación bibliográfica en [docs/BIBLIOGRAPHY_AUDIT.md](docs/BIBLIOGRAPHY_AUDIT.md) y el borrador de respuesta en [docs/RESPUESTA_TUTOR.md](docs/RESPUESTA_TUTOR.md).
 
+## Uso de herramientas de IA
+
+Durante el desarrollo se emplearon herramientas de IA generativa como apoyo para consultas técnicas puntuales, diagnóstico de errores, revisión de fragmentos de código, asistencia en el CSS y revisión de documentación. Los cambios se comprobaron antes de incorporarlos y las decisiones técnicas, la interpretación de los resultados y la responsabilidad final corresponden al autor. La IA no se utiliza como fuente académica: la parte teórica se contrasta y cita mediante referencias originales.
+
 ## Alcance
 
 El sistema es cliente-servidor en ejecución, pero su configuración predeterminada mantiene ambos lados en el mismo equipo y en loopback para facilitar la defensa y proteger el contenido del correo. Se puede separar físicamente cambiando la URL del backend; convertirlo en un servicio multiusuario de producción requiere la capa operativa y de seguridad indicada anteriormente. No sustituye una pasarela antispam ni garantiza detectar campañas nuevas sin reentrenamiento y validación externa.

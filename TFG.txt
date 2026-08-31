@@ -650,6 +650,8 @@ La fase inicial, desarrollada entre octubre y diciembre de 2025, se dedicó al e
 
 Una vez consolidado el marco teórico, se adoptó un enfoque de desarrollo en espiral adaptado al tamaño del trabajo, llevado a cabo entre febrero y junio de 2026. Primero se construyó un núcleo heurístico explicable, después se añadió el clasificador neuronal TF-IDF + MLP y, a continuación, se separaron el backend HTTP central y los clientes Streamlit, extensión y monitor. Gmail aporta mensajes autorizados y Telegram actúa como salida opcional; ambos se coordinan alrededor del contrato del servidor. Cada avance se cerró con la ejecución de la suite de pruebas, manteniendo el prototipo en un estado funcional durante todo el proceso.
 
+Durante el desarrollo se emplearon herramientas de inteligencia artificial generativa como apoyo para consultas técnicas puntuales, diagnóstico y resolución de errores, revisión de fragmentos de código, asistencia en el CSS de la interfaz y revisión de documentación. Antes de incorporar los cambios se realizaron las comprobaciones correspondientes; las decisiones técnicas, la interpretación de los resultados y la responsabilidad final corresponden al autor. Estas herramientas no se utilizaron como fuente académica: los contenidos teóricos se contrastaron y citaron mediante sus fuentes originales.
+
 La gestión del proyecto se apoyó en el control de versiones Git y en la plataforma GitHub como repositorio remoto. El desarrollo se organizó por funcionalidades y cada hito se validó mediante pruebas automatizadas antes de integrarse en la versión de trabajo, con especial atención a las funciones críticas de detección, normalización y persistencia de modelos.
 
 Planificación temporal del proyecto

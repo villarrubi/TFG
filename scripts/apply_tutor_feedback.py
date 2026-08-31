@@ -700,6 +700,26 @@ def _bibliography(doc: DocumentObject) -> None:
 
 def apply_memory(path: Path) -> None:
     doc = Document(path)
+    ai_disclosure = (
+        "Durante el desarrollo se emplearon herramientas de inteligencia artificial "
+        "generativa como apoyo para consultas técnicas puntuales, diagnóstico y resolución "
+        "de errores, revisión de fragmentos de código, asistencia en el CSS de la interfaz "
+        "y revisión de documentación. Antes de incorporar los cambios se realizaron las "
+        "comprobaciones correspondientes; las decisiones técnicas, la interpretación de "
+        "los resultados y la responsabilidad final corresponden al autor. Estas herramientas "
+        "no se utilizaron como fuente académica: los contenidos teóricos se contrastaron y "
+        "citaron mediante sus fuentes originales."
+    )
+    if not any(p.text == ai_disclosure for p in doc.paragraphs):
+        anchor = _paragraph(
+            doc,
+            "La gestión del proyecto se apoyó en el control de versiones Git y en la "
+            "plataforma GitHub como repositorio remoto. El desarrollo se organizó por "
+            "funcionalidades y cada hito se validó mediante pruebas automatizadas antes "
+            "de integrarse en la versión de trabajo, con especial atención a las funciones "
+            "críticas de detección, normalización y persistencia de modelos.",
+        )
+        _insert_paragraph_before(doc, anchor, ai_disclosure)
     _ensure_front_matter_entries(doc)
     _build_proposal_changes(doc)
     _build_experiment(doc)
@@ -779,6 +799,22 @@ def apply_memory(path: Path) -> None:
 
 def apply_full_guide(path: Path) -> None:
     doc = Document(path)
+    ai_question = "¿Has utilizado inteligencia artificial durante el desarrollo?"
+    ai_answer = (
+        "Sí, como herramienta de apoyo para consultas técnicas puntuales, diagnóstico de "
+        "errores, revisión de fragmentos de código, CSS y revisión de documentación. Cada "
+        "cambio incorporado se comprobó y las decisiones técnicas, la interpretación de "
+        "resultados y la responsabilidad final son del autor. La IA no se cita como fuente "
+        "académica: la parte teórica se contrastó con las referencias originales."
+    )
+    if not any(p.text == ai_question for p in doc.paragraphs):
+        anchor = _paragraph(doc, "Demostración en directo")
+        _insert_paragraph_before(
+            doc, anchor, ai_question, style="Pregunta tribunal"
+        )
+        _insert_paragraph_before(
+            doc, anchor, ai_answer, style="Respuesta tribunal"
+        )
     _replace_prefix(
         doc,
         "analizador_email.py usa BytesParser",

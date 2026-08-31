@@ -730,6 +730,21 @@ def sync_full_guide() -> None:
         "¿Por qué pesos 60/40?",
         "¿Por qué pesos 45/55 y alta confianza 70?",
     )
+    replace_prefix(
+        doc,
+        "No. Es un índice de riesgo ponderado",
+        "No. Es un índice de riesgo ponderado que mezcla una puntuación experta y una "
+        "probabilidad. Comparten escala, pero no interpretación estadística. La fusión "
+        "45/55 y el umbral 21 se eligieron con 40 casos separados; todavía deben "
+        "confirmarse sobre correo real reciente e independiente.",
+    )
+    replace_prefix(
+        doc,
+        "Serializa el pipeline completo y simplifica inferencia.",
+        "Serializa el pipeline completo y simplifica la inferencia. Debe cargarse solo "
+        "desde fuentes confiables. El repositorio fija las dependencias y registra los "
+        "metadatos y la huella de cada versión activa.",
+    )
     replace_fragment(
         doc,
         "por defecto 60 % heurística y 40 % red neuronal",
@@ -894,6 +909,9 @@ def sync_full_guide() -> None:
         doc, "Combinado con 60 % heurística", "Combinado con 45 % heurística"
     )
     replace_fragment(
+        doc, "Combinado con 35 % heurística", "Combinado con 45 % heurística"
+    )
+    replace_fragment(
         doc,
         "Si no hay modelo del idioma esperado, se prueba el del otro idioma",
         "Si no hay modelo del idioma esperado, se crea un fallback sintético de ese mismo idioma",
@@ -936,6 +954,14 @@ def sync_full_guide() -> None:
         doc,
         "•\tHe decidido si corregir o retirar los artefactos heredados",
         "•\tHe comprobado que la documentación, las guías y la evidencia reproducible están sincronizadas.",
+    )
+    replace_prefix(
+        doc,
+        "El fallback sintético permite ejecutar una demo limpia",
+        "El fallback sintético permite ejecutar una demo limpia cuando faltan modelos; "
+        "no se presenta como evaluación estadística. Las métricas finales proceden de "
+        "holdouts y EML separados, y se acompañan de sus limitaciones de independencia "
+        "y representatividad.",
     )
     _restore_page_fields(doc)
     _replace_controlled_results_table(doc)

@@ -21,6 +21,7 @@ TFG**, tal y como confirmó el tutor.
 | Aclarar SPF/DKIM/DMARC | Se declara que solo se interpretan resultados ya presentes en cabeceras; no hay consultas DNS ni validación criptográfica. | Sistema heurístico y guía técnica |
 | Revisar bibliografía | Se eliminan entradas no citadas, se añade DIFrauD y se controlan arXiv y duplicados en CI. | `docs/BIBLIOGRAPHY_AUDIT.md` |
 | Demostración en directo | Existe un recorrido de demostración, EML controlados, capturas y plan B sin secretos. | `Guia_03_Guion_defensa.docx`, `defense_demo/README.md` |
+| Declarar el uso de IA | Se menciona de forma breve en la metodología como apoyo técnico, se mantiene la responsabilidad del autor y se excluye la IA como fuente académica. | Metodología; `Guia_defensa_TFG.docx` |
 
 La única acción no realizable desde el repositorio es acordar con el tutor una
 franja concreta de Teams. Debe hacerse después de comprobar la disponibilidad

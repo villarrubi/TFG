@@ -21,6 +21,7 @@ datos/_entrenamiento/
 .vscode/
 .idea/
 ~$*.docx
+~$*.pptx
 
 # Documentación local de propuesta y QA. Las guías finales sí se versionan.
 Propuestaformato.pdf

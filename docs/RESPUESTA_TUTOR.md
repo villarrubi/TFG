@@ -34,6 +34,13 @@ benchmark externo. El repositorio incluye dependencias fijadas, instrucciones
 de ejecución, pruebas automáticas, los datos de evaluación reproducibles y un
 guion de demostración.
 
+Siguiendo tu indicación, he añadido en la metodología una mención breve al uso
+de herramientas de inteligencia artificial como apoyo para consultas técnicas,
+resolución de errores, revisión de código, CSS y documentación. También aclaro
+que las decisiones y la interpretación de los resultados son responsabilidad
+del autor y que la IA no se ha utilizado como fuente académica: la parte
+teórica se ha contrastado y citado mediante las referencias originales.
+
 Para ver el sistema en directo por Teams puedo adaptarme a estas franjas:
 
 - [DÍA Y HORA 1]
