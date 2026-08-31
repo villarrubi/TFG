@@ -174,19 +174,6 @@ Las rutas completas pueden externalizarse mediante
 volúmenes distintos en dos equipos o contenedores. También existen overrides
 por archivo en las plantillas.
 
-Si vienes de una versión antigua que guardaba todo en la raíz, ejecuta primero
-una vista previa y después la migración:
-
-```powershell
-$env:PYTHONPATH = "src"
-python scripts/migrate_runtime_data.py
-python scripts/migrate_runtime_data.py --apply
-```
-
-La utilidad separa las claves, mueve los archivos privados del cliente y
-archiva el `.env.local` antiguo como copia local. Nunca imprime los valores de
-los secretos.
-
 ## Acceso desde otro dispositivo de la red local
 
 Mantén el backend en `127.0.0.1:8766` y expón únicamente Streamlit:
@@ -372,14 +359,14 @@ extension_gmail/                   # extensión Manifest V3
 tests/                             # pruebas unitarias e integración
 browser_tests/                     # recorridos reales con Chromium
 evaluation/                        # datasets controlados y resultados
-scripts/                           # evaluación, benchmarks y utilidades
+scripts/                           # evaluación y experimentos reproducibles
 config/                            # plantillas separadas de cliente y servidor
 runtime/
 ├── client/                        # secretos y preferencias locales (ignorado)
 └── server/
     ├── .env.local                 # ajustes centrales (ignorado)
     └── models/                    # artefactos que solo consume el backend
-docs/                              # documentación técnica adicional
+docs/                              # arquitectura y validación técnica
 ```
 
 ## Problemas habituales
@@ -421,12 +408,10 @@ correspondiente. No presentes el fallback como un modelo evaluado.
 ## Documentación adicional
 
 - [Arquitectura y propiedad de los datos](docs/CLIENT_SERVER_STORAGE.md)
-- [Capturas recomendadas para memoria y defensa](docs/DEFENSE_SCREENSHOTS.md)
 - [Validación de Gmail y Telegram](docs/INTEGRATION_VALIDATION.md)
-- [Auditoría bibliográfica](docs/BIBLIOGRAPHY_AUDIT.md)
 - [Informe de rendimiento](PERFORMANCE_REPORT.md)
 - [Fuentes y protocolo de entrenamiento](evaluation/README.md)
-- [Memoria del proyecto](TFG.pdf)
+- Memoria del proyecto: [PDF](TFG.pdf) y [DOCX](TFG.docx)
 
 ## Uso de herramientas de IA
 

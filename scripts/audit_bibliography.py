@@ -13,8 +13,10 @@ import unicodedata
 from collections import Counter
 from pathlib import Path
 
+from docx import Document
+
 ROOT = Path(__file__).resolve().parents[1]
-MEMORY_TEXT = ROOT / "TFG.txt"
+MEMORY_DOCX = ROOT / "TFG.docx"
 
 ARXIV_EXPECTED = {
     "1802.03162": ("URLNet", "Le"),
@@ -30,6 +32,16 @@ def _normalizar(value: str) -> str:
         unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode()
     )
     return re.sub(r"\W+", "", ascii_value.casefold())
+
+
+def _leer_memoria(path: Path) -> str:
+    """Extrae el texto de la memoria entregable sin publicar una copia TXT."""
+    document = Document(path)
+    return "\n\n".join(
+        paragraph.text.strip()
+        for paragraph in document.paragraphs
+        if paragraph.text.strip()
+    )
 
 
 def _dividir_memoria(text: str) -> tuple[str, list[str]]:
@@ -110,12 +122,13 @@ def audit(text: str) -> list[str]:
 
 
 def main() -> None:
-    errors = audit(MEMORY_TEXT.read_text(encoding="utf-8"))
+    memory_text = _leer_memoria(MEMORY_DOCX)
+    errors = audit(memory_text)
     if errors:
         for error in errors:
             print(f"ERROR: {error}")
         raise SystemExit(1)
-    _, entries = _dividir_memoria(MEMORY_TEXT.read_text(encoding="utf-8"))
+    _, entries = _dividir_memoria(memory_text)
     print(
         f"Bibliografía coherente: {len(entries)} referencias citadas y sin duplicados."
     )

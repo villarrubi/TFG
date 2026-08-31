@@ -28,8 +28,8 @@ frontera externa que requiere secretos.
    alertas.
 10. Con un bot y chat de pruebas, enviar el mensaje desde Configuración y
    comprobar recepción. Revocar después los secretos temporales.
-11. Tomar únicamente las capturas 14 a 17 de `docs/DEFENSE_SCREENSHOTS.md`,
-    revisarlas y borrar cualquier dato identificable antes de incorporarlas.
+11. Si se documenta el resultado con capturas, revisarlas y borrar cualquier
+    dato identificable antes de incorporarlas a la memoria o a la defensa.
 
 No capturar ni versionar pantallas que muestren tokens, IDs de chat, direcciones
 personales o contenido real. Si un paso falla, conservar solo el error

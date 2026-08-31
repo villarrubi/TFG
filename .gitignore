@@ -5,7 +5,6 @@ __pycache__/
 venv/
 .env
 .env.*
-!.env.example
 .venv/
 .pytest_cache/
 credentials.json
@@ -33,6 +32,16 @@ Propuestaformato.pdf
 Guia_defensa_TFG.txt
 /Guia_*.docx
 /Presentacion_defensa_TFG.pptx
+/*CLEANUP*.md
+/TFG.txt
+/docs/*AUDIT*.md
+/docs/*SCREENSHOTS*.md
+/docs/*TUTOR*.md
+/scripts/*tfg_*.py
+/scripts/*tutor*.py
+/scripts/generate_defense_*
+/scripts/migrate_*.py
+/scripts/sync_*docs.py
 _docx_qa/
 _docx_qa_*/
 _pptx_qa_*/

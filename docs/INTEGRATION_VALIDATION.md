@@ -32,5 +32,5 @@ Por tanto, no se inició OAuth ni se envió un mensaje externo. Esto evita inven
 una validación y protege cuentas personales. Cuando se proporcionen credenciales
 de laboratorio, debe ejecutarse `docs/OAUTH_E2E_CHECKLIST.md` y registrar solo
 fecha, entorno y resultado anonimizado; nunca tokens, chats ni correos reales.
-Las capturas concretas y sus reglas de anonimización están enumeradas en
-`docs/DEFENSE_SCREENSHOTS.md`.
+Si se toman capturas como evidencia, deben ocultarse direcciones personales,
+tokens, identificadores de chat, rutas locales y contenido de correo real.
