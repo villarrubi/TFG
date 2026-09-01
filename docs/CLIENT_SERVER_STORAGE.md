@@ -1,5 +1,9 @@
 # Separación de cliente, servidor y datos persistentes
 
+Esta guía resume la frontera de almacenamiento. Para protocolos, contratos
+JSON, flujo de procesamiento, sesiones, seguridad y mapa completo del código,
+consulta [Arquitectura técnica y operación del sistema](ARQUITECTURA_TECNICA.md).
+
 ## Decisión arquitectónica
 
 El sistema utiliza una arquitectura cliente-servidor incluso cuando ambos
@@ -18,6 +22,26 @@ Extensión ─┘                         ├─ entrenamiento/evaluación
 Esta separación permite ejecutar todo en local durante la defensa y mover el
 backend a otro equipo más adelante sin redistribuir modelos: basta con cambiar
 `PHISHING_BACKEND_URL` en cada cliente.
+
+## Identidad y sesiones de cliente
+
+La API de análisis es deliberadamente *stateless*: no registra cuentas,
+sesiones ni un `client_id`. Cada respuesta vuelve por la conexión HTTP que
+originó la petición, de modo que el servidor no necesita identificar al
+solicitante para responder correctamente. La dirección de red puede aparecer
+en el registro técnico, pero no se usa como identidad estable.
+
+En particular, el navegador no llama directamente al backend cuando se usa la
+web: se conecta a Streamlit y es el proceso Python de Streamlit quien realiza
+la petición a la API. Por ello, dos navegadores abiertos contra una misma
+instancia tienen sesiones visuales separadas en Streamlit, pero el backend los
+ve como el mismo proceso cliente. El token administrativo compartido autoriza
+operaciones sensibles; tampoco identifica a una persona o instalación.
+
+Esto es suficiente para el prototipo local. Un servicio multiusuario necesitaría
+autenticación por usuario o instalación, identificadores no reutilizables,
+autorización por roles y trazabilidad, además de aislamiento de credenciales y
+preferencias entre usuarios.
 
 ## Propiedad del almacenamiento
 

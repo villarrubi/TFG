@@ -336,6 +336,27 @@ python scripts/evaluate_external.py --check
 
 ## Estructura del repositorio
 
+Cada carpeta de la raíz tiene una responsabilidad concreta:
+
+| Carpeta | Contenido y finalidad |
+| --- | --- |
+| `.github/workflows/` | Validación continua: pruebas, Ruff, bibliografía, calibración, evaluación y recorridos con Chromium. |
+| `.streamlit/` | Configuración del servidor web Streamlit, protecciones CORS/XSRF y tema visual. |
+| `browser_tests/` | Pruebas de extremo a extremo que levantan procesos reales y controlan Chromium con Playwright. |
+| `config/` | Plantillas públicas de configuración separadas para cliente y servidor; no contiene secretos reales. |
+| `defense_demo/` | Respaldo reproducible de la demostración con resultados esperados si falla una integración externa. |
+| `docs/` | Documentación técnica pública, listas de validación y capturas usadas en la memoria. |
+| `evaluation/` | Casos EML reservados, calibración, procedencia de datasets y resultados experimentales versionados. |
+| `extension_gmail/` | Extensión Chrome Manifest V3: extracción del correo visible, opciones de conexión y presentación del resultado. |
+| `runtime/` | Frontera de persistencia: datos privados del cliente y ajustes/modelos del servidor. Los secretos están ignorados por Git. |
+| `scripts/` | Utilidades reproducibles de evaluación, calibración, reentrenamiento, rendimiento, bibliografía y preparación de la demo. |
+| `src/` | Código ejecutable de la web, backend, monitor, proxy heredado y paquete de dominio `sistema_phishing`. |
+| `tests/` | Pruebas unitarias y de integración del parser, API, modelos, red, almacenamiento e integraciones. |
+
+El detalle de procesos, protocolos, contratos JSON, identificación de clientes,
+concurrencia y persistencia se encuentra en la
+[referencia técnica completa](docs/ARQUITECTURA_TECNICA.md).
+
 ```text
 src/
 ├── app.py                         # entrada del cliente Streamlit
@@ -407,6 +428,7 @@ correspondiente. No presentes el fallback como un modelo evaluado.
 
 ## Documentación adicional
 
+- [Referencia técnica completa](docs/ARQUITECTURA_TECNICA.md)
 - [Arquitectura y propiedad de los datos](docs/CLIENT_SERVER_STORAGE.md)
 - [Validación de Gmail y Telegram](docs/INTEGRATION_VALIDATION.md)
 - [Informe de rendimiento](PERFORMANCE_REPORT.md)
