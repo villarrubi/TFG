@@ -198,6 +198,12 @@ class TestStreamlitBrowser(unittest.TestCase):
                 page.get_by_role("button", name="Analizar correo").click()
                 page.get_by_text("Resultado combinado", exact=True).wait_for(timeout=20_000)
                 page.get_by_text("Idioma detectado:").wait_for()
+
+                page.get_by_role("button", name="Entrenamiento", exact=True).click()
+                page.get_by_text("Administración de modelos", exact=True).wait_for()
+                page.get_by_text("Modelo Español", exact=True).wait_for()
+                page.get_by_text("Modelo Inglés", exact=True).wait_for()
+                self.assertNotIn('<div class="ui-card">', page.locator("body").inner_text())
                 browser.close()
         finally:
             for process in (streamlit, backend):

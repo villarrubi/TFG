@@ -192,13 +192,11 @@ def _show_model_cards(models: dict) -> None:
         else:
             status = estado_badge(False, "", "Sin artefacto")
         cards.append(
-            f"""
-            <div class="ui-card">
-                <div class="ui-label">Modelo {label}</div>
-                <div class="ui-value">{status}</div>
-                <div class="ui-note">Versión: <code>{version}</code></div>
-            </div>
-            """
+            f'<div class="ui-card">'
+            f'<div class="ui-label">Modelo {label}</div>'
+            f'<div class="ui-value">{status}</div>'
+            f'<div class="ui-note">Versión: <code>{version}</code></div>'
+            "</div>"
         )
     render_html(f'<div class="ui-grid ui-grid-2">{"".join(cards)}</div>')
 
