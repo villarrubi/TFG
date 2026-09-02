@@ -15,6 +15,15 @@ SHA-256 están en `training_sources.json`; `scripts/retrain_reproducible.py`
 reconstruye modelos, particiones y `training_results.json` desde los CSV
 externos verificados.
 
+Las etiquetas se conservan como valores binarios por compatibilidad con el
+pipeline, pero su significado no se homogeneiza artificialmente. En
+`spam_ham_spanish` y SMS Spam Mexico, 1 significa spam y 0 ham; se usa como
+proxy textual de spam/smishing. En el agregado inglés, la clase positiva mezcla
+spam y phishing de sus corpus componentes. Solo los EML locales, Zenodo y el
+split phishing de DIFrauD emplean una etiqueta positiva descrita expresamente
+como phishing o decepción. Por eso los informes usan «clase positiva» cuando
+comparan fuentes heterogéneas.
+
 La evaluación final no reutiliza esos mensajes. `local_emails_v1/` contiene 16
 archivos EML reservados, cuatro por idioma y clase, con cabeceras Received,
 resultados SPF/DKIM/DMARC ya presentes, texto, HTML, enlaces discordantes y
@@ -53,3 +62,22 @@ de calibración, manifiesto, EML y modelos; evalúan por modo e idioma; y regene
 externo. Son
 utilidades offline de CI, no clientes de la aplicación: web, extensión y monitor
 obtienen las predicciones del backend central por HTTP.
+
+## Referencias de los datasets
+
+- Softecapps. (2024). *spam_ham_spanish* [Dataset]. Hugging Face.
+  https://doi.org/10.57967/hf/2264
+- Iván, A. (2026). *SMS Spam Mexico - Dataset en Español Mexicano*
+  [Dataset]. Kaggle.
+  https://www.kaggle.com/datasets/aldoivan/sms-spam-mexico-dataset-en-espaol-mexicano
+- Alam, N. A., y colaborador (2024). *Phishing Email Dataset* [Dataset]. Kaggle.
+  https://www.kaggle.com/datasets/naserabdullahalam/phishing-email-dataset
+  La ficha solicita citar el artículo asociado de Al-Subaiey et al.:
+  https://doi.org/10.1016/j.compeleceng.2024.109625
+- Miltchev, R., Rangelov, D., y Genchev, E. (2024). *Phishing validation
+  emails dataset* (Version 1) [Dataset]. Zenodo.
+  https://doi.org/10.5281/zenodo.13474746
+- Boumber, D. A., Qachfar, F. Z., y Verma, R. (2024). Domain-agnostic adapter
+  architecture for deception detection: Extensive evaluations with the DIFrauD
+  benchmark. *Proceedings of LREC-COLING 2024*, 5260--5274.
+  https://aclanthology.org/2024.lrec-main.468/

@@ -153,6 +153,13 @@ crear un fallback sintético de ese mismo idioma y lo comunica expresamente; ese
 fallback sirve para mantener la aplicación disponible, no como evidencia de
 calidad del modelo.
 
+La configuración final almacenada en ambos artefactos usa TF-IDF con unigramas
+y bigramas, `max_features=3000`, `min_df=1`, normalización Unicode de acentos y
+stopwords por idioma. El MLP usa capas ocultas `(64, 32)`, activación ReLU,
+`alpha=0.0001`, `learning_rate_init=0.001`, `max_iter=500`,
+`early_stopping=False` y semilla 42. Son los parámetros de la versión entregada,
+no una afirmación de óptimo universal.
+
 ## Configuración y propiedad de los datos
 
 La configuración predeterminada funciona sin crear archivos adicionales. Para
@@ -232,8 +239,8 @@ atómica y reintenta los mensajes afectados por errores temporales.
 3. Pulsa **Cargar descomprimida** y selecciona `extension_gmail/`.
 4. En **Opciones**, usa `http://127.0.0.1:8766` como backend.
 
-`gmail_extension_server.py` conserva el puerto histórico 8765 únicamente como
-proxy de compatibilidad. La extensión actual llama directamente al backend.
+`gmail_extension_server.py` queda disponible en el puerto 8767 como proxy de
+compatibilidad. La extensión actual llama directamente al backend en 8766.
 
 ## Entrenamiento y evaluación
 
@@ -246,10 +253,33 @@ Los CSV brutos no están en Git por tamaño, licencia y privacidad.
 `evaluation/training_sources.json` fija las fuentes, licencias y SHA-256. El
 protocolo reproducible utiliza:
 
-- 1.148 textos para entrenamiento ES y 209 para prueba oficial.
-- 65.661 textos para entrenamiento EN y 16.416 para prueba.
+- 1.148 textos para entrenamiento ES y 209 para prueba oficial; ambos corpus
+  españoles son spam/ham y su clase positiva se usa como proxy textual de
+  spam/smishing, no como sinónimo de phishing.
+- 65.661 textos para entrenamiento EN y 16.416 para prueba; la clase positiva
+  del agregado combina spam y phishing de corpus históricos.
 - 40 casos separados para calibrar el modo combinado.
 - 16 EML reservados para comparar los tres modos con MIME y cabeceras.
+
+La rejilla de calibración separada recorre pesos heurísticos del 20 al 50 %,
+umbrales del 20 al 60 y alta confianza del 65 al 85. Ordena los candidatos por
+la peor accuracy balanceada de cinco particiones, su media y las métricas
+globales. De ahí salen 45/55 y el umbral 21; cuando varias alternativas empatan,
+se aplican reglas de desempate declaradas en `scripts/calibrate_combined.py`.
+
+Referencias formales de los datos:
+
+- Softecapps (2024), *spam_ham_spanish* [dataset], Hugging Face,
+  https://doi.org/10.57967/hf/2264 (Apache-2.0).
+- Aldo Iván (2026), *SMS Spam Mexico - Dataset en Español Mexicano*
+  [dataset], Kaggle, CC BY-SA 4.0.
+- Alam, N. A., y colaborador (2024), *Phishing Email Dataset* [dataset],
+  Kaggle, CC BY-SA 4.0. La propia ficha solicita citar el artículo asociado de
+  Al-Subaiey et al.: https://doi.org/10.1016/j.compeleceng.2024.109625.
+- Miltchev, Rangelov y Genchev (2024), *Phishing validation emails dataset*
+  (versión 1) [dataset], Zenodo, https://doi.org/10.5281/zenodo.13474746.
+- Boumber, Qachfar y Verma (2024), *DIFrauD*, LREC-COLING 2024,
+  https://aclanthology.org/2024.lrec-main.468/ (dataset MIT).
 
 Las cifras y sus limitaciones están en
 [TRAINING_EVALUATION_REPORT.md](TRAINING_EVALUATION_REPORT.md),
@@ -284,7 +314,9 @@ El backend utiliza `ThreadingHTTPServer`: crea un hilo por petición y no fija
 un máximo cerrado de clientes. El dato relevante es el número de análisis
 simultáneos, no cuántas instalaciones permanecen configuradas pero inactivas.
 
-En la medición local de referencia (Windows 11, Python 3.12.7 y 16 CPU lógicas),
+En la medición local de referencia (AMD Ryzen 7 7800X3D, 8 núcleos/16 hilos,
+63,1 GiB de RAM, Windows 11 Home 25H2 build 26200.9278, Python 3.12.7,
+scikit-learn 1.9.0, NumPy 2.4.6 y Streamlit 1.58.0),
 8 y 16 clientes concurrentes completaron varias rondas sin fallos. Con 16, el
 percentil 95 de latencia estuvo entre 0,58 y 0,66 s; a 32 aparecieron errores y
 picos superiores. Por prudencia, la configuración académica se recomienda para
@@ -433,7 +465,9 @@ correspondiente. No presentes el fallback como un modelo evaluado.
 - [Validación de Gmail y Telegram](docs/INTEGRATION_VALIDATION.md)
 - [Informe de rendimiento](PERFORMANCE_REPORT.md)
 - [Fuentes y protocolo de entrenamiento](evaluation/README.md)
-- Memoria del proyecto: [PDF](TFG.pdf) y [DOCX](TFG.docx)
+- Memoria del proyecto: [PDF](TFG.pdf). El cuerpo se
+  organiza en siete capítulos; el índice general aparece antes de los índices
+  independientes de figuras y tablas.
 
 ## Uso de herramientas de IA
 

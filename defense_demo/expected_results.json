@@ -43,6 +43,33 @@
           "suplantacion_ejecutivo",
           "transferencia_urgente"
         ],
+        "mode_results": {
+          "heuristico": {
+            "risk_score": 76.0,
+            "is_phishing": true,
+            "active_signals": [
+              "cambio_datos_bancarios",
+              "lenguaje_urgente",
+              "suplantacion_ejecutivo",
+              "transferencia_urgente"
+            ]
+          },
+          "neural": {
+            "risk_score": 76.3,
+            "is_phishing": true,
+            "active_signals": []
+          },
+          "combinado": {
+            "risk_score": 76.3,
+            "is_phishing": true,
+            "active_signals": [
+              "cambio_datos_bancarios",
+              "lenguaje_urgente",
+              "suplantacion_ejecutivo",
+              "transferencia_urgente"
+            ]
+          }
+        },
         "model": {
           "language": "es",
           "available": true,
@@ -65,6 +92,23 @@
         "risk_score": 0.0,
         "is_phishing": false,
         "active_signals": [],
+        "mode_results": {
+          "heuristico": {
+            "risk_score": 0.0,
+            "is_phishing": false,
+            "active_signals": []
+          },
+          "neural": {
+            "risk_score": 0.0,
+            "is_phishing": false,
+            "active_signals": []
+          },
+          "combinado": {
+            "risk_score": 0.0,
+            "is_phishing": false,
+            "active_signals": []
+          }
+        },
         "model": {
           "language": "en",
           "available": true,

@@ -1,9 +1,15 @@
 # Informe de rendimiento
 
-Medición comparativa realizada el 24 de agosto de 2026 en Windows, Python
-3.12.7. Cada microbenchmark usa cinco repeticiones y muestra la mediana por
-operación. Los imports se ejecutan en procesos nuevos para medir el arranque
-real. La línea base se ha vuelto a ejecutar el 28 de agosto tras la calibración.
+Medición comparativa realizada el 24 de agosto de 2026 y revalidada el 28 y el
+31 de agosto. El equipo de referencia es un AMD Ryzen 7 7800X3D (8 núcleos y
+16 hilos), 63,1 GiB de RAM y Windows 11 Home 25H2, compilación 26200.9278,
+64 bits. El entorno usa Python 3.12.7, scikit-learn 1.9.0, NumPy 2.4.6,
+SciPy 1.17.1, joblib 1.5.3 y Streamlit 1.58.0; las versiones completas están
+fijadas en `constraints.txt`.
+
+Cada microbenchmark usa cinco repeticiones y muestra la mediana por operación.
+Los imports se ejecutan en procesos nuevos para medir el arranque real. Estas
+cifras describen este equipo y esta ejecución; no constituyen un SLA.
 
 ## Resultado antes y después
 

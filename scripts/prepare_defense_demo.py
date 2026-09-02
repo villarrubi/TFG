@@ -46,17 +46,28 @@ def stable_model_metadata(metadata: dict[str, object] | None) -> dict[str, objec
     return {key: metadata[key] for key in stable_keys if key in metadata}
 
 
-def compact_result(response: dict[str, object]) -> dict[str, object]:
-    """Conserva la parte demostrable del contrato sin datos innecesarios."""
-    result = response["result"]
+def compact_mode_result(result: dict[str, object]) -> dict[str, object]:
+    """Resume una estrategia sin perder las señales explicables."""
     signals = result.get("signals", {})
+    return {
+        "risk_score": result["risk_score"],
+        "is_phishing": result["is_phishing"],
+        "active_signals": sorted(name for name, active in signals.items() if active),
+    }
+
+
+def compact_result(response: dict[str, object]) -> dict[str, object]:
+    """Conserva los tres modos y el modelo realmente cargado para la demo."""
+    result = response["result"]
     return {
         "label": response["label"],
         "selected_mode": response["selected_mode"],
         "language": response["language"],
-        "risk_score": result["risk_score"],
-        "is_phishing": result["is_phishing"],
-        "active_signals": sorted(name for name, active in signals.items() if active),
+        **compact_mode_result(result),
+        "mode_results": {
+            mode: compact_mode_result(mode_result)
+            for mode, mode_result in response["results"].items()
+        },
         "model": stable_model_metadata(response.get("model")),
     }
 

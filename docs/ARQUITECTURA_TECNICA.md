@@ -23,8 +23,8 @@ Hay tres consumidores principales de esa API:
 3. El monitor (`src/monitor_gmail.py`). Lee Gmail desde el proceso local,
    envía cada mensaje al backend y, si corresponde, notifica por Telegram.
 
-El proceso opcional `src/gmail_extension_server.py` es un proxy histórico en
-el puerto 8765. Tampoco contiene modelos: transforma la entrada de la
+El proceso opcional `src/gmail_extension_server.py` es un proxy de
+compatibilidad en el puerto 8767. Tampoco contiene modelos: transforma la entrada de la
 extensión y la reenvía al backend central.
 
 ```text
@@ -125,7 +125,7 @@ La extensión se carga como Manifest V3 desde `extension_gmail/`:
   reintento. No guardan un modelo ni una credencial de usuario del backend.
 - `styles.css` y `options.css` son presentación.
 
-El flujo actual es directo contra el puerto 8766. El puerto 8765 solo se
+El flujo actual es directo contra el puerto 8766. El puerto 8767 solo se
 mantiene para compatibilidad con `gmail_extension_server.py`. La extensión no
 envía `Authorization` y no existe en ella un identificador persistente de
 cliente.
@@ -385,6 +385,12 @@ Los valores anteriores son los predeterminados de
 entrenamiento. `NeuralPhishingDetector.analyze()` convierte la probabilidad de
 clase 1 a porcentaje y conserva remitente/asunto en el resultado.
 
+Los artefactos entregados conservan exactamente esa configuración. En la
+revisión de la entrega, el modelo ES tiene versión corta `165e7c2bf292` y fue
+ajustado con 1.148 ejemplos; el EN tiene versión `a3dd9dc32164` y fue ajustado
+con 65.661. `/health`, `/models` y cada respuesta neuronal o combinada indican
+la versión realmente activa y si procede del artefacto o del fallback sintético.
+
 El detector se carga perezosamente y se cachea por idioma en
 `EmailAnalysisService._detectores`. El bloqueo evita que dos peticiones
 simultáneas carguen dos veces el mismo idioma al arrancar. Si falta o es
@@ -408,6 +414,25 @@ es 70. Si uno de los dos scores alcanza al menos el umbral de alta confianza,
 el combinado conserva el máximo de ambos en vez de diluirlo con la media. La
 decisión final compara el score combinado con `threshold`.
 
+Estos valores proceden de 40 casos bilingües separados tanto del entrenamiento
+como de los 16 EML finales. `scripts/calibrate_combined.py` prueba pesos
+heurísticos de 20 a 50 % en pasos de 5 (el neuronal es el complemento),
+umbrales 20--60 en pasos de 1 y alta confianza 65--85 en pasos de 5. Los casos
+se reparten en cinco particiones estratificadas por idioma y clase. La ordenación
+prioriza, por este orden, la peor accuracy balanceada de una partición, su media,
+la accuracy balanceada global, F1, recall y precisión. El candidato 45/55 con
+umbral 21 obtiene 0,625 de accuracy balanceada mínima, 0,825 de media, F1
+0,8293, recall 0,85 y precisión 0,8095.
+
+El 50/50 obtuvo las mismas métricas; la regla de desempate conserva mayor peso
+neuronal y selecciona 45/55. Varios valores de alta confianza empataron, y la
+regla predeclarada escoge el más próximo a 70, entendido como evidencia
+individual fuerte. Por tanto, la selección es reproducible y no manual, pero no
+se presenta como óptima fuera de este pequeño conjunto de calibración. El 21 se
+usa como umbral común de la entrega para mantener una única política operativa;
+la rejilla lo optimizó para el modo combinado, no para afirmar una probabilidad
+calibrada del 21 %.
+
 `include_all=true` no cambia el modelo ni los pesos: solicita al servidor los
 tres informes para que la UI pueda compararlos.
 
@@ -426,6 +451,12 @@ asunto+cuerpo. Normaliza etiquetas a 0/1, combina campos adicionales útiles y
 descarta filas vacías. El protocolo experimental adicional de
 `training_protocol.py` elimina duplicados, contradicciones y solapamientos
 mediante huellas SHA-256 y hace particiones estratificadas con semilla 42.
+
+Los nombres internos `phishing`/`legitimate` del contrato son históricos. En
+la interfaz se muestran como clase positiva (1) y negativa (0), porque los dos
+corpus españoles son spam/ham y el agregado inglés mezcla spam y phishing. Solo
+los conjuntos etiquetados específicamente como phishing permiten interpretar
+la clase 1 de ese modo; en los demás se documenta como proxy spam/phishing.
 
 ### 5.2 Activación atómica
 
@@ -748,8 +779,8 @@ relativas a la raíz de Git.
 `constraints.txt` fijan dependencias; `EVALUATION_REPORT.md`,
 `TRAINING_EVALUATION_REPORT.md`, `PERFORMANCE_REPORT.md` y
 `EXTERNAL_EVALUATION_REPORT.md` contienen resultados experimentales y de
-rendimiento; `TFG.docx`/`TFG.pdf` son la memoria; y `credentials.example.json`
-es una plantilla de OAuth, no una credencial utilizable.
+rendimiento; `TFG.pdf` es la memoria; y `credentials.example.json` es una
+plantilla de OAuth, no una credencial utilizable.
 
 ## 13. Pruebas y reproducibilidad
 

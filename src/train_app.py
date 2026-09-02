@@ -21,6 +21,26 @@ from ui_components import (
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
+def _dataset_summaries_for_display(summaries: list[dict]) -> list[dict]:
+    """Presenta las clases sin asumir que la positiva siempre es phishing.
+
+    Algunos corpus admitidos por la aplicación usan etiquetas spam/ham. El
+    contrato HTTP conserva los nombres históricos ``phishing`` y
+    ``legitimate`` por compatibilidad, pero la interfaz muestra la semántica
+    binaria real del fichero que haya proporcionado el usuario.
+    """
+    return [
+        {
+            "Fuente": summary["source"],
+            "Filas": summary["rows"],
+            "Clase positiva (1)": summary["phishing"],
+            "Clase negativa (0)": summary["legitimate"],
+            "Textos no vacíos": summary["non_empty_texts"],
+        }
+        for summary in summaries
+    ]
+
+
 def aplicar_estilos_entrenamiento() -> None:
     aplicar_estilos_base()
 
@@ -233,7 +253,14 @@ def _training_tab(client: BackendClient, defaults: HiperparametrosModelo) -> Non
         else:
             try:
                 summaries = client.summarize(files, columns=columns)["datasets"]
-                st.dataframe(summaries, use_container_width=True)
+                st.dataframe(
+                    _dataset_summaries_for_display(summaries),
+                    use_container_width=True,
+                )
+                st.caption(
+                    "La clase 1 conserva el significado del dataset de origen: puede "
+                    "ser phishing, spam o un proxy spam/phishing."
+                )
             except BackendClientError as exc:
                 st.error(str(exc))
 
@@ -264,10 +291,14 @@ def _training_tab(client: BackendClient, defaults: HiperparametrosModelo) -> Non
             st.write(
                 {
                     "Ejemplos": stats["n_samples"],
-                    "Phishing": stats["phishing_count"],
-                    "Legítimos": stats["legit_count"],
+                    "Clase positiva (1)": stats["phishing_count"],
+                    "Clase negativa (0)": stats["legit_count"],
                     "Accuracy de entrenamiento": f"{stats['accuracy'] * 100:.1f}%",
                 }
+            )
+            st.caption(
+                "La etiqueta positiva depende del corpus; en conjuntos spam/ham no "
+                "equivale automáticamente a phishing."
             )
 
 

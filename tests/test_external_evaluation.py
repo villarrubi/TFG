@@ -48,6 +48,12 @@ class TestExternalEvaluation(unittest.TestCase):
             {case["response_summary"]["label"] for case in payload["cases"]},
             {"phishing", "legitimate"},
         )
+        for case in payload["cases"]:
+            self.assertEqual(
+                set(case["response_summary"]["mode_results"]),
+                {"heuristico", "neural", "combinado"},
+            )
+            self.assertFalse(case["response_summary"]["model"]["fallback"])
 
 
 if __name__ == "__main__":

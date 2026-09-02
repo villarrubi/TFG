@@ -165,17 +165,17 @@ function ensureCard() {
   const header = createElement("div", "tfg-phishing-header");
   const titleBlock = createElement("div", "tfg-phishing-title-block");
   titleBlock.appendChild(createElement("div", "tfg-phishing-kicker", "TFG Phishing Guard"));
-  titleBlock.appendChild(createElement("div", "tfg-phishing-title", "Analisis de este correo"));
+  titleBlock.appendChild(createElement("div", "tfg-phishing-title", "Análisis de este correo"));
 
   const status = createElement("div", "tfg-phishing-status", "Cargando");
   status.id = STATUS_ID;
   const actions = createElement("div", "tfg-phishing-actions");
-  const minimize = createElement("button", "tfg-phishing-icon-button", "-");
+  const minimize = createElement("button", "tfg-phishing-icon-button", "−");
   minimize.id = MINIMIZE_ID;
   minimize.type = "button";
   minimize.title = "Minimizar panel";
   minimize.addEventListener("click", toggleMinimized);
-  const dismiss = createElement("button", "tfg-phishing-icon-button", "x");
+  const dismiss = createElement("button", "tfg-phishing-icon-button", "×");
   dismiss.id = DISMISS_ID;
   dismiss.type = "button";
   dismiss.title = "Ocultar hasta cambiar de correo";
@@ -187,11 +187,14 @@ function ensureCard() {
   header.appendChild(actions);
 
   const main = createElement("div", "tfg-phishing-main");
-  const score = createElement("div", "tfg-phishing-score", "--%");
+  const scoreBlock = createElement("div", "tfg-phishing-score-block");
+  const score = createElement("div", "tfg-phishing-score", "—%");
   score.id = SCORE_ID;
+  scoreBlock.appendChild(score);
+  scoreBlock.appendChild(createElement("div", "tfg-phishing-score-label", "Riesgo estimado"));
   const verdict = createElement("div", "tfg-phishing-verdict", "Detector cargado");
   verdict.id = VERDICT_ID;
-  main.appendChild(score);
+  main.appendChild(scoreBlock);
   main.appendChild(verdict);
 
   const barTrack = createElement("div", "tfg-phishing-bar-track");
@@ -369,10 +372,10 @@ async function analyzeVisibleEmail(options = {}) {
   clearOfflineRetry();
   setPanel("loading", {
     status: "Analizando",
-    scoreText: "--%",
+    scoreText: "—%",
     scoreValue: 0,
     verdict: "Revisando contenido y enlaces",
-    summary: "El backend central esta evaluando el correo abierto.",
+    summary: "El backend central está evaluando el correo abierto.",
     meta: "Comprobando ahora"
   });
   clearSignalChips("Analizando");
@@ -414,31 +417,31 @@ async function analyzeVisibleEmail(options = {}) {
       scoreValue: Number(score),
       verdict: result.is_phishing ? "Posible phishing" : "No parece phishing",
       summary: result.is_phishing
-        ? "Hay senales suficientes para tratar este mensaje con cautela."
-        : "No se han encontrado senales fuertes de phishing en los datos visibles.",
-      meta: `Ultima comprobacion: ${new Date().toLocaleTimeString()}`
+        ? "Hay señales suficientes para tratar este mensaje con cautela."
+        : "No se han encontrado señales fuertes de phishing en los datos visibles.",
+      meta: `Última comprobación: ${new Date().toLocaleTimeString()}`
     });
     renderDetails(result);
   } catch (error) {
     const retryable = error.retryable !== false;
     setPanel("offline", {
-      status: retryable ? "Sin conexion" : "Solicitud rechazada",
-      scoreText: "--%",
+      status: retryable ? "Sin conexión" : "Solicitud rechazada",
+      scoreText: "—%",
       scoreValue: 0,
       verdict: retryable ? "Backend central no disponible" : "No se pudo analizar el correo",
       summary: retryable
-        ? "Arranca el backend Python para activar el analisis."
+        ? "Arranca el backend Python para activar el análisis."
         : error.message,
-      meta: `Ultimo intento: ${new Date().toLocaleTimeString()}`
+      meta: `Último intento: ${new Date().toLocaleTimeString()}`
     });
-    clearSignalChips(retryable ? "Sin conexion" : "Entrada rechazada");
+    clearSignalChips(retryable ? "Sin conexión" : "Entrada rechazada");
     const offlineDetails = document.getElementById(DETAILS_ID);
     const toggle = document.getElementById(TOGGLE_ID);
     if (offlineDetails) {
       offlineDetails.dataset.empty = "false";
       offlineDetails.innerHTML = retryable
-        ? "<p>Arranca el backend central con python src/backend_server.py.</p><p>La extension volvera a comprobar la conexion automaticamente.</p>"
-        : "<p>Revisa el tamano y los campos visibles del correo antes de reintentar.</p>";
+        ? "<p>Arranca el backend central con <code>python src/backend_server.py</code>.</p><p>La extensión volverá a comprobar la conexión automáticamente.</p>"
+        : "<p>Revisa el tamaño y los campos visibles del correo antes de reintentar.</p>";
     }
     if (toggle) {
       toggle.disabled = false;
@@ -459,11 +462,11 @@ function scheduleAnalysis() {
 ensureCard();
 setPanel("loading", {
   status: "Preparado",
-  scoreText: "--%",
+  scoreText: "—%",
   scoreValue: 0,
   verdict: "Detector cargado",
-  summary: "Abre un correo en Gmail para iniciar el analisis.",
-  meta: "Sin comprobacion todavia"
+  summary: "Abre un correo en Gmail para iniciar el análisis.",
+  meta: "Sin comprobación todavía"
 });
 clearSignalChips("Esperando correo");
 const observer = new MutationObserver(scheduleAnalysis);
