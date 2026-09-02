@@ -1,7 +1,8 @@
 """Proxy opcional entre la extensión Gmail y el backend central.
 
 La extensión puede llamar directamente al backend en el puerto 8766. Este
-proceso conserva el puerto histórico 8765, pero ya no carga ningún modelo:
+proceso queda disponible como proxy de compatibilidad en el puerto 8767, pero
+ya no carga ningún modelo:
 solo reenvía las solicitudes al servidor central.
 """
 
@@ -31,6 +32,7 @@ from sistema_phishing.network import validar_host_local
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 ALLOWED_ORIGINS = {"https://mail.google.com"}
+DEFAULT_EXTENSION_PORT = 8767
 APP_NAME = "TFG Phishing Guard - Gmail Web"
 ASCII_TITLE = r"""
  ____  _   _ ___ ____  _   _ ___ _   _  ____    ____ _   _    _    ____  ____
@@ -250,7 +252,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--port",
         type=int,
-        default=env_int("GMAIL_EXTENSION_PORT", 8765),
+        default=env_int("GMAIL_EXTENSION_PORT", DEFAULT_EXTENSION_PORT),
         help="Puerto local usado por la extension.",
     )
     parser.add_argument(
