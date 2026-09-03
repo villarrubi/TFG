@@ -1,0 +1,188 @@
+% Documento generado desde la guía DOCX equivalente.
+% Compilación recomendada: pdflatex Guia_XX_*.tex (dos pasadas).
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[a4paper,margin=2.35cm]{geometry}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[table]{xcolor}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage[most]{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\definecolor{uemcgreen}{HTML}{004C3F}
+\definecolor{uemcgold}{HTML}{E5B93F}
+\definecolor{tfgblue}{HTML}{20566B}
+\definecolor{tablelight}{HTML}{E7F1EE}
+\definecolor{uemclight}{HTML}{F2F7F5}
+\hypersetup{colorlinks=true,linkcolor=uemcgreen,urlcolor=tfgblue,pdftitle={Tecnologías y decisiones},pdfauthor={Alejandro Villarrubia García}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\renewcommand{\arraystretch}{1.16}
+\setlist[itemize]{leftmargin=1.2cm,itemsep=2pt,topsep=2pt}
+\setlist[enumerate]{leftmargin=1.2cm,itemsep=4pt,topsep=2pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{uemcgreen}GUÍA 02 · DECISIONES TÉCNICAS}
+\fancyhead[R]{\small\color{uemcgreen}TFG · UEMC}
+\fancyfoot[C]{\color{uemcgreen}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{uemcgold}\leaders\hrule height \headrulewidth\hfill}}
+\begin{document}
+\begin{titlepage}
+  \centering
+  \vspace*{2.4cm}
+  {\Large\color{uemcgreen}\textbf{GUÍA 02 · DECISIONES TÉCNICAS}\par}
+  \vspace{1.5cm}
+  {\Huge\bfseries\color{uemcgreen}Tecnologías y decisiones\par}
+  \vspace{0.7cm}
+  {\large\color{tfgblue}Cómo funciona cada elección y cómo justificarla frente a alternativas\par}
+  \vfill
+  {\large Proyecto TFG · versión alineada con el código actual\par}
+  \vspace{0.35cm}
+  {\large Alejandro Villarrubia García\par}
+  \vspace{0.35cm}
+  {\large Universidad Europea Miguel de Cervantes\par}
+\end{titlepage}
+\tableofcontents
+\clearpage
+
+\section{Criterio de selección}
+
+La arquitectura prioriza reproducibilidad local, facilidad de defensa, separación de responsabilidades y coste operativo bajo. Las decisiones no intentan convertir el TFG en un servicio de producción multiusuario: delimitan un detector demostrable, auditable y extensible.
+
+\section{Comparativa de tecnologías}
+
+\begin{table}[H]
+  \centering
+  \small
+  \caption{Comparativa de tecnologías}
+  \label{tab:comparativa-1}
+  \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.45cm}|X|X|X|}
+    \hline
+    \rowcolor{uemcgreen}
+    \textcolor{white}{\textbf{Tecnología}} & \textcolor{white}{\textbf{Cómo se usa}} & \textcolor{white}{\textbf{Por qué se elige}} & \textcolor{white}{\textbf{Alternativa y límite}} \\
+    \hline
+    Python & Integra parser, reglas, ML, API y automatizaciones & Ecosistema científico, lectura clara y buena trazabilidad & Java/Node serían válidos; añadirían complejidad para este alcance \\
+    \hline
+    \rowcolor{tablelight}
+    Streamlit & Cliente web con sistema visual compartido y adaptable & Permite validar el flujo cliente-servidor con una interfaz coherente y poco código & React daría comunicación navegador-API directa, pero exigiría otro stack \\
+    \hline
+    scikit-learn & TF-IDF vectoriza y MLPClassifier clasifica & Pipeline reproducible, API madura y métricas estándar & TensorFlow sería más flexible para deep learning, pero sobredimensionado para texto tabular \\
+    \hline
+    \rowcolor{tablelight}
+    TF-IDF & Convierte palabras y bigramas en variables & Explicable, rápido y adecuado para corpus moderados & Transformers mejorarían contexto, con más coste y menor explicabilidad local \\
+    \hline
+    email estándar & Parsea MIME y cabeceras EML & No añade dependencia para la parte esencial del formato & Librerías externas pueden aportar atajos, pero no son necesarias \\
+    \hline
+    \rowcolor{tablelight}
+    BeautifulSoup & Inspecciona HTML y formularios & Tolera HTML imperfecto de correos & Parser regex puro sería frágil; un navegador sería inseguro e innecesario \\
+    \hline
+    Gmail API + OAuth & Obtiene mensajes con consentimiento del usuario & Permisos oficiales y flujo revocable & IMAP sería más genérico, pero no aporta el mismo control API \\
+    \hline
+    \rowcolor{tablelight}
+    HTTP stdlib & Expone análisis y administración central & Cero framework extra, contrato pequeño y fácil de auditar & FastAPI facilitaría OpenAPI y escalado; no es necesario para el prototipo \\
+    \hline
+    joblib & Persiste pipeline TF-IDF + MLP & Guarda vectorizador y modelo como una unidad & ONNX sería más portable; exige conversión y no elimina el requisito de confiar en artefactos \\
+    \hline
+    \rowcolor{tablelight}
+    unittest + Ruff & Prueba comportamiento y calidad estática & Incluidos en Python y rápidos en CI/local & pytest aporta fixtures más ricas; el conjunto actual es suficiente y directo \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\section{Por qué dos modelos lingüísticos}
+
+El detector identifica idioma por mensaje, no por sesión. Mantiene un modelo español y otro inglés porque las palabras, stopwords y corpus tienen distribuciones distintas. EmailAnalysisService cachea un detector por idioma para combinar corrección con rendimiento.
+
+\begin{tcolorbox}[colback=uemclight,colframe=uemcgreen,title=Nota para la defensa]
+\textbf{Respuesta breve:} La alternativa de un único modelo multilingüe simplificaría ficheros, pero mezclaría vocabularios y haría más difícil justificar qué datos explican cada predicción.
+\end{tcolorbox}
+
+\section{SOLID aplicado}
+
+\begin{table}[H]
+  \centering
+  \small
+  \caption{Aplicación de SOLID}
+  \label{tab:comparativa-3}
+  \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.75cm}|X|X|}
+    \hline
+    \rowcolor{uemcgreen}
+    \textcolor{white}{\textbf{Principio}} & \textcolor{white}{\textbf{Aplicación en el código}} & \textcolor{white}{\textbf{Beneficio demostrable}} \\
+    \hline
+    Responsabilidad única & Parser, señales, scorer, explicaciones, ML, monitor y transporte están separados & Un cambio en URLs no obliga a tocar Gmail o Streamlit \\
+    \hline
+    \rowcolor{tablelight}
+    Abierto/cerrado & EmailAnalysisService recibe analyzer, detector loader y detector de idioma inyectables & Se prueban estrategias y se añaden modelos sin reescribir el coordinador \\
+    \hline
+    Sustitución & Los consumidores dependen de BackendClient o su protocolo mínimo & Web, extensión y monitor consumen el mismo contrato HTTP \\
+    \hline
+    \rowcolor{tablelight}
+    Segregación & El almacenamiento, el análisis y el transporte tienen superficies pequeñas & Cada prueba necesita solo la interfaz que utiliza \\
+    \hline
+    Inversión & NeuralModelTrainer depende de ModelStorage, no de una ruta fija & Facilita memoria, disco y dobles de prueba \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\section{Decisiones de seguridad}
+
+\begin{itemize}
+  \item El parser limita EML a 10 MiB; /analyze admite 16 MiB y las rutas de datasets 256 MiB con Content-Length obligatorio.
+  \item La API no acepta CORS *; permite Gmail y orígenes chrome-extension://, y no devuelve trazas internas.
+  \item Por defecto Streamlit y el backend escuchan en loopback. Para una demo móvil puede abrirse solo Streamlit en 0.0.0.0:8501 y mantener el backend en 127.0.0.1:8766; no requiere --allow-remote, no es Internet y debe limitarse a una LAN privada de confianza. Un backend remoto sí exige HTTPS y controles adicionales.
+  \item El modelo no ejecuta archivos adjuntos; solo registra metadatos y señales.
+  \item Los nuevos joblib no conservan textos brutos de entrenamiento. Los modelos antiguos se sanean al cargarse y guardarse con el formato actual.
+  \item Credenciales, tokens, estados y artefactos temporales de QA se mantienen fuera del índice Git mediante .gitignore.
+\end{itemize}
+
+\section{Reproducibilidad y evaluación}
+
+Los hiperparámetros finales son TF-IDF (ngram\_range 1-2, max\_features 3.000, min\_df 1, strip\_accents unicode) y MLP ((64, 32), relu, alpha 0,0001, learning rate 0,001, 500 iteraciones, sin early stopping, semilla 42). El protocolo usa 1.148/209 textos ES y 65.661/16.416 EN. La clase positiva mezcla spam/phishing según la fuente y se documenta como proxy, no como equivalencia. Los hashes permiten identificar los joblib y los modelos no guardan textos brutos.
+
+El benchmark reproducible separa arranque e inferencia. Se midió en Windows 11 Home 25H2 de 64 bits (26200.9278), Ryzen 7 7800X3D, 63,1 GiB RAM y Python 3.12.7 con scikit-learn 1.9.0, Streamlit 1.58.0, NumPy 2.4.6, SciPy 1.17.1 y joblib 1.5.3. La carga diferida redujo importación heurística un 96,6 \% y arranque de aplicación un 76,2 \%; la inferencia varió menos de ±3 \%.
+
+La calibración usa 40 casos separados en cinco particiones: pesos heurísticos 20-50, umbrales 20-60 y alta confianza 65-85. Selecciona 45/55, umbral 21 y alta confianza 70 con desempates predefinidos; no produce una probabilidad calibrada. La prueba de concurrencia usa el backend real: 8 y 16 análisis terminaron sin errores, pero a 32 aparecieron fallos. Se recomiendan 4-8 para demo.
+
+La validación automatizada reúne 94 pruebas Python y 2 pruebas con Chromium. Incluye idioma determinista y el recorrido local Gmail EML -> JSON -> HTTP -> backend -> Telegram. GitHub Actions instala versiones fijadas, ejecuta Ruff, verifica calibración, regenera la evaluación, comprueba el respaldo de defensa y recorre web-backend. OAuth real usa una lista E2E separada porque sus credenciales no pueden entrar en CI.
+
+\section{Diferencias con la propuesta inicial}
+
+\begin{table}[H]
+  \centering
+  \small
+  \caption{Diferencias frente a la propuesta inicial}
+  \label{tab:comparativa-4}
+  \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.75cm}|X|X|}
+    \hline
+    \rowcolor{uemcgreen}
+    \textcolor{white}{\textbf{Propuesta}} & \textcolor{white}{\textbf{Implementación actual}} & \textcolor{white}{\textbf{Cómo explicarlo}} \\
+    \hline
+    TensorFlow & scikit-learn MLP & Se eligió una red suficiente para el corpus y más reproducible/ligera en el entorno académico \\
+    \hline
+    \rowcolor{tablelight}
+    Blacklists/reputación & Señales locales de dominio, URL, punycode y acortadores & Se evita depender de red externa y se mantiene privacidad; reputación online queda como extensión \\
+    \hline
+    Certificados & No se inspecciona TLS desde el correo & El EML no prueba por sí mismo el certificado del destino; se prioriza análisis estático seguro \\
+    \hline
+    \rowcolor{tablelight}
+    Interfaz simple & Streamlit como cliente de una API central obligatoria & La interfaz sigue siendo simple y todos los canales comparten los modelos del servidor \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\section{Qué no prometer}
+
+\begin{itemize}
+  \item No decir que se consulta una blacklist online si no se ha configurado una fuente externa.
+  \item No presentar el accuracy de entrenamiento como precisión en producción.
+  \item No llamar a la extensión un producto publicado: se carga en modo desarrollador y consume el backend central configurado.
+\end{itemize}
+
+\end{document}

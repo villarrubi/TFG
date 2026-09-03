@@ -16,6 +16,21 @@ estén activos en el servidor.
 - Extensión local de Chrome para analizar el correo visible en Gmail.
 - Pruebas Python, recorridos reales con Chromium y validación continua.
 
+## Guías de defensa en LaTeX
+
+También se incluyen versiones LaTeX independientes de las dos guías de apoyo:
+
+- [Guía 01 · Flujo y funcionamiento](Guia_01_Flujo_y_funcionamiento.tex)
+- [Guía 02 · Tecnologías y decisiones](Guia_02_Tecnologias_y_decisiones.tex)
+
+Cada archivo es autocontenido y puede abrirse directamente en Overleaf o
+compilarse localmente con dos pasadas de `pdflatex`. Si se actualiza alguno de
+los DOCX, las fuentes se regeneran con:
+
+```powershell
+python scripts/export_guides_latex.py
+```
+
 ## Arquitectura en un minuto
 
 El proyecto es cliente-servidor aunque todos los procesos se ejecuten, por
