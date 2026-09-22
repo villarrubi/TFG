@@ -268,7 +268,7 @@ def render_report(payload: dict[str, object]) -> str:
         "",
         "Los modelos conservan el tamaño, la distribución, las fuentes y las huellas del protocolo, pero no los textos originales. El entrenamiento entregado se puede reconstruir con los CSV verificados externamente, semilla 42 y `scripts/retrain_reproducible.py`; los holdouts no se usan para ajustar los modelos.",
         "",
-        "| Modelo | Muestras | Phishing | Legítimas | Fuentes declaradas | Textos brutos guardados |",
+        "| Modelo | Muestras | Clase positiva (1) | Clase negativa (0) | Fuentes declaradas | Textos brutos guardados |",
         "| --- | ---: | ---: | ---: | --- | ---: |",
         f"| ES | {payload['models']['es']['training_stats']['n_samples']} | {payload['models']['es']['training_stats']['phishing_count']} | {payload['models']['es']['training_stats']['legit_count']} | {', '.join(payload['models']['es']['training_sources'])} | {payload['models']['es']['raw_training_texts_stored']} |",
         f"| EN | {payload['models']['en']['training_stats']['n_samples']} | {payload['models']['en']['training_stats']['phishing_count']} | {payload['models']['en']['training_stats']['legit_count']} | {', '.join(payload['models']['en']['training_sources'])} | {payload['models']['en']['raw_training_texts_stored']} |",

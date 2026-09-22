@@ -1,0 +1,158 @@
+\section{Modelos UML del diseño final}
+\label{sec:uml}
+
+Estos cinco modelos UML documentan el diseño final mediante casos de uso, clases, secuencia, componentes y despliegue. Se han completado durante la revisión a partir del código y no se presentan como documentos anteriores a la implementación. Se omiten métodos auxiliares para facilitar la lectura.
+
+\subsection{Casos de uso}
+El usuario analiza mensajes y consulta sus explicaciones. El responsable configura la instalación y administra modelos. Son funciones de uso, no cuentas aisladas: el prototipo comparte configuración y utiliza un token administrativo. El monitor lee Gmail mediante OAuth y puede enviar alertas a Telegram.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=0.82cm,font=\small,
+ usecase/.style={ellipse,draw=uemcgreen,fill=tablelight,align=center,minimum width=4.2cm,minimum height=1cm},
+ actor/.style={draw=uemcgreen,fill=white,align=center,font=\small\bfseries},link/.style={draw=uemcgreen}]
+\draw[draw=uemcgreen] (3,0) rectangle (12,10.6);
+\node[anchor=north,font=\bfseries] at (7.5,10.4) {Sistema de detección};
+\node[actor] (user) at (1.1,8.9) {\guillemotleft actor\guillemotright\\Usuario};
+\node[actor] (admin) at (1.1,3.8) {\guillemotleft actor\guillemotright\\Responsable\\de instalación};
+\node[actor] (gmail) at (13.3,8.9) {\guillemotleft actor\guillemotright\\Gmail};
+\node[actor] (telegram) at (13.3,1.1) {\guillemotleft actor\guillemotright\\Telegram};
+\node[usecase] (analyze) at (7.4,8.9) {Analizar texto, EML\\o mensaje de Gmail};
+\node[usecase] (explain) at (7.4,7.1) {Consultar riesgo\\y explicación};
+\node[usecase] (settings) at (7.4,5.5) {Configurar conexión\\y parámetros};
+\node[usecase] (models) at (7.4,3.8) {Entrenar, evaluar\\o eliminar un modelo};
+\node[usecase] (monitor) at (7.4,2.2) {Monitorizar mensajes};
+\node[usecase] (alert) at (7.4,0.7) {Enviar alerta};
+\draw[link] (user)--(analyze);\draw[link] (user)--(explain);
+\draw[link] (admin)--(settings);\draw[link] (admin)--(models);\draw[link] (admin)--(monitor);
+\draw[link] (gmail)--(analyze);\draw[link] (gmail) |- (monitor);
+\draw[link] (telegram)--(alert);
+\draw[dashed,-{Stealth},draw=uemcgreen] (alert)--node[right,font=\scriptsize]{\guillemotleft extend\guillemotright}(monitor);
+\end{tikzpicture}
+\caption{Casos de uso principales. La alerta extiende la monitorización cuando se cumple la condición configurada. Fuente: elaboración propia.}
+\label{fig:uml-casos}
+\end{figure}
+
+El análisis requiere un backend disponible. Tras elegir entrada y modo, se valida y normaliza el mensaje y se devuelven riesgo, veredicto y explicación. Las entradas inválidas o los fallos de conexión se comunican sin ejecutar un detector local alternativo. La administración exige autorización cuando hay un token configurado; el entrenamiento activa la versión después del ajuste y la escritura del artefacto.
+
+\clearpage
+\subsection{Clases y responsabilidades}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\scriptsize, x=1cm,y=1cm,
+ cls/.style={rectangle split,rectangle split parts=3,draw=uemcgreen,fill=tablelight,align=left,text width=5.8cm,inner sep=5pt},
+ dep/.style={dashed,-{Stealth},draw=uemcgreen},assoc/.style={-{Stealth},draw=uemcgreen}]
+\node[cls] (client) at (0,0) {\textbf{BackendClient}\nodepart{second}base\_url; admin\_token\nodepart{third}+ analyze(); train(); evaluate()\\+ settings(); delete\_model()};
+\node[cls] (backend) at (7.2,0) {\textbf{AnalysisBackendService}\nodepart{second}config; \_service; \_training\_lock\nodepart{third}+ analyze\_payload(); train\_payload()\\+ update\_settings\_payload()};
+\node[cls] (service) at (7.2,-3.2) {\textbf{EmailAnalysisService}\nodepart{second}config; \_detectores[idioma]\nodepart{third}+ analyze\_all(); analyze\_heuristic()\\+ analyze\_neural(); invalidate\_detector()};
+\node[cls] (analyzer) at (0,-3.2) {\textbf{PhishingAnalyzer}\nodepart{second}correo; signal\_builder; explanation\_builder\nodepart{third}+ analyze()};
+\node[cls] (detector) at (7.2,-6.4) {\textbf{NeuralPhishingDetector}\nodepart{second}classifier; source\nodepart{third}+ analyze(texto, remitente, subject)};
+\node[cls] (classifier) at (0,-6.4) {\textbf{NeuralPhishingClassifier}\nodepart{second}pipeline; last\_training\_stats\nodepart{third}+ fit(); predict(); predict\_proba()\\+ save(); load()};
+\node[cls] (storage) at (0,-9.6) {\textbf{ModelStorage}\nodepart{second}path\nodepart{third}+ load(); save(); exists()};
+\node[cls] (trainer) at (7.2,-9.6) {\textbf{NeuralModelTrainer}\nodepart{second}storage\nodepart{third}+ train\_from\_csvs(); save()};
+\draw[dep] (client.north) -- ++(0,0.65) -| node[pos=0.25,above]{HTTP/JSON; sin referencia local} (backend.north);
+\draw[{Diamond[length=6pt]}-] (backend)--node[right]{1}(service);
+\draw[dep] (service.south) -- ++(0,-0.45) -| node[pos=0.25,below]{fachada heurística} (analyzer.south);
+\draw[assoc] (service)--node[right]{0..2 en caché}(detector);
+\draw[assoc] (detector)--node[above]{1}(classifier);
+\draw[dep] (storage)--node[left]{carga/guarda}(classifier);
+\draw[assoc] (trainer)--node[above]{1}(storage);
+\draw[dep] (backend.east) -- ++(0.55,0) |- (trainer.east);
+\end{tikzpicture}
+\caption{Clases principales y relaciones del análisis y aprendizaje. Rombo lleno: composición; línea continua: asociación; línea discontinua: dependencia. La relación entre cliente y servicio atraviesa la API. Fuente: elaboración propia.}
+\label{fig:uml-clases}
+\end{figure}
+
+\nolinkurl{AnalysisBackendConfig} suministra modo, umbral, pesos y rutas al servicio. \nolinkurl{HiperparametrosModelo} describe el vectorizador y el MLP. El analizador heurístico delega la construcción de señales en \nolinkurl{SignalBuilder}, la puntuación en \nolinkurl{RiskScorer} y el texto explicativo en \nolinkurl{ExplanationBuilder}. \nolinkurl{ModelStorage} persiste el clasificador; la activación administrativa utiliza escritura atómica y la invalidación de la caché en el servicio. Estas dependencias separan el transporte, la lógica de aplicación y el aprendizaje.
+
+\clearpage
+\subsection{Secuencia de análisis combinado}
+La figura~\ref{fig:uml-secuencia} representa una petición válida en modo combinado. La normalización sucede antes de la inferencia. En este modo se obtienen ambos resultados y se aplica la política de fusión. El detector lingüístico selecciona el modelo ES o EN; la caché evita recargarlo en cada petición. La figura agrupa la API y su handler en la misma línea de vida para facilitar la lectura.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,font=\scriptsize,
+ life/.style={draw=uemcgreen,fill=tablelight,align=center,minimum width=2.5cm,minimum height=0.85cm},
+ msg/.style={-{Stealth},draw=uemcgreen},ret/.style={dashed,-{Stealth},draw=uemcgreen}]
+\foreach \x/\id/\name in {0/ui/Streamlit y cliente,3.6/api/API y servicio backend,7.2/svc/EmailAnalysisService,10.8/det/Detectores}{
+\node[life] (\id) at (\x,0) {\name};
+\draw[dashed,gray] (\x,-0.45)--(\x,-11.8);}
+\draw[msg] (0,-1)--node[above]{POST /analyze: entrada y opciones}(3.6,-1);
+\draw[msg] (3.6,-1.8)--(4.25,-1.8)--(4.25,-2.45)--node[below,align=center]{validar entrada y normalizar}(3.6,-2.45);
+\draw[msg] (3.6,-3.2)--node[above]{analyze\_all(datos)}(7.2,-3.2);
+\draw[msg] (7.2,-4)--node[above]{análisis heurístico}(10.8,-4);
+\draw[ret] (10.8,-4.75)--node[above]{señales, riesgo, explicación}(7.2,-4.75);
+\draw[msg] (7.2,-5.5)--(7.8,-5.5)--(7.8,-6.15)--node[below,align=center]{idioma y caché ES/EN}(7.2,-6.15);
+\draw[msg] (7.2,-7)--node[above]{análisis neuronal}(10.8,-7);
+\draw[ret] (10.8,-7.75)--node[above]{puntuación neuronal}(7.2,-7.75);
+\draw[ret] (7.2,-8.6)--node[above]{resultados de ambos detectores}(3.6,-8.6);
+\draw[msg] (3.6,-9.3)--(4.25,-9.3)--(4.25,-10)--node[below,align=center]{fusión, umbral y metadatos}(3.6,-10);
+\draw[ret] (3.6,-11)--node[above]{HTTP 200: resultado JSON}(0,-11);
+\node[anchor=north,align=center] at (0,-11.3) {mostrar veredicto\ y explicación};
+\end{tikzpicture}
+\caption{Secuencia de una petición válida de análisis combinado. Fuente: elaboración propia.}
+\label{fig:uml-secuencia}
+\end{figure}
+
+Si el JSON, el tipo de contenido o los campos no son válidos, el handler devuelve HTTP 400 sin completar el análisis. Una excepción interna devuelve HTTP 500 con un mensaje genérico. El cliente distingue errores de servicio e indisponibilidad. Para entrenar, la secuencia cambia después de la autorización: validar CSV y parámetros, adquirir el bloqueo, entrenar, guardar atómicamente, invalidar cachés y devolver metadatos. Evaluar y comparar no sustituyen por sí solos el modelo activo.
+
+\clearpage
+\subsection{Componentes}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.95cm,y=1cm,font=\small,
+ comp/.style={draw=uemcgreen,fill=tablelight,rectangle,align=center,text width=3.8cm,minimum height=1.2cm},
+ dep/.style={dashed,-{Stealth},draw=uemcgreen}]
+\node[comp] (web) at (0,0) {\guillemotleft component\guillemotright\\Streamlit y BackendClient};
+\node[comp] (ext) at (5,0) {\guillemotleft component\guillemotright\\Extensión Gmail};
+\node[comp] (mon) at (10,0) {\guillemotleft component\guillemotright\\Monitor Gmail};
+\node[comp,text width=6cm] (api) at (5,-2.8) {\guillemotleft component\guillemotright\\API HTTP y servicios de aplicación};
+\node[comp] (parser) at (0,-5.5) {\guillemotleft component\guillemotright\\Normalización MIME/EML};
+\node[comp] (rules) at (5,-5.5) {\guillemotleft component\guillemotright\\Reglas y explicaciones};
+\node[comp] (ml) at (10,-5.5) {\guillemotleft component\guillemotright\\Aprendizaje TF-IDF + MLP};
+\node[comp,text width=5.4cm] (storage) at (10,-8.3) {\guillemotleft artifact\guillemotright\\Configuración y modelos ES/EN};
+\node[comp,text width=4.5cm] (external) at (0,-8.3) {\guillemotleft external service\guillemotright\\Gmail API y Telegram API};
+\draw[dep] (web)--node[left]{HTTP/JSON}(api);
+\draw[dep] (ext)--node[right]{HTTP/JSON}(api);
+\draw[dep] (mon)--node[right]{HTTP/JSON}(api);
+\draw[dep] (api)--(parser);\draw[dep] (api)--(rules);\draw[dep] (api)--(ml);
+\draw[dep] (ml)--(storage);
+\draw[dep] (api.east) -- (13.7,-2.8) |- (storage.east);
+\draw[dep] (mon.east) -- (13.3,0) -- (13.3,-10) -| (external.south);
+\draw[dep] (web.west) -- (-2.8,0) -- (-2.8,-8.3) -- (external.west);
+\end{tikzpicture}
+\caption{Vista de componentes y dependencias. Los servicios externos son consumidos por clientes autorizados; el motor de análisis no consulta reputación online. Fuente: elaboración propia.}
+\label{fig:uml-componentes}
+\end{figure}
+
+La API ofrece análisis y operaciones administrativas sobre datasets, parámetros y modelos. El contenido del correo se normaliza en el servidor; la extracción del mensaje visible en la extensión es una entrada parcial procedente del DOM. Gmail OAuth y Telegram son integraciones de los clientes y del monitor. El proxy opcional de compatibilidad en el puerto 8767 solo reenvía peticiones al backend; no aloja modelos ni constituye un segundo motor de detección.
+
+\clearpage
+\subsection{Despliegue y persistencia}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=0.78cm,font=\small,
+ nodebox/.style={draw=uemcgreen,fill=tablelight,align=center,text width=5.2cm,minimum height=1.3cm},
+ wire/.style={-{Stealth},draw=uemcgreen}]
+\draw[draw=uemcgreen,thick] (-3.2,1.3) rectangle (11,-10.2);
+\node[anchor=north west,font=\bfseries] at (-3,1.15) {\guillemotleft device\guillemotright\ Equipo de demostración};
+\node[nodebox] (browser) at (0,-0.7) {\guillemotleft executionEnvironment\guillemotright\\Navegador y extensión Gmail};
+\node[nodebox] (web) at (0,-3.5) {\guillemotleft executionEnvironment\guillemotright\\Streamlit :8501};
+\node[nodebox] (backend) at (7.5,-3.5) {\guillemotleft executionEnvironment\guillemotright\\Backend :8766};
+\node[nodebox] (monitor) at (7.5,-0.7) {\guillemotleft executionEnvironment\guillemotright\\Proceso monitor Gmail};
+\node[nodebox] (clientfiles) at (0,-7) {\guillemotleft artifact\guillemotright\\runtime/client/\\OAuth, preferencias y estado};
+\node[nodebox] (serverfiles) at (7.5,-7) {\guillemotleft artifact\guillemotright\\runtime/server/\\Configuración y modelos ES/EN};
+\draw[wire] (browser)--node[left]{interfaz web}(web);
+\draw[wire] (web)--node[above]{HTTP/JSON}(backend);
+\draw[wire] (monitor)--node[right]{HTTP/JSON}(backend);
+\draw[wire] (browser.north) -- ++(0,0.6) -| node[pos=0.35,above,font=\scriptsize]{extensión: HTTP/JSON directo} (backend.east);
+\draw[dashed,draw=uemcgreen] (web)--(clientfiles);
+\draw[dashed,draw=uemcgreen] (backend)--(serverfiles);
+\draw[dashed,draw=uemcgreen] (monitor.east) -- ++(0.5,0) |- (0,-9) -- (clientfiles.south);
+\node[align=center,text width=11.5cm] at (3.8,-11.2) {\guillemotleft external service\guillemotright\ Gmail y Telegram\\Conexiones HTTPS de los clientes autorizados fuera del equipo local.};
+\end{tikzpicture}
+\caption{Despliegue local de referencia y propiedad de los datos persistentes. Fuente: elaboración propia.}
+\label{fig:uml-despliegue}
+\end{figure}
+
+El backend escucha por defecto en \nolinkurl{127.0.0.1:8766}. La separación entre cliente y servidor es lógica y de procesos, aunque compartan equipo. Cuando se muestra la web en una LAN, puede exponerse únicamente Streamlit y conservar el backend en loopback. Las credenciales persistentes pertenecen a la instalación cliente, no a usuarios web aislados. La exposición remota del backend exige una decisión explícita, token administrativo y controles adicionales; no se presenta como despliegue de producción.

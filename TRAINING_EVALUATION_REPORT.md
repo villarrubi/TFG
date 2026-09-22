@@ -6,30 +6,38 @@ El modelo español usa 1.148 textos limpios y una prueba oficial separada de 209
 
 Se eliminan copias exactas normalizadas, grupos con etiquetas contradictorias y cualquier coincidencia exacta entre entrenamiento y prueba. Los SHA-256, URLs, licencias y huellas de las particiones están en `evaluation/training_sources.json` y `evaluation/training_results.json`. Los CSV brutos no se versionan.
 
-La etiqueta binaria conserva la semántica de cada fuente. Los corpus españoles
-son spam/ham y se usan como proxy textual de spam/smishing; el agregado inglés
-mezcla spam y phishing históricos. Por ello, «clase positiva (1)» no significa
-automáticamente phishing y la interfaz evita presentar esa equivalencia.
+La etiqueta binaria conserva la semántica de cada fuente. Los corpus españoles son spam/ham y el agregado inglés mezcla spam y phishing. Por ello, clase positiva (1) no significa automáticamente phishing.
 
-Los modelos finales usan TF-IDF con `ngram_range=(1, 2)`,
-`max_features=3000`, `min_df=1` y normalización Unicode de acentos. El MLP usa
-capas `(64, 32)`, ReLU, `alpha=0.0001`, `learning_rate_init=0.001`,
-`max_iter=500`, `early_stopping=False` y semilla 42.
+## Hiperparámetros de los artefactos evaluados
+
+| Modelo | Parámetro | Valor |
+| --- | --- | --- |
+| ES | tfidf_ngram_range | `[1, 2]` |
+| ES | tfidf_max_features | `3000` |
+| ES | tfidf_min_df | `1` |
+| ES | mlp_hidden_layer_sizes | `[64, 32]` |
+| ES | mlp_activation | `"relu"` |
+| ES | mlp_alpha | `0.0001` |
+| ES | mlp_learning_rate_init | `0.001` |
+| ES | mlp_max_iter | `500` |
+| ES | mlp_early_stopping | `false` |
+| ES | mlp_random_state | `42` |
+| EN | tfidf_ngram_range | `[1, 2]` |
+| EN | tfidf_max_features | `3000` |
+| EN | tfidf_min_df | `1` |
+| EN | mlp_hidden_layer_sizes | `[64, 32]` |
+| EN | mlp_activation | `"relu"` |
+| EN | mlp_alpha | `0.0001` |
+| EN | mlp_learning_rate_init | `0.001` |
+| EN | mlp_max_iter | `500` |
+| EN | mlp_early_stopping | `false` |
+| EN | mlp_random_state | `42` |
 
 ## Calibración del modo combinado
 
-Los 40 casos bilingües se reparten en cinco particiones estratificadas por
-idioma y etiqueta. La rejilla recorre peso heurístico 20--50 % (paso 5), umbral
-20--60 (paso 1) y alta confianza 65--85 (paso 5). Ordena por peor accuracy
-balanceada de una partición, media, valor global, F1, recall y precisión; los
-desempates prefieren umbral próximo a 45, alta confianza próxima a 70 y mayor
-peso neuronal.
+Los 40 casos bilingües de calibración se reparten en cinco particiones estratificadas por idioma y etiqueta. La rejilla explora peso heurístico 20–50 % (paso 5), umbral 20–60 (paso 1) y alta confianza 65–85 (paso 5). La selección y los desempates están implementados en `scripts/calibrate_combined.py`; sus resultados completos se conservan en `evaluation/calibration_results.json`.
 
-El resultado reproducible es 45 % heurístico, 55 % neuronal, umbral 21 y alta
-confianza 70, con accuracy balanceada mínima 0,625, media/global 0,825, F1
-0,8293, recall 0,85 y precisión 0,8095. El 50/50 empata en métricas y pierde por
-el desempate declarado. La puntuación combinada es un índice de riesgo, no una
-probabilidad calibrada.
+Esta evaluación utiliza 45 % heurístico, 55 % neuronal, umbral 21 y alta confianza 70. Los pesos dependen de los datos y modelos calibrados; no son universales. Las particiones miden estabilidad dentro de la selección, no una validación independiente. La puntuación es un índice de riesgo, no una probabilidad calibrada.
 
 ## Holdout español
 
@@ -75,11 +83,8 @@ python scripts/retrain_reproducible.py --data-root "C:\ruta\a\datos_entrenamient
 
 ## Referencias de datos
 
-- Softecapps (2024), *spam_ham_spanish*, DOI 10.57967/hf/2264.
-- Iván, A. (2026), *SMS Spam Mexico - Dataset en Español Mexicano*, Kaggle.
-- Alam, N. A., y colaborador (2024), *Phishing Email Dataset*, Kaggle; artículo
-  asociado de Al-Subaiey et al., DOI 10.1016/j.compeleceng.2024.109625.
-- Miltchev, R., Rangelov, D., y Genchev, E. (2024), *Phishing validation emails
-  dataset*, DOI 10.5281/zenodo.13474746.
-- Boumber, D. A., Qachfar, F. Z., y Verma, R. (2024), benchmark DIFrauD,
-  LREC-COLING 2024.
+- Softecapps (2024), spam_ham_spanish, DOI 10.57967/hf/2264.
+- Iván, A. (2026), SMS Spam Mexico - Dataset en Español Mexicano, Kaggle.
+- Alam, N. A., y colaboradores (2024), Phishing Email Dataset; artículo de Al-Subaiey et al., DOI 10.1016/j.compeleceng.2024.109625.
+- Miltchev, R., Rangelov, D., y Genchev, E. (2024), Phishing validation emails dataset, DOI 10.5281/zenodo.13474746.
+- Boumber, D. A., Qachfar, F. Z., y Verma, R. (2024), DIFrauD, LREC-COLING 2024.

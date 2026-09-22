@@ -16,6 +16,34 @@ estén activos en el servidor.
 - Extensión local de Chrome para analizar el correo visible en Gmail.
 - Pruebas Python, recorridos reales con Chromium y validación continua.
 
+## Memoria y fuente editable
+
+Título aprobado: **Phishing. Técnicas y métodos de ataque y cómo detectarlos**.
+
+- Entregable: [TFG.pdf](TFG.pdf), convocatoria de septiembre de 2026.
+- [Presentación de defensa](Presentacion_defensa_TFG.pptx), con notas del orador actualizadas.
+- [Preparación de preguntas sobre los resultados](docs/DEFENSA_RESULTADOS.md).
+- Fuente editorial vigente: [TFG.tex](TFG.tex), con las ampliaciones y diagramas
+  editables en [memoria/](memoria/) y las imágenes en `latex_figures/`.
+- Paquete para Overleaf: `TFG_LaTeX.zip`, generado con el comando siguiente.
+- Cambios y comprobaciones: [revisión aplicada](docs/CORRECCIONES_TRIBUNAL.md).
+
+La fuente LaTeX sustituye al DOCX retirado del repositorio. No es necesario
+recuperar un Word antiguo para editar la memoria. En Overleaf, seleccionar
+`TFG.tex` como documento principal y XeLaTeX o pdfLaTeX como compilador.
+
+Para generar el PDF y el ZIP localmente, con
+[Tectonic](https://tectonic-typesetting.github.io/book/latest/installation/) instalado:
+
+```powershell
+python scripts/build_memory.py --engine tectonic
+python scripts/audit_bibliography.py
+```
+
+También se puede indicar la ruta completa de `tectonic.exe`. Para preparar
+solo el ZIP, usar `python scripts/build_memory.py --package-only`.
+Los scripts históricos que importan DOCX no son la fuente de la memoria final.
+
 ## Guías de defensa en LaTeX
 
 También se incluyen versiones LaTeX independientes de las dos guías de apoyo:

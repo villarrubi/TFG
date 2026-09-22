@@ -1,0 +1,18 @@
+% Datos de Verizon DBIR 2025, p. 10, figura 5. No se infiere una categoría «otros».
+\begin{tikzpicture}[x=0.34cm,y=1.05cm,font=\small]
+\node[anchor=west,font=\bfseries,color=uemcgreen] at (-12,3.15) {Vectores iniciales seleccionados};
+\foreach \x in {0,5,10,15,20,25} {
+  \draw[black!12] (\x,-0.55)--(\x,2.55);
+  \node[below,font=\footnotesize] at (\x,-0.55) {\x};
+}
+\fill[uemcgreen] (0,1.74) rectangle (22,2.26);
+\fill[tfgblue] (0,0.74) rectangle (20,1.26);
+\fill[uemcgreen!70] (0,-0.26) rectangle (16,0.26);
+\node[anchor=east,align=right,text width=4cm] at (-0.6,2) {Abuso de credenciales};
+\node[anchor=east,align=right,text width=4cm] at (-0.6,1) {Explotación de vulnerabilidades};
+\node[anchor=east,align=right,text width=4cm] at (-0.6,0) {Phishing};
+\node[anchor=west] at (22.3,2) {22 \%};
+\node[anchor=west] at (20.3,1) {20 \%};
+\node[anchor=west] at (16.3,0) {16 \%};
+\node[font=\footnotesize] at (12.5,-1.13) {Porcentaje del subconjunto de brechas (n=9.891)};
+\end{tikzpicture}

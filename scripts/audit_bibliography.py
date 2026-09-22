@@ -16,7 +16,7 @@ from pathlib import Path
 from docx import Document
 
 ROOT = Path(__file__).resolve().parents[1]
-MEMORY_DOCX = ROOT / "TFG.docx"
+MEMORY_SOURCE = ROOT / "TFG.tex"
 
 ARXIV_EXPECTED = {
     "1802.03162": ("URLNet", "Le"),
@@ -36,12 +36,53 @@ def _normalizar(value: str) -> str:
 
 def _leer_memoria(path: Path) -> str:
     """Extrae el texto de la memoria entregable sin publicar una copia TXT."""
+    if path.suffix == ".tex":
+        source = _leer_latex(path)
+        try:
+            body, references = source.split(r"\begin{thebibliography}{99}", 1)
+            references, _ = references.split(r"\end{thebibliography}", 1)
+        except ValueError as exc:
+            raise ValueError("No se encontró la bibliografía LaTeX completa.") from exc
+        entries = re.split(r"\\bibitem\{[^}]+\}", references)[1:]
+        if not entries:
+            raise ValueError("La bibliografía LaTeX está vacía.")
+        return (
+            _texto_latex(body)
+            + "\nReferencias\n"
+            + "\n\n".join(_texto_latex(entry) for entry in entries)
+            + "\nAnexos\n"
+        )
     document = Document(path)
     return "\n\n".join(
         paragraph.text.strip()
         for paragraph in document.paragraphs
         if paragraph.text.strip()
     )
+
+
+def _leer_latex(path: Path, visited: frozenset[Path] = frozenset()) -> str:
+    path = path.resolve()
+    if path in visited:
+        raise ValueError(f"Inclusión LaTeX cíclica: {path.name}")
+    source = path.read_text(encoding="utf-8")
+    source = re.sub(r"(?<!\\)%[^\n]*", "", source)
+
+    def expand(match: re.Match) -> str:
+        included = path.parent / match.group(1)
+        if not included.suffix:
+            included = included.with_suffix(".tex")
+        return _leer_latex(included, visited | {path})
+
+    return re.sub(r"\\input\{([^}]+)\}", expand, source)
+
+
+def _texto_latex(source: str) -> str:
+    source = re.sub(r"\\url\{([^}]+)\}", r"\1", source)
+    source = re.sub(r"\\href\{[^}]+\}\{([^}]+)\}", r"\1", source)
+    source = re.sub(r"\\([&%_#$])", r"\1", source)
+    source = re.sub(r"\\[a-zA-Z]+\*?(?:\[[^]]*\])?", "", source)
+    source = source.translate(str.maketrans({"{": "", "}": "", "~": " "}))
+    return " ".join(source.split())
 
 
 def _dividir_memoria(text: str) -> tuple[str, list[str]]:
@@ -122,7 +163,7 @@ def audit(text: str) -> list[str]:
 
 
 def main() -> None:
-    memory_text = _leer_memoria(MEMORY_DOCX)
+    memory_text = _leer_memoria(MEMORY_SOURCE)
     errors = audit(memory_text)
     if errors:
         for error in errors:

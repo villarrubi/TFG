@@ -33,6 +33,8 @@ jobs:
         run: python -m ruff check src tests browser_tests scripts
       - name: Coherencia bibliográfica
         run: python scripts/audit_bibliography.py
+      - name: Coherencia de los modelos de entrega
+        run: python scripts/verify_delivery_models.py
       - name: Calibración y evaluación reproducibles
         env:
           PYTHONPATH: src

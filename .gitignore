@@ -31,7 +31,6 @@ datos/_entrenamiento/
 Propuestaformato.pdf
 Guia_defensa_TFG.txt
 /Guia_*.docx
-/Presentacion_defensa_TFG.pptx
 /*CLEANUP*.md
 /TFG.txt
 /docs/*AUDIT*.md
@@ -52,3 +51,14 @@ debug.log
 # OS
 .DS_Store
 Thumbs.db
+
+# Intermedios del compilador; TFG.tex y TFG.pdf son entregables.
+/TFG.aux
+/TFG.log
+/TFG.toc
+/TFG.lof
+/TFG.lot
+/TFG.out
+/TFG.xdv
+/TFG.synctex.gz
+/TFG_LaTeX.zip

@@ -16,7 +16,7 @@ Esta ejecución usa un corpus local de archivos EML reservado después de calibr
 
 Los modelos conservan el tamaño, la distribución, las fuentes y las huellas del protocolo, pero no los textos originales. El entrenamiento entregado se puede reconstruir con los CSV verificados externamente, semilla 42 y `scripts/retrain_reproducible.py`; los holdouts no se usan para ajustar los modelos.
 
-| Modelo | Muestras | Phishing | Legítimas | Fuentes declaradas | Textos brutos guardados |
+| Modelo | Muestras | Clase positiva (1) | Clase negativa (0) | Fuentes declaradas | Textos brutos guardados |
 | --- | ---: | ---: | ---: | --- | ---: |
 | ES | 1148 | 613 | 535 | softecapps/spam_ham_spanish, DOI 10.57967/hf/2264, Aldo Iván, SMS Spam Mexico - Dataset en Español Mexicano | 0 |
 | EN | 65661 | 34275 | 31386 | Naser Abdullah Alam et al., Phishing Email Dataset | 0 |

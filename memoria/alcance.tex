@@ -1,0 +1,36 @@
+\subsection{Cumplimiento de los objetivos y desviaciones de alcance}
+\label{sec:objetivos-propuesta}
+
+El cumplimiento se valora frente a los objetivos de la propuesta aprobada y no solo frente a los requisitos del prototipo final. Los objetivos académicos se desarrollan en el marco teórico, el estado del arte y la discusión: comprender los ataques, estudiar la ingeniería social y examinar las ventajas y limitaciones de la detección. La aplicación y su evaluación materializan la aplicación de conocimientos al problema. La valoración crítica se apoya en los límites de los datos y de la validación, sin atribuir al prototipo eficacia universal.
+
+\begin{table}[H]
+\centering\small
+\caption{Trazabilidad de los objetivos funcionales de la propuesta.}
+\label{tab:objetivos-propuesta}
+\begin{tabularx}{\textwidth}{|p{4cm}|p{2.5cm}|X|}
+\hline
+\rowcolor{uemcgreen}\color{white}\bfseries Objetivo original & \color{white}\bfseries Estado & \color{white}\bfseries Evidencia y alcance \\\hline
+Identificar indicios en correos o URLs & Parcial & Texto, EML y Gmail; inspección estática de los enlaces del mensaje. No se visita ni se verifica el sitio de destino. \\\hline
+Aplicar reglas y verificaciones heurísticas & Cumplido en correo & 31 señales sobre remitente, cabeceras, enlaces, HTML, adjuntos y contenido; pruebas unitarias y escenarios EML. No equivale a acreditar la legitimidad de una web. \\\hline
+Integrar listas negras y reputación externas & No desarrollado & Se emplean listas locales y reglas. No hay consultas online a proveedores de reputación. \\\hline
+Ofrecer una interfaz comprensible & Implementado & Streamlit y extensión presentan riesgo y explicaciones. Las pruebas verifican funcionamiento; no se ha realizado un estudio de usabilidad con participantes. \\\hline
+Comprobar certificados digitales, previsto en el resumen & No desarrollado & El sistema no conecta con los destinos ni valida sus certificados TLS. \\\hline
+\end{tabularx}
+\end{table}
+
+La consulta de reputación y la comprobación activa de certificados se excluyeron para mantener un análisis estático reproducible y evitar enviar URLs potencialmente sensibles a terceros o contactar con infraestructura sospechosa. También se evitó incorporar dependencias de cuotas, credenciales y disponibilidad de esos servicios. Estas razones explican la decisión, pero no permiten considerar cumplidos los objetivos excluidos.
+
+La consecuencia es una menor cobertura: no se conoce la reputación actual del destino, su contenido servido en ese momento ni el estado de su certificado. Las listas locales pueden quedar desactualizadas. El sistema aporta indicios del correo recibido; no certifica que una URL sea segura. Incorporar esas capacidades requeriría un módulo de consultas separado, límites de tiempo, controles de privacidad y una evaluación específica. Su mención como trabajo futuro no sustituye esta declaración de incumplimiento parcial.
+
+Gmail, Telegram y la centralización de los modelos amplían las formas de uso del prototipo, pero no compensan por sí mismas la ausencia de reputación online o análisis activo de sitios web. Las recomendaciones preventivas se recogen en los controles por fase y en la discusión; no se ha validado una guía organizativa independiente con usuarios o administradores.
+
+\subsection{Elección de scikit-learn frente al uso previsto de TensorFlow}
+\label{sec:decision-tensorflow}
+
+La propuesta incluía scikit-learn y TensorFlow entre las tecnologías previstas. La implementación final concentra el aprendizaje en un pipeline de scikit-learn con TF-IDF y \texttt{MLPClassifier}. Por tanto, se conserva un clasificador neuronal multicapa, aunque no se utiliza TensorFlow. La selección responde al alcance del experimento: clasificación supervisada de texto mediante una representación léxica fija, dos idiomas y ejecución local sobre CPU.
+
+Esta solución permite reunir vectorización, ajuste y predicción en un mismo pipeline, conservar su configuración y serializarlo con las herramientas ya empleadas por el proyecto. Reduce el número de bibliotecas que deben integrarse y mantiene un procedimiento de entrenamiento común para ambos idiomas. La arquitectura cliente-servidor no depende de esta elección: los clientes reciben el mismo contrato JSON y la implementación del modelo queda encapsulada en el backend.
+
+La contrapartida es la expresividad de la representación elegida. TF-IDF utiliza un vocabulario limitado y n-gramas de una o dos palabras; no incorpora una representación contextual de todo el mensaje ni modela por sí mismo su estructura MIME. El MLP aprende a partir de esos rasgos y depende de la representatividad de los corpus. Las cabeceras y los enlaces estructurados se examinan mediante las reglas, no mediante el vectorizador. Diseñar otra representación o una arquitectura neuronal distinta exigiría nuevas decisiones de datos, entrenamiento y validación.
+
+No se implementó ni se midió un modelo equivalente en TensorFlow. En consecuencia, no se afirma que scikit-learn sea más preciso, rápido o eficiente que TensorFlow. La decisión simplifica la implementación de este prototipo; no establece una superioridad general entre bibliotecas. La exclusión de TensorFlow reduce la exploración de arquitecturas alternativas prevista inicialmente, pero permite mantener el objetivo de estudiar un detector neuronal y compararlo con reglas explicables. Las conclusiones experimentales se refieren exclusivamente a TF-IDF más MLP y a su combinación con la heurística.

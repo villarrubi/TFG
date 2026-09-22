@@ -476,6 +476,7 @@ def render_report(payload: dict[str, object]) -> str:
     es = payload["spanish"]
     en = payload["english"]
     external = en["secondary_external_validation"]
+    config = payload["configuration"]
     lines = [
         "# Entrenamiento y evaluación reproducibles",
         "",
@@ -498,6 +499,42 @@ def render_report(payload: dict[str, object]) -> str:
             "y prueba. Los SHA-256, URLs, licencias y huellas de las particiones "
             "están en `evaluation/training_sources.json` y "
             "`evaluation/training_results.json`. Los CSV brutos no se versionan."
+        ),
+        "",
+        (
+            "La etiqueta binaria conserva la semántica de cada fuente. Los corpus "
+            "españoles son spam/ham y el agregado inglés mezcla spam y phishing. "
+            "Por ello, clase positiva (1) no significa automáticamente phishing."
+        ),
+        "",
+        "## Hiperparámetros de los artefactos evaluados",
+        "",
+        "| Modelo | Parámetro | Valor |",
+        "| --- | --- | --- |",
+        *[
+            f"| {language} | {name} | `{json.dumps(value, ensure_ascii=False)}` |"
+            for language, item in (("ES", es), ("EN", en))
+            for name, value in item["model"]["hyperparameters"].items()
+        ],
+        "",
+        "## Calibración del modo combinado",
+        "",
+        (
+            "Los 40 casos bilingües de calibración se reparten en cinco particiones "
+            "estratificadas por idioma y etiqueta. La rejilla explora peso heurístico "
+            "20–50 % (paso 5), umbral 20–60 (paso 1) y alta confianza 65–85 (paso 5). "
+            "La selección y los desempates están implementados en "
+            "`scripts/calibrate_combined.py`; sus resultados completos se conservan "
+            "en `evaluation/calibration_results.json`."
+        ),
+        "",
+        (
+            f"Esta evaluación utiliza {config['heuristic_weight']} % heurístico, "
+            f"{config['neural_weight']} % neuronal, umbral {config['threshold']:g} "
+            f"y alta confianza {config['high_confidence_threshold']:g}. Los pesos dependen "
+            "de los datos y modelos calibrados; no son universales. Las particiones "
+            "miden estabilidad dentro de la selección, no una validación independiente. "
+            "La puntuación es un índice de riesgo, no una probabilidad calibrada."
         ),
         "",
         "## Holdout español",
@@ -542,6 +579,20 @@ def render_report(payload: dict[str, object]) -> str:
             '"C:\\ruta\\a\\datos_entrenamiento" --evaluate-only --check'
         ),
         "```",
+        "",
+        "## Referencias de datos",
+        "",
+        "- Softecapps (2024), spam_ham_spanish, DOI 10.57967/hf/2264.",
+        "- Iván, A. (2026), SMS Spam Mexico - Dataset en Español Mexicano, Kaggle.",
+        (
+            "- Alam, N. A., y colaboradores (2024), Phishing Email Dataset; "
+            "artículo de Al-Subaiey et al., DOI 10.1016/j.compeleceng.2024.109625."
+        ),
+        (
+            "- Miltchev, R., Rangelov, D., y Genchev, E. (2024), Phishing validation "
+            "emails dataset, DOI 10.5281/zenodo.13474746."
+        ),
+        "- Boumber, D. A., Qachfar, F. Z., y Verma, R. (2024), DIFrauD, LREC-COLING 2024.",
         "",
     ]
     return "\n".join(lines)

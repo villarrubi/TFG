@@ -14,7 +14,6 @@ from docx import Document
 from docx.table import Table
 from docx.text.paragraph import Paragraph
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -97,7 +96,7 @@ def emit_table(rows: list[list[str]], index: int, caption: str) -> list[str]:
         layout = "|" + "|".join("X" for _ in range(columns)) + "|"
 
     lines = [
-        rf"\begin{{table}}[H]",
+        r"\begin{table}[H]",
         r"  \centering",
         r"  \small",
         rf"  \caption{{{latex_text(caption)}}}",
@@ -215,8 +214,7 @@ def export(docx_path: Path, output_path: Path) -> None:
             if (
                 not text
                 or paragraph.style.name in {"Title", "Subtitle"}
-                or text.startswith("GUÍA ")
-                or text.startswith("Proyecto TFG")
+                or text.startswith(("GUÍA ", "Proyecto TFG"))
             ):
                 continue
 
