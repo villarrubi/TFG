@@ -23,6 +23,7 @@ from sistema_phishing.gmail_client import (
     obtener_perfil_gmail,
     obtener_ultimos_correos,
 )
+from sistema_phishing.guidance import build_guidance
 from sistema_phishing.runtime_paths import gmail_credentials_path, gmail_token_path
 from ui_components import (
     aplicar_estilos_base,
@@ -314,8 +315,33 @@ def mostrar_resultado_basico(resultado, titulo: str = "Resultado del análisis")
         """
     )
     _render_metric_strip(resultado)
-    if resultado.get("description"):
-        st.info(resultado["description"])
+    mostrar_orientacion(resultado)
+
+
+def mostrar_orientacion(resultado):
+    """Prioriza motivos y acciones sin equiparar señales ausentes con seguridad."""
+    guidance = resultado.get("guidance") or build_guidance(resultado)
+    st.write(guidance["summary"])
+    st.markdown("#### Qué hacer ahora")
+    for action in guidance["actions"][:3]:
+        st.write(f"- {action}")
+    findings = guidance["findings"]
+    if findings:
+        st.markdown("#### Principales indicios")
+        for finding in findings[:3]:
+            st.write(f"**{finding['title']}:** {finding['detail']}")
+        detail_label = (
+            "Ver el indicio y su recomendación" if len(findings) == 1
+            else f"Ver los {len(findings)} indicios y sus recomendaciones"
+        )
+        with st.expander(detail_label):
+            for finding in findings:
+                st.write(f"**{finding['title']}**")
+                st.write(finding["detail"])
+                st.write(f"Qué hacer: {finding['action']}")
+    for note in guidance["context"]:
+        st.caption(note)
+    st.caption(guidance["limits"])
 
 
 SIGNAL_GROUPS = {
@@ -369,12 +395,19 @@ def _mostrar_senales_agrupadas(signals: dict) -> None:
     """Muestra las señales por familia para facilitar la revisión."""
     for grupo, nombres in SIGNAL_GROUPS.items():
         filas = [
-            {"Señal": _nombre_senal(nombre), "Estado": "Activa" if signals.get(nombre) else "Correcta"}
+            {
+                "Señal": _nombre_senal(nombre),
+                "Estado": (
+                    "Firma/cifrado presente (sin verificar)"
+                    if nombre == "mensaje_firmado_cifrado" and signals.get(nombre)
+                    else "Indicio detectado" if signals.get(nombre) else "No detectada"
+                ),
+            }
             for nombre in nombres
             if nombre in signals
         ]
-        activas = sum(1 for fila in filas if fila["Estado"] == "Activa")
-        with st.expander(f"{grupo} ({activas}/{len(filas)} activas)", expanded=activas > 0):
+        activas = sum(1 for fila in filas if fila["Estado"] == "Indicio detectado")
+        with st.expander(f"{grupo} ({activas} indicios)"):
             st.table(filas)
 
 
@@ -383,10 +416,6 @@ def mostrar_resultado_heuristico(resultado):
     mostrar_resultado_basico(resultado, "Análisis heurístico")
     st.markdown("### Señales por categoría")
     _mostrar_senales_agrupadas(resultado["signals"])
-
-    with st.expander("Explicación detallada de las señales"):
-        for item in resultado["explanation"]:
-            st.write(f"- {item}")
 
     if resultado["urls"]:
         with st.expander(f"Enlaces detectados ({len(resultado['urls'])})"):
@@ -411,7 +440,8 @@ def mostrar_resultado_neural(resultado):
     """Muestra la salida simplificada del clasificador neuronal."""
     mostrar_resultado_basico(resultado, "Análisis por red neuronal")
     st.markdown("### Detalle del modelo")
-    st.write(f"**Probabilidad de phishing:** {resultado['risk_score']:.1f}%")
+    st.write(f"**Puntuación de la clase positiva:** {resultado['risk_score']:.1f}/100")
+    st.caption("La clase positiva depende del corpus de entrenamiento; no es una probabilidad calibrada de phishing.")
     st.write(f"**Clasificación:** {'Phishing probable' if resultado['is_phishing'] else 'No parece phishing'}")
 
 
@@ -571,6 +601,7 @@ def mostrar_resultados_gmail(registros, tipo_analisis: str):
 
     resultado_principal = registro["resultado_principal"]
     st.metric("Riesgo", f"{resultado_principal['risk_score']:.1f}%")
+    mostrar_orientacion(resultado_principal)
 
     if tipo_analisis == "Red neuronal":
         st.write(
@@ -587,8 +618,7 @@ def mostrar_resultados_gmail(registros, tipo_analisis: str):
 
     tab_senales, tab_enlaces, tab_cabeceras = st.tabs(["Señales", "Enlaces", "Cabeceras"])
     with tab_senales:
-        for item in registro["resultado_heur"].get("explanation", []):
-            st.write(f"- {item}")
+        _mostrar_senales_agrupadas(registro["resultado_heur"].get("signals", {}))
     with tab_enlaces:
         urls = registro["resultado_heur"].get("urls", [])
         anchors = registro["resultado_heur"].get("anchors", [])

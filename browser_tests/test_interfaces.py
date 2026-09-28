@@ -17,6 +17,17 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 EXTENSION = ROOT / "extension_gmail"
+sys.path.insert(0, str(ROOT / "src"))
+from sistema_phishing.guidance import FINDINGS, build_guidance
+
+
+def _capture_qa(page, name):
+    """Capturas opcionales fuera del repositorio durante la revisión visual."""
+    directory = os.environ.get("TFG_UI_QA_DIR")
+    if directory:
+        output = Path(directory)
+        output.mkdir(parents=True, exist_ok=True)
+        page.screenshot(path=str(output / f"{name}.png"), animations="disabled")
 
 
 class _QuietStaticHandler(SimpleHTTPRequestHandler):
@@ -45,7 +56,110 @@ class TestExtensionOptionsBrowser(unittest.TestCase):
         cls.server.server_close()
         cls.thread.join(timeout=2)
 
-    def test_guarda_endpoint_local_y_comprueba_salud(self):
+    def _check_result_panel(self, browser):
+        page = browser.new_page(viewport={"width": 1280, "height": 800})
+        response = {"risk_score": 76, "is_phishing": True, "signals": {
+            "cambio_datos_bancarios": True, "transferencia_urgente": True,
+            "suplantacion_ejecutivo": True, "lenguaje_urgente": True,
+            "reply_to_diferente": False,
+        }}
+
+        def fulfill(route):
+            response["guidance"] = build_guidance(response)
+            route.fulfill(status=200, content_type="application/json",
+                          headers={"Access-Control-Allow-Origin": "*"},
+                          body=json.dumps(response))
+
+        page.route("**/analyze", fulfill)
+        page.set_content("""
+          <div role="main"><h2 class="hP">Cambio de cuenta para el pago</h2>
+          <div class="adn ads"><span class="gD" email="direccion@example.com">Dirección</span>
+          <div class="a3s aiL">Necesito una transferencia urgente a la nueva cuenta bancaria.</div>
+          </div></div>
+        """)
+        page.add_style_tag(path=str(EXTENSION / "styles.css"))
+        page.add_script_tag(path=str(EXTENSION / "server_config.js"))
+        page.add_script_tag(path=str(EXTENSION / "content.js"))
+        card = page.locator("#tfg-phishing-card")
+        page.locator("#tfg-phishing-card.danger").wait_for()
+        self.assertIn("teléfono conocido", page.locator("#tfg-phishing-advice").inner_text())
+        self.assertIn("Cambio de cuenta bancaria", page.locator("#tfg-phishing-signals").inner_text())
+        self.assertNotIn("Reply-To", card.inner_text())
+        _capture_qa(page, "extension-bec")
+
+        # Todos los indicios, incluso el último y un texto largo, deben ser accesibles.
+        response["signals"] = dict.fromkeys(FINDINGS, True)
+        response["signals"]["mensaje_firmado_cifrado"] = True
+        response["signals"]["regla_" + "x" * 300 + "<img src=x>"] = True
+        page.evaluate("analyzeVisibleEmail({force: true})")
+        toggle = page.locator("#tfg-phishing-toggle")
+        toggle.focus()
+        toggle.press("Enter")
+        self.assertEqual(toggle.get_attribute("aria-expanded"), "true")
+        self.assertEqual(page.locator(".tfg-phishing-finding").count(), 31)
+        self.assertIn("Mención de un documento", page.locator("#tfg-phishing-details").inner_text())
+        self.assertIn("no se ha verificado", page.locator("#tfg-phishing-details").inner_text())
+        self.assertEqual(card.locator("img").count(), 0)
+        for width, height in [(1280, 800), (360, 640), (320, 480), (1280, 400)]:
+            with self.subTest(viewport=(width, height)):
+                page.set_viewport_size({"width": width, "height": height})
+                bounds = card.bounding_box()
+                self.assertGreaterEqual(bounds["y"], 0)
+                self.assertLessEqual(bounds["y"] + bounds["height"], height + 1)
+                self.assertTrue(card.evaluate("el => el.scrollWidth <= el.clientWidth + 1"))
+                last = page.locator("#tfg-phishing-details > p").last
+                last.scroll_into_view_if_needed()
+                self.assertLessEqual(last.bounding_box()["y"] + last.bounding_box()["height"], height)
+                if width == 320:
+                    _capture_qa(page, "extension-small-details")
+        page.locator("#tfg-phishing-minimize").click()
+        self.assertFalse(page.locator("#tfg-phishing-advice").is_visible())
+        page.locator("#tfg-phishing-minimize").click()
+        page.set_viewport_size({"width": 1280, "height": 800})
+
+        response.update(risk_score=0, is_phishing=False, signals={"reply_to_diferente": False})
+        page.locator(".a3s").evaluate("el => { el.textContent = 'Texto de relleno '.repeat(40); }")
+        page.evaluate("analyzeVisibleEmail({force: true})")
+        self.assertIn("no confirma", page.locator("#tfg-phishing-summary").inner_text())
+        self.assertEqual(page.locator(".tfg-phishing-finding").count(), 0)
+        self.assertNotIn("Cambio de cuenta bancaria", card.inner_text())
+        _capture_qa(page, "extension-no-alert")
+        response.update(risk_score=80, is_phishing=True, signals={})
+        page.locator(".a3s").evaluate("el => { el.textContent += ' Petición añadida al final.'; }")
+        page.evaluate("analyzeVisibleEmail()")
+        self.assertIn("sin indicios heurísticos", page.locator("#tfg-phishing-summary").inner_text())
+        self.assertEqual(page.locator(".tfg-phishing-finding").count(), 0)
+
+        # Una respuesta tardía no puede presentar motivos del correo anterior.
+        page.evaluate("""() => {
+          window.fetchCalls = 0;
+          window.fetch = () => new Promise(resolve => {
+            window.fetchCalls += 1;
+            window.resolveOld = resolve;
+          });
+          window.pendingAnalysis = analyzeVisibleEmail({force: true});
+        }""")
+        page.wait_for_function("typeof window.resolveOld === 'function'")
+        page.evaluate("analyzeVisibleEmail()")
+        self.assertEqual(page.evaluate("window.fetchCalls"), 1)
+        self.assertTrue(toggle.is_disabled())
+        page.evaluate("""async () => {
+          document.querySelector('h2.hP').textContent = 'Otro correo';
+          resolveOld(new Response(JSON.stringify({risk_score:99, is_phishing:true})));
+          await pendingAnalysis;
+        }""")
+        self.assertNotIn("99.0%", card.inner_text())
+        self.assertFalse(page.locator("#tfg-phishing-advice").is_visible())
+        page.evaluate("() => { window.fetch = async () => { throw new Error('offline'); }; }")
+        page.evaluate("analyzeVisibleEmail({force: true})")
+        self.assertIn("Sin conexión", card.inner_text())
+        self.assertFalse(page.locator("#tfg-phishing-advice").is_visible())
+        page.locator("div[role='main']").evaluate("el => el.replaceChildren()")
+        page.evaluate("analyzeVisibleEmail()")
+        self.assertFalse(card.is_visible())
+        page.close()
+
+    def test_configuracion_y_resultados_legibles_de_la_extension(self):
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch()
             page = browser.new_page()
@@ -108,6 +222,7 @@ class TestExtensionOptionsBrowser(unittest.TestCase):
                 page.evaluate("globalThis.__requestedOrigins"),
                 ["https://phishing.example/*"],
             )
+            self._check_result_panel(browser)
             browser.close()
 
 
@@ -198,6 +313,12 @@ class TestStreamlitBrowser(unittest.TestCase):
                 page.get_by_role("button", name="Analizar correo").click()
                 page.get_by_text("Resultado combinado", exact=True).wait_for(timeout=20_000)
                 page.get_by_text("Idioma detectado:").wait_for()
+                page.get_by_text("Qué hacer ahora", exact=True).first.wait_for()
+                self.assertIn("no introduzcas claves", page.locator("body").inner_text())
+                page.get_by_text("Qué hacer ahora", exact=True).first.evaluate(
+                    "el => el.scrollIntoView({block: 'start'})"
+                )
+                _capture_qa(page, "web-result-guidance")
 
                 page.get_by_role("button", name="Entrenamiento", exact=True).click()
                 page.get_by_text("Administración de modelos", exact=True).wait_for()

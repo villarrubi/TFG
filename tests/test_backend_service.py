@@ -39,6 +39,8 @@ class BackendServiceTests(unittest.TestCase):
         self.assertIn("risk_score", result)
         self.assertIn("is_phishing", result)
         self.assertIn("description", result)
+        self.assertIn("guidance", result)
+        self.assertEqual(result["guidance"], result["result"]["guidance"])
         self.assertIsInstance(result["risk_score"], (int, float))
         self.assertIsNone(result["model"])
 
@@ -92,6 +94,10 @@ class BackendServiceTests(unittest.TestCase):
         self.assertEqual(response["selected_mode"], "combinado")
         self.assertEqual(set(response["results"]), {"heuristico", "neural", "combinado"})
         self.assertEqual(response["result"], response["results"]["combinado"])
+        for mode, result in response["results"].items():
+            with self.subTest(mode=mode):
+                self.assertIn("guidance", result)
+                self.assertTrue(result["guidance"]["actions"])
 
     def test_texto_pegado_se_parsea_en_el_servidor(self):
         service = AnalysisBackendService(AnalysisBackendConfig(mode="heuristico"))

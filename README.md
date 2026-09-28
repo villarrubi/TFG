@@ -295,6 +295,17 @@ atómica y reintenta los mensajes afectados por errores temporales.
 `gmail_extension_server.py` queda disponible en el puerto 8767 como proxy de
 compatibilidad. La extensión actual llama directamente al backend en 8766.
 
+El panel presenta **Qué hacer ahora** y hasta tres **Principales indicios**.
+El botón de detalle permite leer todos los motivos y sus recomendaciones;
+el panel se desplaza dentro de la ventana sin cortar el contenido. Una señal
+no detectada no se presenta como una comprobación de seguridad superada.
+La web y las alertas de Telegram utilizan el mismo catálogo de orientación.
+Los modelos, reglas, pesos y puntuaciones no cambian por esta presentación.
+
+Tras actualizar el código, reinicia el backend, pulsa **Recargar** en la ficha
+de la extensión de `chrome://extensions` y actualiza la pestaña de Gmail.
+La versión de la extensión con este panel es la **1.0.1**.
+
 ## Entrenamiento y evaluación
 
 La vista **Entrenamiento** envía los CSV al backend. El servidor valida las

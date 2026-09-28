@@ -6,43 +6,14 @@ from html import escape
 
 import requests
 
+from .guidance import FINDINGS, build_guidance
+
 
 class TelegramNotificationError(RuntimeError):
     """Error controlado al enviar una notificación por Telegram."""
 
 
-SUSPICIOUS_EXPLANATIONS = {
-    "reply_to_diferente": "Reply-To diferente del From.",
-    "nombre_display_engano": "Nombre visible del remitente incoherente con la dirección.",
-    "remitente_marca_engano": "Uso de una marca conocida desde un dominio no correspondiente.",
-    "cabecera_spoofing": "Return-Path o cabeceras de remitente incoherentes.",
-    "incoherencia_remitente": "Incoherencias entre From, Return-Path y Received-SPF.",
-    "enlaces_sospechosos": "Enlaces hacia dominios sospechosos, IPs directas o direcciones extrañas.",
-    "dominio_blacklist": "URL incluida en la lista negra local.",
-    "autenticacion_fallida": "Fallos de autenticación SPF/DKIM/DMARC.",
-    "dmarc_fallido": "DMARC indica fallo de política.",
-    "dkim_mal_formado": "Firma DKIM mal formada o incompleta.",
-    "recibidos_sospechosos": "Cabeceras Received con intermediarios sospechosos.",
-    "saludo_generico": "Saludo genérico típico de campañas masivas.",
-    "solicitud_credenciales": "Solicitud explícita de credenciales o datos de acceso.",
-    "cambio_datos_bancarios": "Solicitud de cambio de datos bancarios o beneficiario.",
-    "transferencia_urgente": "Orden de transferencia o pago con presión temporal.",
-    "suplantacion_ejecutivo": "Pretexto de autoridad, aislamiento o confidencialidad propio de BEC.",
-    "mensaje_id_sospechoso": "Message-ID con dominio inconsistente.",
-    "url_parametros_sospechosos": "Parámetros de URL compatibles con redirección sospechosa.",
-    "meta_refresh_html": "HTML con meta refresh.",
-    "javascript_redireccion": "HTML con JavaScript de redirección.",
-    "html_sospechoso": "HTML con elementos sospechosos.",
-    "adjunto_sospechoso": "Adjuntos con extensiones de riesgo.",
-    "lenguaje_urgente": "Lenguaje urgente o de alta presión.",
-    "asunto_sospechoso": "Asunto con fórmula típica de phishing.",
-    "dominio_punycode_unicode": "Dominio con punycode o caracteres Unicode sospechosos.",
-    "enlace_shortener": "Uso de acortador de enlaces.",
-    "anchor_distinto": "Texto visible del enlace distinto a la URL real.",
-    "formulario_html": "Formulario HTML potencialmente sospechoso.",
-    "formulario_action_sospechoso": "Formulario con acción vacía, relativa o sospechosa.",
-    "referencia_archivo": "Referencia a adjuntos o documentos potencialmente usada como gancho.",
-}
+SUSPICIOUS_EXPLANATIONS = {name: values[1] for name, values in FINDINGS.items()}
 
 
 def _recortar(texto: str, limite: int = 90) -> str:
@@ -103,17 +74,14 @@ class TelegramNotifier:
 
 def construir_mensaje_alerta(datos_email: dict, resultado: dict, modo: str) -> str:
     """Construye el texto enviado cuando se detecta un correo sospechoso."""
-    remitente = escape(str(datos_email.get("from", "(sin remitente)")))
-    asunto = escape(str(datos_email.get("subject", "(sin asunto)")))
+    remitente = escape(_recortar(datos_email.get("from", "(sin remitente)"), 90))
+    asunto = escape(_recortar(datos_email.get("subject", "(sin asunto)"), 120))
     urls = resultado.get("urls", [])
-    signals = resultado.get("signals", {})
-    explicaciones = [
-        escape(texto)
-        for nombre, texto in SUSPICIOUS_EXPLANATIONS.items()
-        if signals.get(nombre)
-    ][:5]
-    urls_resumen = [escape(_recortar(url)) for url in urls[:3]]
-    modo_seguro = escape(str(modo))
+    guidance = build_guidance(resultado)
+    findings = guidance["findings"]
+    explicaciones = [escape(item["title"]) for item in findings[:3]]
+    urls_resumen = [escape(_recortar(url, 70)) for url in urls[:2]]
+    modo_seguro = escape(_recortar(modo, 30))
     score = float(resultado["risk_score"])
     lineas = [
         "<b>ALERTA DE PHISHING</b>",
@@ -128,13 +96,18 @@ def construir_mensaje_alerta(datos_email: dict, resultado: dict, modo: str) -> s
         lineas.append("")
         lineas.append("<b>Señales activas:</b>")
         lineas.extend(f"- {item}" for item in explicaciones)
+        if len(findings) > 3:
+            remaining = len(findings) - 3
+            noun = "indicio" if remaining == 1 else "indicios"
+            lineas.append(f"Y {remaining} {noun} más en el detalle del análisis.")
     else:
         lineas.append("")
-        lineas.append("No hay señales heurísticas sospechosas destacadas en el mensaje.")
+        lineas.append(escape(guidance["summary"]))
     if urls_resumen:
         lineas.append("")
         lineas.append("<b>Primeros enlaces:</b>")
         lineas.extend(f"- {url}" for url in urls_resumen)
     lineas.append("")
-    lineas.append("Revisa el correo antes de abrir enlaces o responder.")
+    lineas.append("<b>Qué hacer ahora:</b>")
+    lineas.extend(f"- {escape(action)}" for action in guidance["actions"][:3])
     return "\n".join(lineas)

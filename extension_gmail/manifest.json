@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Detector de Phishing para Gmail",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Envía el correo al backend central y muestra su respuesta dentro de Gmail Web.",
   "permissions": ["storage"],
   "options_page": "options.html",

@@ -31,6 +31,7 @@ from .defaults import (
     DEFAULT_PHISHING_THRESHOLD,
 )
 from .env_loader import actualizar_env_file
+from .guidance import build_guidance
 from .idioma import detectar_idioma_correo
 from .metrics import calcular_metricas_clasificacion
 from .model_config import cargar_hiperparametros_desde_env
@@ -766,14 +767,15 @@ class AnalysisBackendService:
 
     @staticmethod
     def _normalizar_resultado(resultado: Mapping[str, Any]) -> dict[str, Any]:
+        output = dict(resultado)
+        output["guidance"] = build_guidance(resultado)
         if resultado.get("description"):
-            return dict(resultado)
+            return output
         explanation = resultado.get("explanation")
         description = (
             str(explanation[0])
             if isinstance(explanation, list) and explanation
             else "Resultado generado por el backend central de phishing."
         )
-        output = dict(resultado)
         output["description"] = description
         return output

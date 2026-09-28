@@ -5,6 +5,7 @@ const SCORE_ID = "tfg-phishing-score";
 const VERDICT_ID = "tfg-phishing-verdict";
 const BAR_ID = "tfg-phishing-bar";
 const SUMMARY_ID = "tfg-phishing-summary";
+const ADVICE_ID = "tfg-phishing-advice";
 const SIGNALS_ID = "tfg-phishing-signals";
 const META_ID = "tfg-phishing-meta";
 const TOGGLE_ID = "tfg-phishing-toggle";
@@ -20,6 +21,8 @@ let lastFingerprint = "";
 let dismissedFingerprint = "";
 let debounceTimer = null;
 let retryTimer = null;
+let analysisRequestId = 0;
+let pendingFingerprint = "";
 
 function textOf(element) {
   return element ? element.textContent.replace(/\s+/g, " ").trim() : "";
@@ -104,7 +107,8 @@ function getEmailPayload() {
 }
 
 function fingerprint(payload) {
-  return [payload.subject, payload.from, payload.body.slice(0, 500), payload.urls.join("|")].join("::");
+  // Un cambio al final del texto o en el HTML también puede cambiar los indicios.
+  return JSON.stringify(payload);
 }
 
 function getRetryIntervalMs() {
@@ -161,6 +165,8 @@ function ensureCard() {
   card = createElement("section", "tfg-phishing-card loading");
   card.id = CARD_ID;
   card.setAttribute("aria-live", "polite");
+  card.setAttribute("aria-label", "Análisis de phishing del correo visible");
+  card.tabIndex = 0;
 
   const header = createElement("div", "tfg-phishing-header");
   const titleBlock = createElement("div", "tfg-phishing-title-block");
@@ -191,7 +197,7 @@ function ensureCard() {
   const score = createElement("div", "tfg-phishing-score", "—%");
   score.id = SCORE_ID;
   scoreBlock.appendChild(score);
-  scoreBlock.appendChild(createElement("div", "tfg-phishing-score-label", "Riesgo estimado"));
+  scoreBlock.appendChild(createElement("div", "tfg-phishing-score-label", "Índice de riesgo"));
   const verdict = createElement("div", "tfg-phishing-verdict", "Detector cargado");
   verdict.id = VERDICT_ID;
   main.appendChild(scoreBlock);
@@ -204,6 +210,9 @@ function ensureCard() {
 
   const summary = createElement("div", "tfg-phishing-summary", "Abre un correo para analizarlo.");
   summary.id = SUMMARY_ID;
+  const advice = createElement("div", "tfg-phishing-advice");
+  advice.id = ADVICE_ID;
+  advice.hidden = true;
   const signals = createElement("div", "tfg-phishing-signals");
   signals.id = SIGNALS_ID;
   const meta = createElement("div", "tfg-phishing-meta", "Sin comprobacion todavia");
@@ -213,6 +222,7 @@ function ensureCard() {
   toggle.id = TOGGLE_ID;
   toggle.type = "button";
   toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", DETAILS_ID);
   toggle.addEventListener("click", toggleDetails);
 
   const details = createElement("div", "tfg-phishing-details");
@@ -224,6 +234,7 @@ function ensureCard() {
   card.appendChild(main);
   card.appendChild(barTrack);
   card.appendChild(summary);
+  card.appendChild(advice);
   card.appendChild(signals);
   card.appendChild(meta);
   card.appendChild(toggle);
@@ -286,7 +297,7 @@ function toggleDetails() {
   }
   details.hidden = !details.hidden;
   toggle.setAttribute("aria-expanded", String(!details.hidden));
-  toggle.textContent = details.hidden ? "Ver detalles" : "Ocultar detalles";
+  toggle.textContent = details.hidden ? (toggle.dataset.label || "Ver detalles") : "Ocultar detalles";
 }
 
 function renderDetails(result) {
@@ -296,53 +307,61 @@ function renderDetails(result) {
     return;
   }
 
-  const activeSignals = Object.entries(result.signals || {})
-    .filter(([, value]) => value)
-    .map(([name]) => name.replaceAll("_", " "));
-  const explanations = Array.isArray(result.explanation)
-    ? result.explanation.filter((line) => !line.startsWith("No se") && !line.startsWith("El asunto no") && !line.startsWith("No hay"))
-    : [];
+  // El servidor relaciona explícitamente cada motivo con su señal activa.
+  // No deducir si una frase es positiva o negativa por sus primeras palabras.
+  const guidance = result.guidance || {
+    summary: "No se han recibido motivos detallados para este resultado.",
+    findings: [],
+    actions: ["Confirma cualquier petición de dinero o claves por un canal conocido."],
+    context: [],
+    limits: "La puntuación por sí sola no confirma que un correo sea auténtico."
+  };
+  const findings = guidance.findings || [];
+  document.getElementById(SUMMARY_ID).textContent = guidance.summary;
+  const advice = document.getElementById(ADVICE_ID);
+  advice.replaceChildren(createElement("strong", "", "Qué hacer ahora"));
+  const actions = createElement("ul");
+  (guidance.actions || []).slice(0, 2).forEach((action) => {
+    actions.appendChild(createElement("li", "", action));
+  });
+  advice.appendChild(actions);
+  advice.hidden = false;
 
-  const lines = [
-    result.description,
-    ...explanations.slice(0, 4),
-    activeSignals.length ? `Señales activas: ${activeSignals.slice(0, 6).join(", ")}.` : ""
-  ].filter(Boolean);
-
-  details.dataset.empty = lines.length ? "false" : "true";
+  details.dataset.empty = "false";
   if (toggle) {
-    toggle.disabled = !lines.length;
-    toggle.textContent = "Ver detalles";
+    toggle.disabled = false;
+    toggle.dataset.label = findings.length === 1
+      ? "Ver el indicio y su recomendación"
+      : findings.length
+        ? `Ver los ${findings.length} indicios y sus recomendaciones`
+        : "Ver alcance del análisis";
+    toggle.textContent = toggle.dataset.label;
     toggle.setAttribute("aria-expanded", "false");
   }
   details.hidden = true;
-  details.innerHTML = "";
-  lines.forEach((line) => {
-    const paragraph = document.createElement("p");
-    paragraph.textContent = line;
-    details.appendChild(paragraph);
+  details.replaceChildren();
+  findings.forEach((finding) => {
+    const item = createElement("div", "tfg-phishing-finding");
+    item.appendChild(createElement("strong", "", finding.title));
+    item.appendChild(createElement("p", "", finding.detail));
+    item.appendChild(createElement("p", "tfg-phishing-next-step", `Qué hacer: ${finding.action}`));
+    details.appendChild(item);
   });
-  renderSignalChips(activeSignals);
-}
+  (guidance.context || []).forEach((note) => details.appendChild(createElement("p", "", note)));
+  details.appendChild(createElement("strong", "", "Alcance del análisis"));
+  details.appendChild(createElement("p", "", "Se analiza lo visible en Gmail. No se verifican las cabeceras completas, la autenticidad del remitente ni los destinos de los enlaces."));
+  details.appendChild(createElement("p", "", guidance.limits));
+  details.appendChild(createElement("p", "", "La puntuación es un índice de riesgo, no una probabilidad calibrada."));
 
-function renderSignalChips(activeSignals) {
   const container = document.getElementById(SIGNALS_ID);
-  if (!container) {
-    return;
-  }
-  container.innerHTML = "";
-  if (!activeSignals.length) {
-    const chip = createElement("span", "tfg-phishing-chip muted", "Sin señales activas");
-    container.appendChild(chip);
-    return;
-  }
-  activeSignals.slice(0, 4).forEach((signal) => {
-    const chip = createElement("span", "tfg-phishing-chip", signal);
-    container.appendChild(chip);
+  container.replaceChildren();
+  container.hidden = !findings.length;
+  if (findings.length) container.appendChild(createElement("strong", "", "Principales indicios"));
+  const list = createElement("ul");
+  findings.slice(0, 3).forEach((finding) => {
+    list.appendChild(createElement("li", "", finding.title));
   });
-  if (activeSignals.length > 4) {
-    container.appendChild(createElement("span", "tfg-phishing-chip muted", `+${activeSignals.length - 4}`));
-  }
+  container.appendChild(list);
 }
 
 function clearSignalChips(text) {
@@ -351,12 +370,19 @@ function clearSignalChips(text) {
     return;
   }
   container.innerHTML = "";
+  container.hidden = false;
   container.appendChild(createElement("span", "tfg-phishing-chip muted", text));
 }
 
 async function analyzeVisibleEmail(options = {}) {
   const payload = getEmailPayload();
   if (!payload) {
+    clearOfflineRetry();
+    lastFingerprint = "";
+    pendingFingerprint = "";
+    analysisRequestId += 1;
+    const card = document.getElementById(CARD_ID);
+    if (card) card.hidden = true;
     return;
   }
 
@@ -365,11 +391,21 @@ async function analyzeVisibleEmail(options = {}) {
   if (dismissedFingerprint === currentFingerprint) {
     return;
   }
-  if (!options.force && currentFingerprint === lastFingerprint) {
+  if (!options.force && (currentFingerprint === lastFingerprint || currentFingerprint === pendingFingerprint)) {
     return;
   }
 
   clearOfflineRetry();
+  const requestId = ++analysisRequestId;
+  pendingFingerprint = currentFingerprint;
+  const isCurrentMessage = () => {
+    const visible = getEmailPayload();
+    return requestId === analysisRequestId && visible &&
+      fingerprint(visible) === currentFingerprint && dismissedFingerprint !== currentFingerprint;
+  };
+  const advice = document.getElementById(ADVICE_ID);
+  advice.hidden = true;
+  advice.replaceChildren();
   setPanel("loading", {
     status: "Analizando",
     scoreText: "—%",
@@ -379,6 +415,10 @@ async function analyzeVisibleEmail(options = {}) {
     meta: "Comprobando ahora"
   });
   clearSignalChips("Analizando");
+  const toggle = document.getElementById(TOGGLE_ID);
+  toggle.disabled = true;
+  toggle.textContent = "Analizando…";
+  toggle.setAttribute("aria-expanded", "false");
   const details = document.getElementById(DETAILS_ID);
   if (details) {
     details.hidden = true;
@@ -408,6 +448,7 @@ async function analyzeVisibleEmail(options = {}) {
       throw requestError;
     }
     const result = await response.json();
+    if (!isCurrentMessage()) return;
     lastFingerprint = currentFingerprint;
     const score = Number(result.risk_score || 0).toFixed(1);
     const state = result.is_phishing ? "danger" : "safe";
@@ -415,7 +456,7 @@ async function analyzeVisibleEmail(options = {}) {
       status: result.is_phishing ? "Riesgo alto" : "Riesgo bajo",
       scoreText: `${score}%`,
       scoreValue: Number(score),
-      verdict: result.is_phishing ? "Posible phishing" : "No parece phishing",
+      verdict: result.is_phishing ? "Posible phishing" : "Sin alerta de phishing",
       summary: result.is_phishing
         ? "Hay señales suficientes para tratar este mensaje con cautela."
         : "No se han encontrado señales fuertes de phishing en los datos visibles.",
@@ -423,6 +464,7 @@ async function analyzeVisibleEmail(options = {}) {
     });
     renderDetails(result);
   } catch (error) {
+    if (!isCurrentMessage()) return;
     const retryable = error.retryable !== false;
     setPanel("offline", {
       status: retryable ? "Sin conexión" : "Solicitud rechazada",
@@ -445,12 +487,15 @@ async function analyzeVisibleEmail(options = {}) {
     }
     if (toggle) {
       toggle.disabled = false;
+      toggle.dataset.label = "Ver detalles";
       toggle.textContent = "Ver detalles";
     }
     lastFingerprint = "";
     if (retryable) {
       scheduleOfflineRetry();
     }
+  } finally {
+    if (requestId === analysisRequestId) pendingFingerprint = "";
   }
 }
 
@@ -469,6 +514,11 @@ setPanel("loading", {
   meta: "Sin comprobación todavía"
 });
 clearSignalChips("Esperando correo");
-const observer = new MutationObserver(scheduleAnalysis);
+const observer = new MutationObserver((mutations) => {
+  const widget = document.getElementById(WIDGET_ID);
+  if (mutations.some((mutation) => !widget || !widget.contains(mutation.target))) {
+    scheduleAnalysis();
+  }
+});
 observer.observe(document.documentElement, { childList: true, subtree: true });
 scheduleAnalysis();

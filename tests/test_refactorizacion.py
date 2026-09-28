@@ -8,6 +8,7 @@ from io import StringIO
 from sistema_phishing import ExplanationBuilder, SignalBuilder
 from sistema_phishing.correo import CorreoAnalizado
 from sistema_phishing.dataset import cargar_dataset_csv
+from sistema_phishing.guidance import FINDINGS, VERIFY_PAYMENT, build_guidance
 from sistema_phishing.modelo_neural import (
     ModelStorage,
     NeuralPhishingClassifier,
@@ -71,6 +72,32 @@ class TestRefactorizacion(unittest.TestCase):
         self.assertTrue(signals["remitente_marca_engano"])
         self.assertTrue(signals["saludo_generico"])
         self.assertEqual(len(explanations), len(signals))
+        self.assertEqual(set(FINDINGS), set(signals) - {"mensaje_firmado_cifrado"})
+        guidance = build_guidance({"signals": signals, "is_phishing": True})
+        self.assertEqual(
+            {item["signal"] for item in guidance["findings"]},
+            {name for name, value in signals.items() if value and name in FINDINGS},
+        )
+        # Una firma no debe aparecer como un peligro ni como autenticidad validada.
+        signed = build_guidance({"signals": {"mensaje_firmado_cifrado": True}})
+        self.assertEqual(signed["findings"], [])
+        self.assertIn("no se ha verificado", signed["context"][0])
+        self.assertIn("no confirma", signed["summary"])
+        for flagged in (True, False):
+            with self.subTest(flagged=flagged):
+                bec = build_guidance({
+                    "is_phishing": flagged,
+                    "signals": {name: True for name in signals},
+                })
+                self.assertEqual(bec["findings"][0]["signal"], "cambio_datos_bancarios")
+                self.assertEqual(bec["actions"][0], VERIFY_PAYMENT)
+                self.assertEqual(len(bec["actions"]), len(set(bec["actions"])))
+                self.assertEqual(len(bec["findings"]), 30)
+        model_only = build_guidance({"is_phishing": True})
+        self.assertEqual(model_only["findings"], [])
+        self.assertIn("sin indicios heurísticos", model_only["summary"])
+        unknown = build_guidance({"signals": {"regla_futura": True}})
+        self.assertIn("no hay una explicación", unknown["findings"][0]["detail"])
 
     def test_dataset_csv_admite_columnas_alternativas(self):
         csv_data = StringIO(

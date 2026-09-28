@@ -20,6 +20,25 @@ Telegram. Esta ejecución descubrió y corrigió la falta de serialización JSON
 cabeceras enriquecidas y bytes SMTPUTF8 conservados como `surrogateescape`.
 La suite completa que incluye este recorrido contiene 94 pruebas Python.
 
+## Presentación de resultados: revisión del 28 de septiembre
+
+El recorrido de Chromium de la extensión comprueba también su panel sobre un
+DOM representativo de Gmail, con respuestas controladas del análisis: fraude
+BEC, todas las señales activas, ausencia de alertas, puntuación alta sin motivos
+heurísticos, textos largos, errores de conexión y respuestas de un correo
+anterior. Se verifica que todos los detalles sean accesibles, que no aparezca
+desbordamiento horizontal en ventanas de hasta 320 × 480 y que la navegación
+por teclado, el detalle y la minimización funcionen. No requiere una cuenta de
+Gmail real ni demuestra compatibilidad con futuros cambios de su DOM.
+
+El segundo recorrido de Chromium levanta la web y el backend reales y comprueba
+que se muestran las recomendaciones recibidas. Las pruebas Python verifican
+que se prioricen los indicios activos, que una firma no se presente como prueba
+de autenticidad y que las alertas de Telegram contengan acciones concretas y
+respeten el límite de tamaño. Se mantienen dos recorridos de navegador y 94
+pruebas Python, ampliando sus comprobaciones. Los modelos y los resultados de
+evaluación permanecen iguales.
+
 ## Preparación de servicios reales
 
 - Dependencias de Google instaladas: sí.

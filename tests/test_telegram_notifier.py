@@ -44,6 +44,8 @@ class TestTelegramNotifier(unittest.TestCase):
         self.assertIn("80.0%", mensaje)
         self.assertIn("a@example.com", mensaje)
         self.assertIn("Primeros enlaces", mensaje)
+        self.assertIn("Qué hacer ahora", mensaje)
+        self.assertIn("sin usar el enlace", mensaje)
 
     def test_error_de_red_no_filtra_el_token(self):
         def failing_post(url, json, timeout):
@@ -92,3 +94,25 @@ class TestTelegramNotifier(unittest.TestCase):
         self.assertIn("Lenguaje urgente", mensaje)
         self.assertNotIn("No se encontró", mensaje)
         self.assertIn("Riesgo alto", mensaje)
+        self.assertIn("No actúes por la urgencia", mensaje)
+        # Con muchas señales, priorizar el pago frente a frases tranquilizadoras.
+        largo = construir_mensaje_alerta(
+            {"from": "<&" * 1000, "subject": "<&" * 1000},
+            {
+                "risk_score": 90,
+                "is_phishing": True,
+                "urls": ["https://example.com/" + "<&" * 1000] * 100,
+                "signals": {
+                    "lenguaje_urgente": True,
+                    "saludo_generico": True,
+                    "referencia_archivo": True,
+                    "cambio_datos_bancarios": True,
+                    "mensaje_firmado_cifrado": True,
+                },
+            }, "combinado",
+        )
+        self.assertLess(len(largo), 4096)
+        self.assertIn("Cambio de cuenta bancaria", largo)
+        self.assertIn("1 indicio más", largo)
+        self.assertNotIn("firmado", largo)
+        self.assertIn("teléfono conocido", largo)
