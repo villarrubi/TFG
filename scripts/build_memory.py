@@ -16,27 +16,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", default="tectonic", help="Tectonic o ruta al ejecutable.")
     parser.add_argument("--package-only", action="store_true", help="Solo crea el ZIP de fuentes.")
-    parser.add_argument("--guides", action="store_true", help="Compila también las dos guías LaTeX públicas.")
     args = parser.parse_args()
-    if args.package_only and args.guides:
-        parser.error("--package-only no se combina con --guides.")
     if not args.package_only:
         engine = shutil.which(args.engine)
         if engine is None:
             raise SystemExit("No se encontró Tectonic. Instálalo o indica --engine con su ruta.")
         with tempfile.TemporaryDirectory(prefix="tfg-latex-") as temporary:
-            sources = ["TFG"]
-            if args.guides:
-                sources += ["Guia_01_Flujo_y_funcionamiento", "Guia_02_Tecnologias_y_decisiones"]
-            for name in sources:
-                subprocess.run(
-                    [engine, f"{name}.tex", "--outdir", temporary, "--keep-logs"],
-                    cwd=ROOT,
-                    check=True,
-                )
-            # Publicar los PDF solo si todos los documentos solicitados compilan.
-            for name in sources:
-                shutil.copyfile(Path(temporary) / f"{name}.pdf", ROOT / f"{name}.pdf")
+            subprocess.run(
+                [engine, "TFG.tex", "--outdir", temporary, "--keep-logs"],
+                cwd=ROOT,
+                check=True,
+            )
+            shutil.copyfile(Path(temporary) / "TFG.pdf", ROOT / "TFG.pdf")
     package = ROOT / "TFG_LaTeX.zip"
     with ZipFile(package, "w", compression=ZIP_DEFLATED) as archive:
         archive.write(ROOT / "TFG.tex", "TFG.tex")

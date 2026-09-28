@@ -9,15 +9,10 @@ Alejandro Villarrubia García · Septiembre de 2026
 | Material | Consulta | Fuente editable |
 | --- | --- | --- |
 | Memoria | [TFG.pdf](../TFG.pdf) | [TFG.tex](../TFG.tex), [memoria/](../memoria/) y [figuras](../latex_figures/) |
-| Presentación | [PDF](../Presentacion_defensa_TFG.pdf) | [PowerPoint con notas del orador](../Presentacion_defensa_TFG.pptx) |
-| Flujo y funcionamiento | [Guía 01](../Guia_01_Flujo_y_funcionamiento.pdf) | [LaTeX](../Guia_01_Flujo_y_funcionamiento.tex) |
-| Tecnologías y decisiones | [Guía 02](../Guia_02_Tecnologias_y_decisiones.pdf) | [LaTeX](../Guia_02_Tecnologias_y_decisiones.tex) |
-| Respuesta a las observaciones | [Correcciones del tribunal](CORRECCIONES_TRIBUNAL.md) | Markdown |
 
 El [README](../README.md) contiene la instalación y el arranque desde una copia
-limpia. Las versiones vigentes de los documentos son las enlazadas en esta tabla.
-Los diagnósticos anteriores, fechados dentro de `docs/`, documentan el historial
-de revisión y pueden describir problemas ya corregidos.
+limpia. La documentación técnica y los resultados incluidos permiten revisar
+el diseño, ejecutar el prototipo y reproducir sus comprobaciones.
 
 ## Software y demostración
 
@@ -26,8 +21,8 @@ mantiene los modelos; Streamlit, la extensión y el monitor actúan como cliente
 La configuración de ejemplo y las dependencias se incluyen en el repositorio.
 No se necesitan credenciales de Gmail ni Telegram para analizar texto o EML.
 
-El [recorrido de demostración](../defense_demo/README.md) utiliza dos mensajes
-de prueba incluidos y dispone de [resultados de respaldo](../defense_demo/expected_results.json).
+Se incluyen dos casos de referencia (fraude BEC y reunión legítima), con sus
+[resultados esperados](../defense_demo/expected_results.json) comprobados en CI.
 Las integraciones externas y su alcance de validación se explican en
 [INTEGRATION_VALIDATION.md](INTEGRATION_VALIDATION.md).
 
@@ -71,8 +66,8 @@ python -m unittest discover -s browser_tests -p "test_*.py"
 Las pruebas de navegador requieren Chromium de Playwright. Reproducir el
 entrenamiento completo requiere los corpus externos identificados en su informe;
 no es necesario descargarlos para ejecutar la aplicación con los modelos entregados.
-Para reconstruir la memoria y las dos guías, con Tectonic instalado:
+Para reconstruir la memoria, con Tectonic instalado:
 
 ```powershell
-python scripts/build_memory.py --guides --engine tectonic
+python scripts/build_memory.py --engine tectonic
 ```

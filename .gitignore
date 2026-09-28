@@ -71,3 +71,19 @@ Thumbs.db
 /TFG.xdv
 /TFG.synctex.gz
 /TFG_LaTeX.zip
+
+# Material personal conservado localmente; excluido de la entrega.
+/Guia_*
+/Presentacion_defensa_TFG.*
+/docs/images/
+/scripts/build_memory_personal.py
+/defense_demo/README.md
+/docs/CORRECCIONES_TRIBUNAL.md
+/docs/DEFENSA_RESULTADOS.md
+/docs/REVISION_TRIBUNAL_2026-09-22.md
+/docs/VERIFICACION_FUENTES.md
+/scripts/document_helpers.py
+/scripts/export_guides_latex.py
+/scripts/export_latex_txt.py
+/scripts/export_submission_artifacts.ps1
+/scripts/revise_submission_documents.py

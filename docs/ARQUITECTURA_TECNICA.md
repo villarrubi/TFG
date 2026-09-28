@@ -735,12 +735,12 @@ relativas a la raíz de Git.
 
 | Carpeta | Contenido real | Papel técnico |
 |---|---|---|
-| `.github/workflows/` | `ci.yml` | Integración continua en Ubuntu/Python 3.12: instala dependencias, Chromium, pruebas unitarias, Ruff, bibliografía, calibración, evaluación y pruebas de navegador. No ejecuta el servidor como servicio permanente. |
+| `.github/workflows/` | `ci.yml` | Integración continua en Ubuntu y Windows/Python 3.12: instala dependencias, Chromium, pruebas unitarias, Ruff, bibliografía, calibración, evaluación y pruebas de navegador. No ejecuta el servidor como servicio permanente. |
 | `.streamlit/` | `config.toml` | Configuración de la fachada Streamlit: dirección local, modo headless, CORS/XSRF, tema y analítica desactivada. |
 | `browser_tests/` | `test_interfaces.py` | Pruebas de extremo a extremo con Playwright/Chromium: opciones de la extensión, validación de URL, arranque real de backend+Streamlit y análisis desde la UI. |
 | `config/` | `client.env.example`, `server.env.example` | Plantillas públicas, separadas, para crear los ficheros privados de runtime del cliente y del servidor. No contienen secretos reales. |
-| `defense_demo/` | `README.md`, `expected_results.json` | Respaldo reproducible de la defensa: estado esperado y respuestas compactas. No sustituye la ejecución viva. |
-| `docs/` | arquitectura, almacenamiento, integración, OAuth e imágenes | Documentación técnica pública y evidencia visual. Este documento es la descripción completa de arquitectura. |
+| `defense_demo/` | `expected_results.json` | Resultados de referencia del backend y de los tres modos para dos casos EML, comprobados automáticamente. |
+| `docs/` | arquitectura, almacenamiento, integración y OAuth | Documentación técnica pública. Este documento es la descripción completa de arquitectura. |
 | `evaluation/` | EML locales, manifiesto, calibración, resultados y fuentes | Corpus controlado/sintético, holdouts y resultados reproducibles. Los CSV brutos externos se mantienen fuera de Git. |
 | `extension_gmail/` | Manifest V3, content/options/config y CSS | Cliente Chrome que extrae el correo visible y consulta el backend; no contiene el modelo. |
 | `runtime/` | `README.md`, `client/`, `server/` | Frontera de persistencia en ejecución. `client/` guarda OAuth/preferencias/estado local; `server/` guarda ajustes y modelos. Los secretos y estados están ignorados; los modelos de referencia están versionados. |
