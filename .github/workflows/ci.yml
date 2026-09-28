@@ -39,6 +39,7 @@ jobs:
       - name: Coherencia de los modelos de entrega
         run: python scripts/verify_delivery_models.py
       - name: Calibración y evaluación reproducibles
+        shell: bash
         env:
           PYTHONPATH: src
         run: |
