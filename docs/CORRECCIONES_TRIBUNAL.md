@@ -74,7 +74,7 @@ Se detectó que el modelo español activo había sido reentrenado con 998 muestr
 
 - Modelo ES de entrega, SHA-256: `165e7c2bf292adf1d7bc88d936b3c14f4c7fe8f1caa3d2615718ca1190aaefb0`.
 - Modelo EN de entrega, SHA-256: `a3dd9dc3216445c70574982ad7b2515e02830e1a8c0f2ad841cf2c2eb2c56d69`.
-- Calibración: 45 % heurístico / 55 % neuronal, umbral 21 y alta confianza neuronal desde 70. Esta última regla puede prevalecer sobre la media ponderada.
+- Calibración: 45 % heurístico / 55 % neuronal y umbral 21. Si cualquiera de los dos detectores alcanza 70, la fusión conserva el máximo individual en lugar de diluirlo en la media ponderada.
 - Evaluación final de 16 EML: exactitud heurística 100 %, neuronal 81,25 % y combinada 87,5 %. El combinado detecta los ocho phishing y produce dos falsas alarmas.
 
 `verify_delivery_models.py`, incorporado a CI, comprueba los hashes frente a la memoria y los informes. Si se vuelve a entrenar un modelo, será necesario actualizar y reproducir los resultados antes de entregar otra versión.
