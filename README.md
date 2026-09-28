@@ -20,8 +20,10 @@ estén activos en el servidor.
 
 Título aprobado: **Phishing. Técnicas y métodos de ataque y cómo detectarlos**.
 
+- [Índice de entrega y recorrido para el tribunal](docs/ENTREGA_TRIBUNAL.md).
 - Entregable: [TFG.pdf](TFG.pdf), convocatoria de septiembre de 2026.
 - [Presentación de defensa](Presentacion_defensa_TFG.pptx), con notas del orador actualizadas.
+- [Presentación en PDF](Presentacion_defensa_TFG.pdf), para consultar sin PowerPoint.
 - [Preparación de preguntas sobre los resultados](docs/DEFENSA_RESULTADOS.md).
 - Fuente editorial vigente: [TFG.tex](TFG.tex), con las ampliaciones y diagramas
   editables en [memoria/](memoria/) y las imágenes en `latex_figures/`.
@@ -44,16 +46,24 @@ También se puede indicar la ruta completa de `tectonic.exe`. Para preparar
 solo el ZIP, usar `python scripts/build_memory.py --package-only`.
 Los scripts históricos que importan DOCX no son la fuente de la memoria final.
 
-## Guías de defensa en LaTeX
+## Guías de defensa
 
 También se incluyen versiones LaTeX independientes de las dos guías de apoyo:
 
-- [Guía 01 · Flujo y funcionamiento](Guia_01_Flujo_y_funcionamiento.tex)
-- [Guía 02 · Tecnologías y decisiones](Guia_02_Tecnologias_y_decisiones.tex)
+- Guía 01 · Flujo y funcionamiento: [PDF](Guia_01_Flujo_y_funcionamiento.pdf) y [LaTeX](Guia_01_Flujo_y_funcionamiento.tex).
+- Guía 02 · Tecnologías y decisiones: [PDF](Guia_02_Tecnologias_y_decisiones.pdf) y [LaTeX](Guia_02_Tecnologias_y_decisiones.tex).
 
 Cada archivo es autocontenido y puede abrirse directamente en Overleaf o
-compilarse localmente con dos pasadas de `pdflatex`. Si se actualiza alguno de
-los DOCX, las fuentes se regeneran con:
+compilarse localmente con dos pasadas de `pdflatex`. Para compilar la memoria
+y las dos guías con Tectonic:
+
+```powershell
+python scripts/build_memory.py --guides --engine tectonic
+```
+
+Los DOCX de preparación personal no se distribuyen en GitHub y no son necesarios
+para consultar ni compilar estos documentos. Si se dispone de ellos y se
+actualizan, las fuentes de las guías se regeneran con:
 
 ```powershell
 python scripts/export_guides_latex.py

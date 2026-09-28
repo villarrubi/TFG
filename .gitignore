@@ -47,6 +47,15 @@ _pptx_qa_*/
 debug.log
 .test_tmp/
 .external-evaluation/
+/tmp/
+/Flujo_y_funcionamiento.pdf
+/Guia_03_Guion_defensa.pdf
+/Guia_defensa_TFG.pdf
+/scripts/organize_memory_chapters.py
+/Guia_*.aux
+/Guia_*.log
+/Guia_*.toc
+/Guia_*.out
 
 # OS
 .DS_Store

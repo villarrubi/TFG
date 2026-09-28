@@ -3,18 +3,22 @@
 \documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[spanish,es-nodecimaldot,shorthands=off]{babel}
 \usepackage[a4paper,margin=2.35cm]{geometry}
 \usepackage{lmodern}
 \usepackage{microtype}
 \usepackage[table]{xcolor}
 \usepackage{array}
 \usepackage{tabularx}
+\usepackage{xltabular}
+\renewcommand{\tabularxcolumn}[1]{>{\raggedright\arraybackslash}p{#1}}
 \usepackage{float}
 \usepackage{enumitem}
 \usepackage[most]{tcolorbox}
 \usepackage{fancyhdr}
-\usepackage{hyperref}
+\usepackage[hypertexnames=false]{hyperref}
+\setlength{\headheight}{15pt}
+\emergencystretch=3em
 \definecolor{uemcgreen}{HTML}{004C3F}
 \definecolor{uemcgold}{HTML}{E5B93F}
 \definecolor{tfgblue}{HTML}{20566B}
@@ -28,27 +32,29 @@
 \setlist[enumerate]{leftmargin=1.2cm,itemsep=4pt,topsep=2pt}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small\color{uemcgreen}GUÍA 02 · DECISIONES TÉCNICAS}
-\fancyhead[R]{\small\color{uemcgreen}TFG · UEMC}
+\fancyhead[L]{\small\color{uemcgreen}GUÍA 02 \textperiodcentered{} DECISIONES TÉCNICAS}
+\fancyhead[R]{\small\color{uemcgreen}TFG \textperiodcentered{} UEMC}
 \fancyfoot[C]{\color{uemcgreen}\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\headrule}{\hbox to\headwidth{\color{uemcgold}\leaders\hrule height \headrulewidth\hfill}}
 \begin{document}
+\hypersetup{pageanchor=false}
 \begin{titlepage}
   \centering
   \vspace*{2.4cm}
-  {\Large\color{uemcgreen}\textbf{GUÍA 02 · DECISIONES TÉCNICAS}\par}
+  {\Large\color{uemcgreen}\textbf{GUÍA 02 \textperiodcentered{} DECISIONES TÉCNICAS}\par}
   \vspace{1.5cm}
   {\Huge\bfseries\color{uemcgreen}Tecnologías y decisiones\par}
   \vspace{0.7cm}
   {\large\color{tfgblue}Cómo funciona cada elección y cómo justificarla frente a alternativas\par}
   \vfill
-  {\large Proyecto TFG · versión alineada con el código actual\par}
+  {\large Proyecto TFG \textperiodcentered{} versión alineada con el código actual\par}
   \vspace{0.35cm}
   {\large Alejandro Villarrubia García\par}
   \vspace{0.35cm}
   {\large Universidad Europea Miguel de Cervantes\par}
 \end{titlepage}
+\hypersetup{pageanchor=true}
 \tableofcontents
 \clearpage
 
@@ -56,27 +62,33 @@
 
 La arquitectura prioriza reproducibilidad local, facilidad de defensa, separación de responsabilidades y coste operativo bajo. Las decisiones no intentan convertir el TFG en un servicio de producción multiusuario: delimitan un detector demostrable, auditable y extensible.
 
+Frente a la propuesta aprobada, el cumplimiento funcional es parcial: quedaron fuera la reputación online, la validación TLS y la inspección activa de sitios. Se excluyeron para mantener el análisis estático y evitar dependencias externas, con menor cobertura como consecuencia. La memoria lo documenta en 5.3.1; el apartado 5.3.2 justifica TensorFlow y 5.10 reúne los cinco modelos UML del diseño final.
+
 \section{Comparativa de tecnologías}
 
-\begin{table}[H]
-  \centering
+\begingroup
   \small
-  \caption{Comparativa de tecnologías}
-  \label{tab:comparativa-1}
-  \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.45cm}|X|X|X|}
+  \begin{xltabular}{\textwidth}{|>{\raggedright\arraybackslash}p{2.45cm}|X|X|X|}
+  \caption{Comparativa de tecnologías}\label{tab:comparativa-1}\\
     \hline
     \rowcolor{uemcgreen}
     \textcolor{white}{\textbf{Tecnología}} & \textcolor{white}{\textbf{Cómo se usa}} & \textcolor{white}{\textbf{Por qué se elige}} & \textcolor{white}{\textbf{Alternativa y límite}} \\
     \hline
-    Python & Integra parser, reglas, ML, API y automatizaciones & Ecosistema científico, lectura clara y buena trazabilidad & Java/Node serían válidos; añadirían complejidad para este alcance \\
+    \endfirsthead
+    \hline
+    \rowcolor{uemcgreen}
+    \textcolor{white}{\textbf{Tecnología}} & \textcolor{white}{\textbf{Cómo se usa}} & \textcolor{white}{\textbf{Por qué se elige}} & \textcolor{white}{\textbf{Alternativa y límite}} \\
+    \hline
+    \endhead
+    Python & Integra parser, reglas, ML, API y automatizaciones & Ecosistema científico, lectura clara y buena trazabilidad & Java/\allowbreak{}Node serían válidos; añadirían complejidad para este alcance \\
     \hline
     \rowcolor{tablelight}
     Streamlit & Cliente web con sistema visual compartido y adaptable & Permite validar el flujo cliente-servidor con una interfaz coherente y poco código & React daría comunicación navegador-API directa, pero exigiría otro stack \\
     \hline
-    scikit-learn & TF-IDF vectoriza y MLPClassifier clasifica & Pipeline reproducible, API madura y métricas estándar & TensorFlow sería más flexible para deep learning, pero sobredimensionado para texto tabular \\
+    scikit-learn & TF-IDF vectoriza y MLPClassifier clasifica & Pipeline reproducible, API madura y métricas estándar & TensorFlow permite otras arquitecturas; no se implementó ni midió una alternativa equivalente. \\
     \hline
     \rowcolor{tablelight}
-    TF-IDF & Convierte palabras y bigramas en variables & Explicable, rápido y adecuado para corpus moderados & Transformers mejorarían contexto, con más coste y menor explicabilidad local \\
+    TF-IDF & Convierte palabras y bigramas en variables & Explicable, rápido y adecuado para corpus moderados & Transformers ofrecen representaciones contextuales; su posible mejora requeriría una comparación independiente. \\
     \hline
     email estándar & Parsea MIME y cabeceras EML & No añade dependencia para la parte esencial del formato & Librerías externas pueden aportar atajos, pero no son necesarias \\
     \hline
@@ -91,10 +103,10 @@ La arquitectura prioriza reproducibilidad local, facilidad de defensa, separaci�
     joblib & Persiste pipeline TF-IDF + MLP & Guarda vectorizador y modelo como una unidad & ONNX sería más portable; exige conversión y no elimina el requisito de confiar en artefactos \\
     \hline
     \rowcolor{tablelight}
-    unittest + Ruff & Prueba comportamiento y calidad estática & Incluidos en Python y rápidos en CI/local & pytest aporta fixtures más ricas; el conjunto actual es suficiente y directo \\
+    unittest + Ruff & Prueba comportamiento y calidad estática & unittest forma parte de Python; Ruff es una dependencia de desarrollo instalada por separado. & pytest aporta fixtures más ricas; el conjunto actual es suficiente y directo \\
     \hline
-  \end{tabularx}
-\end{table}
+  \end{xltabular}
+\endgroup
 
 \section{Por qué dos modelos lingüísticos}
 
@@ -106,20 +118,24 @@ El detector identifica idioma por mensaje, no por sesión. Mantiene un modelo es
 
 \section{SOLID aplicado}
 
-\begin{table}[H]
-  \centering
+\begingroup
   \small
-  \caption{Aplicación de SOLID}
-  \label{tab:comparativa-3}
-  \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.75cm}|X|X|}
+  \begin{xltabular}{\textwidth}{|>{\raggedright\arraybackslash}p{2.75cm}|X|X|}
+  \caption{Aplicación de SOLID}\label{tab:comparativa-3}\\
     \hline
     \rowcolor{uemcgreen}
     \textcolor{white}{\textbf{Principio}} & \textcolor{white}{\textbf{Aplicación en el código}} & \textcolor{white}{\textbf{Beneficio demostrable}} \\
     \hline
+    \endfirsthead
+    \hline
+    \rowcolor{uemcgreen}
+    \textcolor{white}{\textbf{Principio}} & \textcolor{white}{\textbf{Aplicación en el código}} & \textcolor{white}{\textbf{Beneficio demostrable}} \\
+    \hline
+    \endhead
     Responsabilidad única & Parser, señales, scorer, explicaciones, ML, monitor y transporte están separados & Un cambio en URLs no obliga a tocar Gmail o Streamlit \\
     \hline
     \rowcolor{tablelight}
-    Abierto/cerrado & EmailAnalysisService recibe analyzer, detector loader y detector de idioma inyectables & Se prueban estrategias y se añaden modelos sin reescribir el coordinador \\
+    Abierto/\allowbreak{}cerrado & EmailAnalysisService recibe analyzer, detector loader y detector de idioma inyectables & Se prueban estrategias y se añaden modelos sin reescribir el coordinador \\
     \hline
     Sustitución & Los consumidores dependen de BackendClient o su protocolo mínimo & Web, extensión y monitor consumen el mismo contrato HTTP \\
     \hline
@@ -128,14 +144,14 @@ El detector identifica idioma por mensaje, no por sesión. Mantiene un modelo es
     \hline
     Inversión & NeuralModelTrainer depende de ModelStorage, no de una ruta fija & Facilita memoria, disco y dobles de prueba \\
     \hline
-  \end{tabularx}
-\end{table}
+  \end{xltabular}
+\endgroup
 
 \section{Decisiones de seguridad}
 
 \begin{itemize}
-  \item El parser limita EML a 10 MiB; /analyze admite 16 MiB y las rutas de datasets 256 MiB con Content-Length obligatorio.
-  \item La API no acepta CORS *; permite Gmail y orígenes chrome-extension://, y no devuelve trazas internas.
+  \item El parser limita EML a 10 MiB; /\allowbreak{}analyze admite 16 MiB y las rutas de datasets 256 MiB con Content-Length obligatorio.
+  \item La API no acepta CORS *; permite Gmail y orígenes chrome-extension:/\allowbreak{}/\allowbreak{}, y no devuelve trazas internas.
   \item Por defecto Streamlit y el backend escuchan en loopback. Para una demo móvil puede abrirse solo Streamlit en 0.0.0.0:8501 y mantener el backend en 127.0.0.1:8766; no requiere --allow-remote, no es Internet y debe limitarse a una LAN privada de confianza. Un backend remoto sí exige HTTPS y controles adicionales.
   \item El modelo no ejecuta archivos adjuntos; solo registra metadatos y señales.
   \item Los nuevos joblib no conservan textos brutos de entrenamiento. Los modelos antiguos se sanean al cargarse y guardarse con el formato actual.
@@ -144,43 +160,49 @@ El detector identifica idioma por mensaje, no por sesión. Mantiene un modelo es
 
 \section{Reproducibilidad y evaluación}
 
-Los hiperparámetros finales son TF-IDF (ngram\_range 1-2, max\_features 3.000, min\_df 1, strip\_accents unicode) y MLP ((64, 32), relu, alpha 0,0001, learning rate 0,001, 500 iteraciones, sin early stopping, semilla 42). El protocolo usa 1.148/209 textos ES y 65.661/16.416 EN. La clase positiva mezcla spam/phishing según la fuente y se documenta como proxy, no como equivalencia. Los hashes permiten identificar los joblib y los modelos no guardan textos brutos.
+Los hiperparámetros finales son TF-IDF (ngram\_range 1-2, max\_features 3.000, min\_df 1, strip\_accents unicode) y MLP ((64, 32), relu, alpha 0,0001, learning rate 0,001, 500 iteraciones, sin early stopping, semilla 42). El protocolo usa 1.148/\allowbreak{}209 textos ES y 65.661/\allowbreak{}16.416 EN. La clase positiva mezcla spam/\allowbreak{}phishing según la fuente y se documenta como proxy, no como equivalencia. Los hashes permiten identificar los joblib y los modelos no guardan textos brutos.
 
-El benchmark reproducible separa arranque e inferencia. Se midió en Windows 11 Home 25H2 de 64 bits (26200.9278), Ryzen 7 7800X3D, 63,1 GiB RAM y Python 3.12.7 con scikit-learn 1.9.0, Streamlit 1.58.0, NumPy 2.4.6, SciPy 1.17.1 y joblib 1.5.3. La carga diferida redujo importación heurística un 96,6 \% y arranque de aplicación un 76,2 \%; la inferencia varió menos de ±3 \%.
+El benchmark reproducible separa arranque e inferencia. Se midió en Windows 11 Home 25H2 de 64 bits (26200.9278), Ryzen 7 7800X3D, 63,1 GiB RAM y Python 3.12.7 con scikit-learn 1.9.0, Streamlit 1.58.0, NumPy 2.4.6, SciPy 1.17.1 y joblib 1.5.3. La carga diferida redujo importación heurística un 96,6 \% y arranque de aplicación un 76,2 \%; la inferencia varió hasta aproximadamente un 3 \%.
 
-La calibración usa 40 casos separados en cinco particiones: pesos heurísticos 20-50, umbrales 20-60 y alta confianza 65-85. Selecciona 45/55, umbral 21 y alta confianza 70 con desempates predefinidos; no produce una probabilidad calibrada. La prueba de concurrencia usa el backend real: 8 y 16 análisis terminaron sin errores, pero a 32 aparecieron fallos. Se recomiendan 4-8 para demo.
+La calibración usa 40 casos separados en cinco particiones: pesos heurísticos 20-50, umbrales 20-60 y alta confianza 65-85. Selecciona 45/\allowbreak{}55, umbral 21 y alta confianza 70 con desempates predefinidos; no produce una probabilidad calibrada. La prueba de concurrencia usa el backend real: 8 y 16 análisis terminaron sin errores, pero a 32 aparecieron fallos. Se recomiendan 4-8 para demo.
+
+La selección 45/\allowbreak{}55 es local y debe repetirse si cambian datos, reglas o modelos. En los 16 EML reservados, el heurístico obtuvo 100 \% de exactitud y el combinado 87,5 \%, con dos falsas alarmas. No se demuestra una mejora universal de la combinación.
 
 La validación automatizada reúne 94 pruebas Python y 2 pruebas con Chromium. Incluye idioma determinista y el recorrido local Gmail EML -> JSON -> HTTP -> backend -> Telegram. GitHub Actions instala versiones fijadas, ejecuta Ruff, verifica calibración, regenera la evaluación, comprueba el respaldo de defensa y recorre web-backend. OAuth real usa una lista E2E separada porque sus credenciales no pueden entrar en CI.
 
 \section{Diferencias con la propuesta inicial}
 
-\begin{table}[H]
-  \centering
+\begingroup
   \small
-  \caption{Diferencias frente a la propuesta inicial}
-  \label{tab:comparativa-4}
-  \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.75cm}|X|X|}
+  \begin{xltabular}{\textwidth}{|>{\raggedright\arraybackslash}p{2.75cm}|X|X|}
+  \caption{Diferencias frente a la propuesta inicial}\label{tab:comparativa-4}\\
     \hline
     \rowcolor{uemcgreen}
     \textcolor{white}{\textbf{Propuesta}} & \textcolor{white}{\textbf{Implementación actual}} & \textcolor{white}{\textbf{Cómo explicarlo}} \\
     \hline
-    TensorFlow & scikit-learn MLP & Se eligió una red suficiente para el corpus y más reproducible/ligera en el entorno académico \\
+    \endfirsthead
+    \hline
+    \rowcolor{uemcgreen}
+    \textcolor{white}{\textbf{Propuesta}} & \textcolor{white}{\textbf{Implementación actual}} & \textcolor{white}{\textbf{Cómo explicarlo}} \\
+    \hline
+    \endhead
+    TensorFlow & scikit-learn MLP & TF-IDF y MLP comparten un pipeline local. No se midió superioridad frente a TensorFlow. \\
     \hline
     \rowcolor{tablelight}
-    Blacklists/reputación & Señales locales de dominio, URL, punycode y acortadores & Se evita depender de red externa y se mantiene privacidad; reputación online queda como extensión \\
+    Blacklists/\allowbreak{}reputación & Señales locales de dominio, URL, punycode y acortadores & Se evita depender de red externa y se mantiene privacidad; reputación online queda como extensión \\
     \hline
     Certificados & No se inspecciona TLS desde el correo & El EML no prueba por sí mismo el certificado del destino; se prioriza análisis estático seguro \\
     \hline
     \rowcolor{tablelight}
     Interfaz simple & Streamlit como cliente de una API central obligatoria & La interfaz sigue siendo simple y todos los canales comparten los modelos del servidor \\
     \hline
-  \end{tabularx}
-\end{table}
+  \end{xltabular}
+\endgroup
 
 \section{Qué no prometer}
 
 \begin{itemize}
-  \item No decir que se consulta una blacklist online si no se ha configurado una fuente externa.
+  \item El prototipo no implementa consultas online de reputación; añadir credenciales no activa esa capacidad.
   \item No presentar el accuracy de entrenamiento como precisión en producción.
   \item No llamar a la extensión un producto publicado: se carga en modo desarrollador y consume el backend central configurado.
 \end{itemize}

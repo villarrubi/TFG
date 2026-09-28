@@ -15,6 +15,7 @@ $renderRoot = Join-Path $repoRoot "tmp\rendered_docs"
 New-Item -ItemType Directory -Force -Path $renderRoot | Out-Null
 
 $documents = @(
+    @{ Name = "Guia_01_Flujo_y_funcionamiento.docx"; Pdf = (Join-Path $renderRoot "Guia_01_Flujo_y_funcionamiento.pdf") },
     @{ Name = "Guia_defensa_TFG.docx"; Pdf = (Join-Path $renderRoot "Guia_defensa_TFG.pdf") },
     @{ Name = "Guia_03_Guion_defensa.docx"; Pdf = (Join-Path $renderRoot "Guia_03_Guion_defensa.pdf") },
     @{ Name = "Guia_02_Tecnologias_y_decisiones.docx"; Pdf = (Join-Path $renderRoot "Guia_02_Tecnologias_y_decisiones.pdf") }
@@ -27,6 +28,10 @@ $word.DisplayAlerts = 0
 try {
     foreach ($entry in $documents) {
         $docxPath = Join-Path $repoRoot $entry.Name
+        if (-not (Test-Path -LiteralPath $docxPath)) {
+            Write-Output ("Guía personal no presente en esta copia: " + $entry.Name)
+            continue
+        }
         $document = $word.Documents.Open($docxPath, $false, $false)
         try {
             $document.Fields.Update() | Out-Null

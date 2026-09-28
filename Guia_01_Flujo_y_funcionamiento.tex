@@ -3,18 +3,22 @@
 \documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[spanish,es-nodecimaldot,shorthands=off]{babel}
 \usepackage[a4paper,margin=2.35cm]{geometry}
 \usepackage{lmodern}
 \usepackage{microtype}
 \usepackage[table]{xcolor}
 \usepackage{array}
 \usepackage{tabularx}
+\usepackage{xltabular}
+\renewcommand{\tabularxcolumn}[1]{>{\raggedright\arraybackslash}p{#1}}
 \usepackage{float}
 \usepackage{enumitem}
 \usepackage[most]{tcolorbox}
 \usepackage{fancyhdr}
-\usepackage{hyperref}
+\usepackage[hypertexnames=false]{hyperref}
+\setlength{\headheight}{15pt}
+\emergencystretch=3em
 \definecolor{uemcgreen}{HTML}{004C3F}
 \definecolor{uemcgold}{HTML}{E5B93F}
 \definecolor{tfgblue}{HTML}{20566B}
@@ -28,33 +32,35 @@
 \setlist[enumerate]{leftmargin=1.2cm,itemsep=4pt,topsep=2pt}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small\color{uemcgreen}GUÍA 01 · MAPA DEL SISTEMA}
-\fancyhead[R]{\small\color{uemcgreen}TFG · UEMC}
+\fancyhead[L]{\small\color{uemcgreen}GUÍA 01 \textperiodcentered{} MAPA DEL SISTEMA}
+\fancyhead[R]{\small\color{uemcgreen}TFG \textperiodcentered{} UEMC}
 \fancyfoot[C]{\color{uemcgreen}\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\headrule}{\hbox to\headwidth{\color{uemcgold}\leaders\hrule height \headrulewidth\hfill}}
 \begin{document}
+\hypersetup{pageanchor=false}
 \begin{titlepage}
   \centering
   \vspace*{2.4cm}
-  {\Large\color{uemcgreen}\textbf{GUÍA 01 · MAPA DEL SISTEMA}\par}
+  {\Large\color{uemcgreen}\textbf{GUÍA 01 \textperiodcentered{} MAPA DEL SISTEMA}\par}
   \vspace{1.5cm}
   {\Huge\bfseries\color{uemcgreen}Flujo y funcionamiento\par}
   \vspace{0.7cm}
   {\large\color{tfgblue}Qué ocurre desde que entra un correo hasta que se explica el riesgo\par}
   \vfill
-  {\large Proyecto TFG · versión alineada con el código actual\par}
+  {\large Proyecto TFG \textperiodcentered{} versión alineada con el código actual\par}
   \vspace{0.35cm}
   {\large Alejandro Villarrubia García\par}
   \vspace{0.35cm}
   {\large Universidad Europea Miguel de Cervantes\par}
 \end{titlepage}
+\hypersetup{pageanchor=true}
 \tableofcontents
 \clearpage
 
 \section{Idea general}
 
-El montaje es cliente-servidor. El navegador usa Streamlit como capa de presentación y Streamlit envía peticiones HTTP/JSON al backend central. La extensión y el monitor también consumen esa API. Solo el servidor parsea, analiza, entrena y guarda los modelos; Gmail y Telegram son integraciones externas. La web comparte una interfaz adaptable con navegación de marca, estados homogéneos y un flujo de detección ordenado en tres pasos.
+El montaje es cliente-servidor. El navegador usa Streamlit como capa de presentación y Streamlit envía peticiones HTTP/\allowbreak{}JSON al backend central. La extensión y el monitor también consumen esa API. Solo el servidor parsea, analiza, entrena y guarda los modelos; Gmail y Telegram son integraciones externas. La web comparte una interfaz adaptable con navegación de marca, estados homogéneos y un flujo de detección ordenado en tres pasos.
 
 \begin{tcolorbox}[colback=uemclight,colframe=uemcgreen,title=Nota para la defensa]
 \textbf{Frase para la defensa:} Aunque cliente y servidor estén en el mismo ordenador, son procesos separados con un contrato HTTP y comparten una versión activa por idioma. Para la demo móvil, mantén el backend en 127.0.0.1:8766 e inicia Streamlit con --server.address 0.0.0.0 --server.port 8501; el móvil usa la IP privada. Es acceso temporal a una LAN de confianza, no Internet, y la web no tiene autenticación multiusuario.
@@ -63,27 +69,31 @@ El montaje es cliente-servidor. El navegador usa Streamlit como capa de presenta
 \section{Flujo completo}
 
 \begin{enumerate}
-  \item Entrada de cliente: la web, la extensión o el monitor envían texto, campos JSON o un EML Base64 al backend; /analyze limita la petición a 16 MiB.
+  \item Entrada de cliente: la web, la extensión o el monitor envían texto, campos JSON o un EML Base64 al backend; /\allowbreak{}analyze limita la petición a 16 MiB.
   \item Normalización: se extraen remitente, asunto, cuerpo, HTML, cabeceras completas, URLs, anclas y adjuntos.
   \item Señales: se revisan autenticación, coherencia de dominios, URLs, punycode, acortadores, HTML, formularios, lenguaje urgente y adjuntos.
   \item Puntuación heurística: RiskScorer pondera las señales activas y produce un riesgo de 0 a 100; ExplanationBuilder conserva el motivo.
   \item Idioma y modelo: EmailAnalysisService detecta español o inglés por mensaje y reutiliza un detector neuronal cacheado por idioma.
-  \item Decisión: el modo combinado calcula una media ponderada; el umbral configurado se aplica de forma uniforme en heurístico, neuronal y combinado.
+  \item Decisión: el modo combinado calcula la media 45/\allowbreak{}55 y conserva el máximo de ambos detectores si alcanza 70. El umbral común de 21 determina el veredicto en los tres modos.
   \item Salida: el backend devuelve clasificación, puntuación, explicación, señales, idioma y versión; el cliente se limita a presentarlos o generar la alerta.
 \end{enumerate}
 
 \section{Piezas y responsabilidades}
 
-\begin{table}[H]
-  \centering
+\begingroup
   \small
-  \caption{Piezas y responsabilidades}
-  \label{tab:comparativa-2}
-  \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.45cm}|X|X|X|}
+  \begin{xltabular}{\textwidth}{|>{\raggedright\arraybackslash}p{2.45cm}|X|X|X|}
+  \caption{Piezas y responsabilidades}\label{tab:comparativa-2}\\
     \hline
     \rowcolor{uemcgreen}
     \textcolor{white}{\textbf{Capa}} & \textcolor{white}{\textbf{Módulo}} & \textcolor{white}{\textbf{Responsabilidad}} & \textcolor{white}{\textbf{Resultado}} \\
     \hline
+    \endfirsthead
+    \hline
+    \rowcolor{uemcgreen}
+    \textcolor{white}{\textbf{Capa}} & \textcolor{white}{\textbf{Módulo}} & \textcolor{white}{\textbf{Responsabilidad}} & \textcolor{white}{\textbf{Resultado}} \\
+    \hline
+    \endhead
     Entrada & analizador\_email.py & Parseo MIME seguro y extracción de partes & Correo normalizado \\
     \hline
     \rowcolor{tablelight}
@@ -92,17 +102,17 @@ El montaje es cliente-servidor. El navegador usa Streamlit como capa de presenta
     Señales & header\_signals, url\_utils, html\_signals, content\_signals & Reglas pequeñas y comprobables & Diccionario de señales \\
     \hline
     \rowcolor{tablelight}
-    Cliente & backend\_client.py & Contrato HTTP común sin lógica de detección & Petición/respuesta JSON \\
+    Cliente & backend\_client.py & Contrato HTTP común sin lógica de detección & Petición/\allowbreak{}respuesta JSON \\
     \hline
     Servidor & backend\_service.py & Casos de uso, idioma, versiones y administración & Resultado central \\
     \hline
     \rowcolor{tablelight}
-    ML & modelo\_neural.py & TF-IDF, MLP, entrenamiento y persistencia del servidor & Probabilidad phishing \\
+    ML & modelo\_neural.py & TF-IDF, MLP, entrenamiento y persistencia del servidor & Puntuación de clase positiva \\
     \hline
     Presentación & Streamlit, monitor, extensión & Recoger entrada y mostrar o alertar & UI o alerta \\
     \hline
-  \end{tabularx}
-\end{table}
+  \end{xltabular}
+\endgroup
 
 \section{Cómo se analiza un EML}
 
@@ -110,7 +120,7 @@ El parser usa email.parser.BytesParser con una política MIME estándar. Conserv
 
 \begin{itemize}
   \item Texto plano: se decodifica respetando el charset declarado y se conserva como cuerpo analizable.
-  \item HTML: se guarda separado para revisar formularios, meta refresh, iframes, base href y javascript/data URLs.
+  \item HTML: se guarda separado para revisar formularios, meta refresh, iframes, base href y javascript/\allowbreak{}data URLs.
   \item Adjuntos: se anotan nombre y tipo sin ejecutar ni abrir contenido potencialmente peligroso.
   \item URLs: se deduplican, se limpian de puntuación y se extraen también de enlaces HTML.
 \end{itemize}
@@ -123,30 +133,34 @@ Si un EML está corrupto o falla una alerta de Telegram, ese mensaje queda repor
 
 \section{API y extensión}
 
-\begin{table}[H]
-  \centering
+\begingroup
   \small
-  \caption{Endpoints y controles de la API}
-  \label{tab:comparativa-3}
-  \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.45cm}|X|X|X|}
+  \begin{xltabular}{\textwidth}{|>{\raggedright\arraybackslash}p{2.45cm}|X|X|X|}
+  \caption{Endpoints y controles de la API}\label{tab:comparativa-3}\\
     \hline
     \rowcolor{uemcgreen}
     \textcolor{white}{\textbf{Endpoint}} & \textcolor{white}{\textbf{Entrada}} & \textcolor{white}{\textbf{Respuesta}} & \textcolor{white}{\textbf{Controles}} \\
     \hline
-    GET /health y /models & Sin cuerpo & Estado y versiones sin rutas locales & No-store; sin artefactos \\
+    \endfirsthead
+    \hline
+    \rowcolor{uemcgreen}
+    \textcolor{white}{\textbf{Endpoint}} & \textcolor{white}{\textbf{Entrada}} & \textcolor{white}{\textbf{Respuesta}} & \textcolor{white}{\textbf{Controles}} \\
+    \hline
+    \endhead
+    GET /\allowbreak{}health y /\allowbreak{}models & Sin cuerpo & Estado y versiones sin rutas locales & No-store; sin artefactos \\
     \hline
     \rowcolor{tablelight}
-    POST /analyze & JSON hasta 16 MiB & Riesgo, explicación, idioma y versión & Tipos, tamaño y CORS \\
+    POST /\allowbreak{}analyze & JSON hasta 16 MiB & Riesgo, explicación, idioma y versión & Tipos, tamaño y CORS \\
     \hline
-    POST /train y /evaluate & CSV serializado hasta 256 MiB & Versión y métricas & Token admin opcional en local \\
+    POST /\allowbreak{}train y /\allowbreak{}evaluate & CSV serializado hasta 256 MiB & Versión y métricas & Token admin opcional en local \\
     \hline
     \rowcolor{tablelight}
-    POST /compare y /models/delete & Configuraciones o idioma & Comparación o confirmación & Token y límites \\
+    POST /\allowbreak{}compare y /\allowbreak{}models/\allowbreak{}delete & Configuraciones o idioma & Comparación o confirmación & Token y límites \\
     \hline
-  \end{tabularx}
-\end{table}
+  \end{xltabular}
+\endgroup
 
-La extensión de Gmail no ejecuta Python: recoge el correo visible y lo envía directamente al backend central, por defecto en 127.0.0.1:8766. El proceso del puerto 8765 se conserva únicamente como proxy de compatibilidad y tampoco carga modelos.
+La extensión de Gmail no ejecuta Python: recoge el correo visible y lo envía directamente al backend central, por defecto en 127.0.0.1:8766. El proceso del puerto 8767 se conserva únicamente como proxy de compatibilidad y tampoco carga modelos.
 
 \section{Ejemplo de extremo a extremo}
 
@@ -154,8 +168,8 @@ La extensión de Gmail no ejecuta Python: recoge el correo visible y lo envía d
   \item El usuario abre un correo con asunto urgente y un enlace que aparenta ser de una marca conocida.
   \item El adaptador extrae From, Subject, cuerpo, anclas y URL.
   \item Las reglas detectan urgencia, dominio externo, anchor distinto y posible incoherencia de cabeceras.
-  \item El modelo neuronal calcula una probabilidad sobre el texto completo.
-  \item El modo combinado aplica la fusión calibrada 45/55 y el umbral 21; si una evidencia alcanza 70 no se diluye, y la explicación muestra qué señales activaron el riesgo.
+  \item El modelo neuronal calcula una puntuación de clase positiva sobre el texto normalizado. Su significado depende de las etiquetas del corpus: spam/\allowbreak{}ham en ES y mezcla spam/\allowbreak{}phishing en EN.
+  \item El modo combinado aplica la fusión calibrada 45/\allowbreak{}55 y el umbral 21; si una evidencia alcanza 70 no se diluye, y la explicación muestra qué señales activaron el riesgo.
   \item La UI pinta la tarjeta, la extensión la inserta en Gmail y el monitor podría notificar por Telegram.
 \end{enumerate}
 
@@ -163,6 +177,11 @@ La extensión de Gmail no ejecuta Python: recoge el correo visible y lo envía d
 
 \begin{itemize}
   \item La lista de dominios y señales es local; no se afirma que exista reputación online en tiempo real.
+\end{itemize}
+
+Los pesos 45/\allowbreak{}55 dependen de los modelos y de los 40 casos de calibración. En los 16 EML finales, el heurístico acierta 16 y el combinado 14; combinar no mejora esta prueba ni garantiza un resultado superior con otros datos.
+
+\begin{itemize}
   \item El análisis apoya decisiones y las 94 pruebas más 2 recorridos validan el flujo, no la eficacia en producción; el MLP requiere datos representativos y evaluación separada.
 \end{itemize}
 

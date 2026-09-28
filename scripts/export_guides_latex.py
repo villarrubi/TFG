@@ -35,6 +35,8 @@ def latex_text(text: str) -> str:
         "}": r"\}",
         "~": r"\textasciitilde{}",
         "^": r"\textasciicircum{}",
+        "/": r"/\allowbreak{}",
+        "·": r"\textperiodcentered{}",
     }
     return "".join(replacements.get(char, char) for char in text)
 
@@ -96,23 +98,23 @@ def emit_table(rows: list[list[str]], index: int, caption: str) -> list[str]:
         layout = "|" + "|".join("X" for _ in range(columns)) + "|"
 
     lines = [
-        r"\begin{table}[H]",
-        r"  \centering",
+        r"\begingroup",
         r"  \small",
-        rf"  \caption{{{latex_text(caption)}}}",
-        rf"  \label{{tab:comparativa-{index}}}",
-        rf"  \begin{{tabularx}}{{\textwidth}}{{{layout}}}",
+        rf"  \begin{{xltabular}}{{\textwidth}}{{{layout}}}",
+        rf"  \caption{{{latex_text(caption)}}}\label{{tab:comparativa-{index}}}\\",
         r"    \hline",
         r"    \rowcolor{uemcgreen}",
     ]
     header = [rf"\textcolor{{white}}{{\textbf{{{latex_text(value)}}}}}" for value in rows[0]]
     lines.extend(["    " + " & ".join(header) + r" \\", r"    \hline"])
+    lines.extend([r"    \endfirsthead", r"    \hline", r"    \rowcolor{uemcgreen}"])
+    lines.extend(["    " + " & ".join(header) + r" \\", r"    \hline", r"    \endhead"])
     for row_index, row in enumerate(rows[1:], start=1):
         values = [latex_text(value) for value in row]
         if row_index % 2 == 0:
             lines.append(r"    \rowcolor{tablelight}")
         lines.extend(["    " + " & ".join(values) + r" \\", r"    \hline"])
-    lines.extend([r"  \end{tabularx}", r"\end{table}", ""])
+    lines.extend([r"  \end{xltabular}", r"\endgroup", ""])
     return lines
 
 
@@ -123,18 +125,22 @@ def preamble(title: str, subtitle: str, guide_label: str) -> list[str]:
         r"\documentclass[11pt,a4paper]{article}",
         r"\usepackage[utf8]{inputenc}",
         r"\usepackage[T1]{fontenc}",
-        r"\usepackage[spanish,es-nodecimaldot]{babel}",
+        r"\usepackage[spanish,es-nodecimaldot,shorthands=off]{babel}",
         r"\usepackage[a4paper,margin=2.35cm]{geometry}",
         r"\usepackage{lmodern}",
         r"\usepackage{microtype}",
         r"\usepackage[table]{xcolor}",
         r"\usepackage{array}",
         r"\usepackage{tabularx}",
+        r"\usepackage{xltabular}",
+        r"\renewcommand{\tabularxcolumn}[1]{>{\raggedright\arraybackslash}p{#1}}",
         r"\usepackage{float}",
         r"\usepackage{enumitem}",
         r"\usepackage[most]{tcolorbox}",
         r"\usepackage{fancyhdr}",
-        r"\usepackage{hyperref}",
+        r"\usepackage[hypertexnames=false]{hyperref}",
+        r"\setlength{\headheight}{15pt}",
+        r"\emergencystretch=3em",
         r"\definecolor{uemcgreen}{HTML}{004C3F}",
         r"\definecolor{uemcgold}{HTML}{E5B93F}",
         r"\definecolor{tfgblue}{HTML}{20566B}",
@@ -149,11 +155,12 @@ def preamble(title: str, subtitle: str, guide_label: str) -> list[str]:
         r"\pagestyle{fancy}",
         r"\fancyhf{}",
         rf"\fancyhead[L]{{\small\color{{uemcgreen}}{latex_text(guide_label)}}}",
-        r"\fancyhead[R]{\small\color{uemcgreen}TFG · UEMC}",
+        r"\fancyhead[R]{\small\color{uemcgreen}TFG \textperiodcentered{} UEMC}",
         r"\fancyfoot[C]{\color{uemcgreen}\thepage}",
         r"\renewcommand{\headrulewidth}{0.4pt}",
         r"\renewcommand{\headrule}{\hbox to\headwidth{\color{uemcgold}\leaders\hrule height \headrulewidth\hfill}}",
         r"\begin{document}",
+        r"\hypersetup{pageanchor=false}",
         r"\begin{titlepage}",
         r"  \centering",
         r"  \vspace*{2.4cm}",
@@ -163,12 +170,13 @@ def preamble(title: str, subtitle: str, guide_label: str) -> list[str]:
         r"  \vspace{0.7cm}",
         rf"  {{\large\color{{tfgblue}}{latex_text(subtitle)}\par}}",
         r"  \vfill",
-        r"  {\large Proyecto TFG · versión alineada con el código actual\par}",
+        r"  {\large Proyecto TFG \textperiodcentered{} versión alineada con el código actual\par}",
         r"  \vspace{0.35cm}",
         r"  {\large Alejandro Villarrubia García\par}",
         r"  \vspace{0.35cm}",
         r"  {\large Universidad Europea Miguel de Cervantes\par}",
         r"\end{titlepage}",
+        r"\hypersetup{pageanchor=true}",
         r"\tableofcontents",
         r"\clearpage",
         "",

@@ -2,6 +2,38 @@
 
 Fecha: 22 de septiembre de 2026.
 
+Revisión final de entrega: 28 de septiembre de 2026. Véase el
+[índice de materiales para el tribunal](ENTREGA_TRIBUNAL.md).
+
+## Revisión final del 28 de septiembre
+
+- Se integra la explicación de la figura 2.1 en su pie y se ajustan los saltos de
+  las tablas del estado del arte y de planificación. La memoria resultante tiene
+  74 páginas de PDF. Se distingue la planificación inicial de junio de las
+  evaluaciones de agosto y la revisión de septiembre.
+- El diagrama de secuencia representa las llamadas reales del backend a los
+  dos detectores y la fusión posterior. Se mejora el espacio de sus etiquetas.
+- Se corrigen los puertos residuales del proxy (8767), se elimina del árbol un
+  archivo de configuración inexistente y se identifican los fragmentos de los
+  anexos como extractos simplificados. La validación local de Gmail y Telegram
+  se distingue de una prueba con servicios y credenciales reales.
+- Se elimina una cita residual a GreatHorn sin entrada bibliográfica. El auditor
+  detecta ahora también citas parentéticas sin referencia, además de referencias
+  sin citar. Esta comprobación es interna y no verifica por sí sola cada fuente.
+- Se revisan las dos guías públicas y la presentación para explicar la regla de
+  alta confianza, la diferencia entre spam y phishing, el alcance parcial y los
+  límites de la comparación con TensorFlow. Se corrigen solapamientos de texto
+  y enlaces a documentos inexistentes. Se incluyen las tres versiones PDF.
+- Las guías personales de preparación se actualizan localmente, con un índice
+  automático en la guía completa. Sus DOCX no son necesarios para consultar ni
+  compilar la entrega pública.
+
+Se han vuelto a reproducir las evaluaciones de entrenamiento y de los 1.528
+textos externos con los modelos entregados, sin reentrenarlos ni modificar sus
+resultados. Se conservan copias de los materiales anteriores y registros de
+esta revisión fuera del repositorio. Las comprobaciones automáticas de la
+entrega y sus límites se describen más abajo.
+
 ## Entregables y edición
 
 - [TFG.pdf](../TFG.pdf): memoria revisada y compilada desde la fuente editorial.

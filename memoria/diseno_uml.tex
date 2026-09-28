@@ -67,7 +67,7 @@ El análisis requiere un backend disponible. Tras elegir entrada y modo, se vali
 
 \clearpage
 \subsection{Secuencia de análisis combinado}
-La figura~\ref{fig:uml-secuencia} representa una petición válida en modo combinado. La normalización sucede antes de la inferencia. En este modo se obtienen ambos resultados y se aplica la política de fusión. El detector lingüístico selecciona el modelo ES o EN; la caché evita recargarlo en cada petición. La figura agrupa la API y su handler en la misma línea de vida para facilitar la lectura.
+La figura~\ref{fig:uml-secuencia} representa una petición válida en modo combinado. El backend normaliza la entrada y solicita por separado el análisis heurístico y el neuronal a \nolinkurl{EmailAnalysisService}. Después aplica la fusión y el umbral. El detector lingüístico selecciona el modelo ES o EN; la caché evita recargarlo en cada petición. La figura agrupa la API y el servicio backend en una línea de vida.
 
 \begin{figure}[H]
 \centering
@@ -78,15 +78,20 @@ La figura~\ref{fig:uml-secuencia} representa una petición válida en modo combi
 \node[life] (\id) at (\x,0) {\name};
 \draw[dashed,gray] (\x,-0.45)--(\x,-11.8);}
 \draw[msg] (0,-1)--node[above]{POST /analyze: entrada y opciones}(3.6,-1);
-\draw[msg] (3.6,-1.8)--(4.25,-1.8)--(4.25,-2.45)--node[below,align=center]{validar entrada y normalizar}(3.6,-2.45);
-\draw[msg] (3.6,-3.2)--node[above]{analyze\_all(datos)}(7.2,-3.2);
-\draw[msg] (7.2,-4)--node[above]{análisis heurístico}(10.8,-4);
-\draw[ret] (10.8,-4.75)--node[above]{señales, riesgo, explicación}(7.2,-4.75);
-\draw[msg] (7.2,-5.5)--(7.8,-5.5)--(7.8,-6.15)--node[below,align=center]{idioma y caché ES/EN}(7.2,-6.15);
-\draw[msg] (7.2,-7)--node[above]{análisis neuronal}(10.8,-7);
-\draw[ret] (10.8,-7.75)--node[above]{puntuación neuronal}(7.2,-7.75);
-\draw[ret] (7.2,-8.6)--node[above]{resultados de ambos detectores}(3.6,-8.6);
-\draw[msg] (3.6,-9.3)--(4.25,-9.3)--(4.25,-10)--node[below,align=center]{fusión, umbral y metadatos}(3.6,-10);
+\draw[msg] (3.6,-1.65)--(4.25,-1.65)--(4.25,-2.15)--(3.6,-2.15);
+\node[anchor=east,align=right] at (3.45,-1.9) {validar y\\normalizar};
+\draw[msg] (3.6,-2.9)--node[above]{analyze\_heuristic(datos)}(7.2,-2.9);
+\draw[msg] (7.2,-3.6)--node[above]{analizar reglas}(10.8,-3.6);
+\draw[ret] (10.8,-4.3)--node[above]{resultado heurístico}(7.2,-4.3);
+\draw[ret] (7.2,-5)--node[above]{riesgo y explicación}(3.6,-5);
+\draw[msg] (3.6,-5.7)--node[above]{analyze\_neural(datos)}(7.2,-5.7);
+\draw[msg] (7.2,-6.25)--(7.8,-6.25)--(7.8,-6.8)--(7.2,-6.8);
+\node[anchor=west,align=left] at (7.95,-6.5) {idioma y\\caché ES/EN};
+\draw[msg] (7.2,-7.5)--node[above]{analizar texto}(10.8,-7.5);
+\draw[ret] (10.8,-8.2)--node[above]{puntuación neuronal}(7.2,-8.2);
+\draw[ret] (7.2,-8.9)--node[above]{resultado neuronal}(3.6,-8.9);
+\draw[msg] (3.6,-9.45)--(4.25,-9.45)--(4.25,-10)--(3.6,-10);
+\node[anchor=west,align=left] at (4.4,-9.7) {fusión, umbral\\y metadatos};
 \draw[ret] (3.6,-11)--node[above]{HTTP 200: resultado JSON}(0,-11);
 \node[anchor=north,align=center] at (0,-11.3) {mostrar veredicto\ y explicación};
 \end{tikzpicture}

@@ -225,14 +225,10 @@ Alkhalil et al. (2021) proponen cuatro fases generales: planificación, preparac
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.92\textwidth]{latex_figures/figura_2_1.png}
-  \caption[Diagrama de flujo swimlane de las fases de un ataque de phishing.]{Diagrama de flujo swimlane de las fases de un ataque de phishing.}
+  \includegraphics[width=0.86\textwidth]{latex_figures/figura_2_1.png}
+  \caption[Fases de un ataque de phishing.]{Fases de un ataque de phishing. Fuente: elaboración propia, adaptada de Alkhalil et al. (2021) y MITRE ATT\&CK (2025). La secuencia relaciona las acciones del atacante y de la víctima con los controles defensivos.}
   \label{fig:2-1}
 \end{figure}
-
-\begin{center}
-  \footnotesize Fuente: Adaptado de Alkhalil et al. (2021) y MITRE ATT\&CK (2025). Ilustra la progresión secuencial con énfasis en interacciones humano-técnicas.
-\end{center}
 
 \subsection{Preparación y Recopilación de Información (Reconocimiento)}
 
@@ -472,7 +468,7 @@ Más allá de los principios de influencia, los atacantes aprovechan sesgos cogn
   \item Sesgo de anclaje: el usuario ancla su percepción en el remitente aparentemente legítimo.
   \item Efecto de mera exposición: cuanto más parecido sea el dominio o el diseño al original, mayor confianza genera.
   \item Aversión a la pérdida (loss aversion): el miedo a perder el acceso a una cuenta o sufrir una penalización puede pesar más que una ganancia equivalente y precipitar la respuesta.
-  \item Fatiga de decisión y sobrecarga cognitiva: en entornos laborales con alto volumen de correo, la atención selectiva colapsa (GreatHorn, 2021).
+  \item Carga de atención: revisar muchos mensajes exige atención sostenida. Como criterio de diseño del prototipo, se muestran señales concretas para ayudar al usuario a revisar cada decisión.
 \end{itemize}
 
 La combinación de urgencia, autoridad y prueba social puede elevar la persuasión del mensaje. Este efecto depende del contexto, de la experiencia previa y de las diferencias individuales, por lo que no debe expresarse como una tasa universal de éxito (Heiding et al., 2024).
@@ -573,7 +569,7 @@ Los avances recientes enfatizan multimodalidad y zero-shot, con énfasis en LLMs
 
 \begingroup
   \arrayrulecolor{uemcgreen}
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \small
   \caption{Comparativa de técnicas de deep learning y transformers.}
@@ -674,14 +670,14 @@ La gestión del proyecto se apoyó en el control de versiones Git y en la plataf
 
 \section{Planificación temporal del proyecto}
 
-La planificación se distribuyó en siete fases repartidas a lo largo del curso académico. La tabla siguiente resume la planificación temporal, las actividades principales de cada fase y el entregable asociado. Las fases de análisis y documentación se concentraron en el primer cuatrimestre, mientras que la implementación del prototipo y su validación se desarrollaron en el segundo.
+La planificación inicial se distribuyó en siete fases repartidas a lo largo del curso académico. La tabla siguiente resume la planificación temporal, las actividades principales de cada fase y el entregable asociado. Las fases de análisis y documentación se concentraron en el primer cuatrimestre, mientras que la implementación del prototipo y su validación se desarrollaron en el segundo.
 
 \begingroup
   \arrayrulecolor{uemcgreen}
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \small
-  \caption{Planificación temporal del proyecto.}
+  \caption{Planificación inicial del proyecto.}
   \label{tab:4-1}
   \begin{tabularx}{\textwidth}{|X|X|X|X|}
     \hline
@@ -709,7 +705,9 @@ La planificación se distribuyó en siete fases repartidas a lo largo del curso 
 \end{table}
 \endgroup
 
-La carga de trabajo del segundo cuatrimestre se concentró en el motor heurístico, el clasificador neuronal y el backend central, que reúnen la lógica del prototipo. Después se adaptaron Streamlit, Gmail, la extensión y el monitor como clientes del mismo contrato HTTP. La extensión llama directamente al servidor; el proceso del puerto 8765 se conserva únicamente como proxy de compatibilidad, sin reglas ni modelos propios.
+La planificación inicial terminaba en junio. La versión de entrega incorpora después el entrenamiento reproducible y las mediciones de agosto de 2026, además de la revisión documental y las correcciones del tribunal de septiembre. Las fechas de los artefactos y los informes identifican estas comprobaciones finales; la tabla no debe interpretarse como fecha de cierre de la versión entregada.
+
+La carga de trabajo del segundo cuatrimestre se concentró en el motor heurístico, el clasificador neuronal y el backend central, que reúnen la lógica del prototipo. Después se adaptaron Streamlit, Gmail, la extensión y el monitor como clientes del mismo contrato HTTP. La extensión llama directamente al servidor; el proceso del puerto 8767 se conserva únicamente como proxy de compatibilidad, sin reglas ni modelos propios.
 
 \input{memoria/estructura}
 
@@ -1262,7 +1260,7 @@ Como trabajo futuro prioritario se plantea confirmar la calibración sobre datas
   \item[DKIM] Mecanismo de autenticación de correo basado en firmas criptográficas del dominio remitente.
   \item[SPF] Política DNS que permite comprobar si la IP emisora está autorizada para el dominio del sobre SMTP. No autentica por sí sola el From visible ni garantiza la integridad del contenido.
   \item[DMARC] Política e informes del dominio del From visible. Exige alineación con al menos un SPF o DKIM válido y puede solicitar none, quarantine o reject; no verifica por sí mismo el contenido del mensaje.
-  \item[Análisis combinado] Modo que pondera la puntuación heurística y la probabilidad del clasificador neuronal.
+  \item[Análisis combinado] Modo que pondera ambas puntuaciones y conserva el máximo individual si alcanza el umbral de alta confianza. Produce un índice de riesgo, no una probabilidad calibrada.
   \item[Streamlit] Framework de Python utilizado para construir la interfaz web interactiva del prototipo.
   \item[Heurística] Conjunto de reglas basadas en conocimiento experto que evalúan indicios de phishing de forma explicable.
   \item[MLPClassifier] Perceptrón multicapa de scikit-learn: red neuronal de alimentación directa con una o más capas ocultas.
@@ -1380,7 +1378,7 @@ TFG/
 |   |-- backend_server.py             # Servidor HTTP central
 |   |-- config_app.py                 # Configuración de clientes y servidor
 |   |-- detect_app.py                 # Cliente web de detección
-|   |-- gmail_extension_server.py     # Proxy legado opcional (puerto 8765)
+|   |-- gmail_extension_server.py     # Proxy legado opcional (puerto 8767)
 |   |-- monitor_app.py                # Vista de monitorización de Gmail
 |   |-- monitor_gmail.py              # Monitorización periódica opcional
 |   |-- train_app.py                  # Entrenamiento y evaluación
@@ -1419,7 +1417,6 @@ TFG/
 |-- scripts/                          # Automatización y experimentos
 |-- requirements.txt
 |-- credentials.example.json
-|-- .env.example                    # Aviso de migración
 |-- config/                            # Plantillas cliente/servidor
 `-- runtime/                           # Datos persistentes separados
     |-- client/                       # Secretos y preferencias (Git ignora)
@@ -1429,7 +1426,7 @@ TFG/
 
 \chapter{Fragmentos de código fuente}
 
-A continuación se reproducen los fragmentos más representativos del sistema: la fachada del análisis heurístico, el servicio común que combina heurística y red neuronal, y el núcleo del pipeline neuronal TF-IDF + MLP.
+A continuación se presentan extractos simplificados para explicar las responsabilidades; se omiten validaciones, metadatos y métodos auxiliares. No son archivos ejecutables completos. El código íntegro y vigente se encuentra en el repositorio. Se muestran la fachada del análisis heurístico, el servicio común que combina heurística y red neuronal, y el núcleo del pipeline neuronal TF-IDF + MLP.
 
 \section{Fachada del análisis heurístico (heuristicas.py)}
 
@@ -1449,18 +1446,19 @@ def analizar_correo(correo):
 \section{Servicio común de análisis (analysis\_service.py)}
 
 \begin{lstlisting}
-analysis_service.py (extracto actualizado)
+analysis_service.py (extracto simplificado)
 from collections.abc import Callable
 from threading import Lock
 from typing import Protocol
 from .analizador_email import construir_texto_para_analisis
 from .heuristicas import analizar_correo
 from .idioma import detectar_idioma_correo
-from .modelo_neural import ModelStorage, NeuralPhishingClassifier, NeuralPhishingDetector
 MODO_HEURISTICO = "heuristico"
 MODO_NEURAL = "neural"
 MODO_COMBINADO = "combinado"
 def cargar_detector_neural(config, idioma="es"):
+    # Importación diferida: el modo heurístico no carga scikit-learn.
+    from .modelo_neural import ModelStorage, NeuralPhishingClassifier, NeuralPhishingDetector
     ruta_principal = config.model_path_en if idioma == "en" else config.model_path_es
     classifier = ModelStorage(ruta_principal).load()
     idioma_esperado = "english" if idioma == "en" else "spanish"
@@ -1509,7 +1507,7 @@ class EmailAnalysisService:
 \section{Núcleo del clasificador neuronal (modelo\_neural.py)}
 
 \begin{lstlisting}
-modelo_neural.py (extracto actualizado)
+modelo_neural.py (extracto simplificado)
 class NeuralPhishingClassifier:
     def __init__(self, language="spanish", hiperparametros=None):
         self.language = language
@@ -1547,7 +1545,7 @@ class NeuralPhishingDetector:
 
 \chapter{Guía resumida de instalación y uso}
 
-Este anexo resume la ejecución cliente-servidor local. Primero se inicia el backend obligatorio en 127.0.0.1:8766 y después Streamlit en 127.0.0.1:8501. Para una demostración desde un móvil de la misma red privada se mantiene la API en loopback y se inicia solo la web con streamlit run src/app.py --server.address 0.0.0.0 --server.port 8501; se accede mediante \url{http://IP_DEL_EQUIPO:8501} y puede ser necesario permitir el puerto 8501 en el perfil privado del firewall. No requiere --allow-remote ni abrir 8766. Como Streamlit no incorpora autenticación multiusuario, este acceso LAN debe ser temporal, en una red de confianza y sin redirección de puertos. La extensión apunta directamente al backend desde Opciones y el monitor usa PHISHING\_BACKEND\_URL. El puerto 8765 queda como proxy antiguo opcional. Un despliegue remoto real exige HTTPS y controles operativos adicionales.
+Este anexo resume la ejecución cliente-servidor local. Primero se inicia el backend obligatorio en 127.0.0.1:8766 y después Streamlit en 127.0.0.1:8501. Para una demostración desde un móvil de la misma red privada se mantiene la API en loopback y se inicia solo la web con streamlit run src/app.py --server.address 0.0.0.0 --server.port 8501; se accede mediante \url{http://IP_DEL_EQUIPO:8501} y puede ser necesario permitir el puerto 8501 en el perfil privado del firewall. No requiere --allow-remote ni abrir 8766. Como Streamlit no incorpora autenticación multiusuario, este acceso LAN debe ser temporal, en una red de confianza y sin redirección de puertos. La extensión apunta directamente al backend desde Opciones y el monitor usa PHISHING\_BACKEND\_URL. El puerto 8767 queda como proxy antiguo opcional. Un despliegue remoto real exige HTTPS y controles operativos adicionales.
 
 \textbf{Comandos de instalación y uso}
 
@@ -1561,7 +1559,7 @@ python -m pip install -r requirements-dev.txt -c constraints.txt
 $env:PYTHONPATH="src"; python src/backend_server.py
 # 3b. Ejecutar el cliente web en otra terminal
 $env:PYTHONPATH="src"; streamlit run src/app.py
-# 3c. El proxy 8765 solo se usa por compatibilidad antigua
+# 3c. El proxy 8767 solo se usa por compatibilidad antigua
 $env:PYTHONPATH="src"; python src/gmail_extension_server.py
 # 4. Ejecutar la suite de pruebas
 $env:PYTHONPATH="src"; python -m unittest discover -s tests -p "test_*.py"
@@ -1596,9 +1594,9 @@ Verificado: Benchmark reproducible de arranque e inferencia con comparación ant
   \item Verificado: Cálculo de exactitud, precisión, recall y F1.
   \item Verificado: arranque separado de backend y Streamlit, navegación y análisis HTTP completo.
   \item Verificado: Análisis desde texto pegado y archivo .eml.
-  \item Verificado: Importación autorizada de correos mediante la API de Gmail.
+  \item Verificado con dobles de prueba: importación de correos por el cliente de Gmail. La conexión OAuth real requiere credenciales de laboratorio y una comprobación separada.
   \item Verificado: Selección del modelo neuronal según el idioma del mensaje.
-  \item Verificado: Monitorización de Gmail y notificación opcional por Telegram.
+  \item Verificado con dobles de prueba: monitorización y notificación Telegram. Las pruebas locales no acreditan disponibilidad actual de los servicios externos.
 \end{itemize}
 
 \chapter{Resumen de arquitectura y evidencia}

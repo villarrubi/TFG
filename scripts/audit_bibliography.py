@@ -141,6 +141,25 @@ def audit(text: str) -> list[str]:
             errors.append(f"Referencia no citada: {author} ({year})")
 
     references_text = "\n".join(entries)
+    # También revisar la dirección cita -> referencia. Comprobar solo que cada
+    # entrada se cite no detectaba una cita residual cuya entrada se retiró.
+    reference_keys = [
+        (_normalizar(author), year)
+        for author, year in map(_clave_referencia, entries)
+    ]
+    for group in re.findall(r"\(([^()]*?(?:19|20)\d{2}[^()]*)\)", body):
+        for part in group.split(";"):
+            citation = re.search(
+                r"^\s*(?:Fuentes?:\s*)?([^\d]+?),\s*((?:19|20)\d{2}[a-z]?)",
+                part,
+            )
+            if citation and not any(
+                _normalizar(citation[1]).startswith(author) and citation[2] == year
+                for author, year in reference_keys
+            ):
+                errors.append(
+                    f"Cita parentética sin referencia: {citation[1]} ({citation[2]})"
+                )
     arxiv_ids = re.findall(
         r"arXiv:(\d{4}\.\d{4,5})", references_text, flags=re.IGNORECASE
     )
