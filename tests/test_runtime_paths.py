@@ -28,7 +28,9 @@ class RuntimePathsTests(unittest.TestCase):
             },
             clear=False,
         ):
-            root = Path(tmpdir)
+            # Windows puede devolver TEMP con un alias 8.3 (RUNNER~1).
+            # Comparar nombres canónicos, igual que el contrato de las rutas.
+            root = Path(tmpdir).resolve()
             self.assertEqual(client_data_dir(root), root / "runtime" / "client")
             self.assertEqual(server_data_dir(root), root / "runtime" / "server")
             self.assertEqual(
@@ -53,7 +55,7 @@ class RuntimePathsTests(unittest.TestCase):
 
     def test_directorios_se_pueden_externalizar(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
+            root = Path(tmpdir).resolve()
             client = root / "cliente-privado"
             server = root / "servidor-persistente"
             with mock.patch.dict(
