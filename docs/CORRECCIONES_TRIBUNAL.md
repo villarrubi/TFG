@@ -27,6 +27,10 @@ Revisión final de entrega: 28 de septiembre de 2026. Véase el
 - Las guías personales de preparación se actualizan localmente, con un índice
   automático en la guía completa. Sus DOCX no son necesarios para consultar ni
   compilar la entrega pública.
+- Una clonación limpia en Windows detectó que `core.autocrlf` cambiaba los bytes
+  de los corpus y, por tanto, sus hashes. Se fijan sus finales de línea mediante
+  `.gitattributes`; se conservan los datos, modelos, predicciones y resultados.
+  La validación continua se amplía a Windows y Linux para cubrir esa diferencia.
 
 Se han vuelto a reproducir las evaluaciones de entrenamiento y de los 1.528
 textos externos con los modelos entregados, sin reentrenarlos ni modificar sus

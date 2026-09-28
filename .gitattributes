@@ -1,0 +1,4 @@
+# Los hashes de los corpus identifican sus bytes. Evitar que autocrlf cambie
+# los datos de calibración, los EML o su manifiesto al clonar en Windows.
+/evaluation/calibration_controlled_v1.csv text eol=lf
+/evaluation/local_emails_v1/* text eol=lf
