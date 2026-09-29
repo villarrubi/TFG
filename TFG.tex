@@ -63,7 +63,7 @@
 \setlength{\parindent}{0pt}
 % El cuerpo usa 6 pt de separación entre párrafos (antes/después); la portada conserva su composición propia.
 \setlength{\parskip}{0pt}
-\setlength{\headheight}{18pt}
+\setlength{\headheight}{22pt}
 \emergencystretch=4em
 % Citas breves dentro del texto; las extensas pueden pasarse a una nota al pie.
 \newcommand{\citaCorta}[1]{\enquote{#1}}
@@ -236,7 +236,7 @@ Esta fase inicial es fundamental para la personalización y efectividad del ataq
 
 \begin{itemize}
   \item Actividades clave: Análisis de fuentes abiertas (OSINT, por sus siglas en inglés), como LinkedIn para spear phishing o bases de datos de brechas pasadas (p. ej., Have I Been Pwned). En ataques masivos, se usan bots para escanear listas de emails.
-  \item Ejemplo: En un spear phishing corporativo, el atacante podría mapear la jerarquía de una empresa para targeting de ejecutivos (whaling).
+  \item Ejemplo: En un spear phishing corporativo, el atacante podría estudiar la jerarquía de una empresa para la selección de ejecutivos como objetivo (whaling).
   \item Duración y riesgos: La fase de reconocimiento puede prolongarse y no siempre deja señales visibles para la organización. El DBIR 2025 identifica el abuso de credenciales como uno de los vectores iniciales más frecuentes, lo que refuerza la necesidad de limitar la exposición pública y vigilar credenciales comprometidas (Verizon, 2025).
 \end{itemize}
 
@@ -248,7 +248,7 @@ Una vez identificados los vectores de amenaza, el atacante diseña el "cebo" ---
 
 \begin{itemize}
   \item Actividades clave: Creación de emails falsos, sitios web clonados (usando kits de phishing como Evilginx) o mensajes en otros canales (SMS para smishing, llamadas para vishing). Se incorporan elementos como logos robados, URLs acortadas o adjuntos maliciosos.
-  \item Ejemplo: Un email simulando un banco que advierte de "actividad sospechosa" con un enlace a un sitio falso, o un QR code en un cartel físico que redirige a malware (quishing).
+  \item Ejemplo: Un correo que suplanta a un banco y advierte de "actividad sospechosa" con un enlace a un sitio falso, o un código QR en un cartel físico que redirige a contenido malicioso (quishing).
   \item Técnicas avanzadas: Uso de homógrafos (p. ej., un dominio visualmente parecido a paypal.com que sustituye la segunda letra a latina por una a cirílica, U+0430) o envenenamiento de DNS para redirigir tráfico (Imperva, 2023).
 \end{itemize}
 
@@ -263,11 +263,11 @@ Esta fase es crítica porque la credibilidad del mensaje y su similitud con comu
 
 \subsection{Interacción y Explotación (Colección Inicial)}
 
-El objetivo es inducir una acción del usuario, como hacer clic en un enlace, abrir un adjunto o ingresar datos. Aquí ocurre la "mordida" del anzuelo, donde la víctima interactúa con el payload malicioso.
+El objetivo es inducir una acción del usuario, como hacer clic en un enlace, abrir un adjunto o introducir datos. En esta fase, la víctima interactúa con el contenido malicioso.
 
 \begin{itemize}
   \item Actividades clave: El usuario puede ser redirigido a un sitio falso para capturar credenciales o inducido a abrir un adjunto malicioso. En ataques de varias etapas, un proxy adversary-in-the-middle (AiTM) puede interceptar tokens de sesión en tiempo real (Kroll, 2025).
-  \item Ejemplo: En un ataque de clonación (clone phishing), se duplica un email legítimo previo y se reemplaza un adjunto seguro por uno infectado (Fortinet, 2025).
+  \item Ejemplo: En un ataque de clonación (clone phishing), se duplica un correo legítimo previo y se reemplaza un adjunto seguro por uno infectado (Fortinet, 2025).
   \item Factores humanos: La urgencia, el miedo a perder acceso y la apariencia de legitimidad explotan sesgos cognitivos y pueden precipitar una decisión. La formación y la autenticación resistente al phishing reducen el riesgo, pero no eliminan la necesidad de controles técnicos.
 \end{itemize}
 
@@ -351,7 +351,7 @@ Con los datos en mano, el atacante los procesa y convierte en ganancia. Esta fas
     Reconocimiento & Monitoreo OSINT & Alertas leaks & Have I Been Pwned \\
     \hline
     \rowcolor{tablelight}
-    Distribución & Filtros email (SPF/DKIM/DMARC) & Análisis QR & Mimecast \\
+    Distribución & Filtros de correo (SPF/DKIM/DMARC) & Análisis de códigos QR & Mimecast \\
     \hline
     Interacción & MFA resistente AiTM & Monitoreo clics & Microsoft Defender \\
     \hline
@@ -380,7 +380,7 @@ Otros vectores menos frecuentes pero en ascenso son el phishing a través de red
 
 \subsection{Clasificación según el grado de personalización y objetivo}
 
-En función del nivel de targeting distinguimos varios tipos claramente diferenciados:
+En función del grado de personalización y del objetivo del ataque se distinguen los siguientes tipos:
 
 \begin{itemize}
   \item Phishing masivo o genérico: campañas de gran volumen que reutilizan mensajes similares. Su coste reducido permite mantenerlas incluso cuando solo una fracción pequeña de los destinatarios interactúa.
@@ -657,12 +657,13 @@ La literatura reciente sitúa los transformers y los LLM entre las líneas activ
 Este capítulo describe el enfoque metodológico seguido para el desarrollo del prototipo, así como la planificación temporal del proyecto y las herramientas empleadas. El trabajo se ha desarrollado a lo largo del curso académico 2025-2026, distribuyendo las actividades de análisis y documentación en el primer cuatrimestre y las de implementación y validación en el segundo.
 
 \section{Enfoque metodológico}
+\label{sec:metodologia}
 
 El proyecto se ha desarrollado siguiendo una metodología iterativa e incremental, combinada con una revisión bibliográfica continua. Cada iteración añade una capacidad nueva al sistema y se cierra con la ejecución de la suite de pruebas, de modo que el prototipo permanece en un estado funcional durante todo el proceso.
 
 La fase inicial, desarrollada entre octubre y diciembre de 2025, se dedicó al estudio del contexto del problema y a la revisión de la literatura académica (IEEE, arXiv y Springer) y de los informes de industria citados en el estado del arte. Esta etapa permitió identificar las técnicas de detección más relevantes, delimitar el hueco de investigación y definir los objetivos específicos y el alcance del sistema.
 
-Una vez consolidado el marco teórico, se adoptó un enfoque de desarrollo en espiral adaptado al tamaño del trabajo, llevado a cabo entre febrero y junio de 2026. Primero se construyó un núcleo heurístico explicable, después se añadió el clasificador neuronal TF-IDF + MLP y, a continuación, se separaron el backend HTTP central y los clientes Streamlit, extensión y monitor. Gmail aporta mensajes autorizados y Telegram actúa como salida opcional; ambos se coordinan alrededor del contrato del servidor. Cada avance se cerró con la ejecución de la suite de pruebas, manteniendo el prototipo en un estado funcional durante todo el proceso.
+La propuesta aprobada fue la guía previa a la programación; no se elaboró una especificación adicional de requisitos ni un diseño detallado independiente antes de implementar. Las decisiones se concretaron durante las iteraciones: núcleo heurístico, incorporación del clasificador neuronal y posterior centralización del análisis para los distintos clientes. El historial conservado registra el núcleo heurístico en junio de 2026, las integraciones y un primer servicio central en julio, y la consolidación del backend y de la evaluación reproducible en agosto. Estas fechas identifican versiones registradas, no el momento exacto en que se concibió cada decisión. El apartado~\ref{sec:proceso-diseno} relaciona este proceso con los requisitos y los modelos del diseño final.
 
 Durante el desarrollo se emplearon herramientas de inteligencia artificial generativa como apoyo para consultas técnicas puntuales, diagnóstico y resolución de errores, revisión de fragmentos de código, asistencia en el CSS de la interfaz y revisión de documentación. Antes de incorporar los cambios se realizaron las comprobaciones correspondientes; las decisiones técnicas, la interpretación de los resultados y la responsabilidad final corresponden al autor. Estas herramientas no se utilizaron como fuente académica: los contenidos teóricos se contrastaron y citaron mediante sus fuentes originales.
 
@@ -670,7 +671,7 @@ La gestión del proyecto se apoyó en el control de versiones Git y en la plataf
 
 \section{Planificación temporal del proyecto}
 
-La planificación inicial se distribuyó en siete fases repartidas a lo largo del curso académico. La tabla siguiente resume la planificación temporal, las actividades principales de cada fase y el entregable asociado. Las fases de análisis y documentación se concentraron en el primer cuatrimestre, mientras que la implementación del prototipo y su validación se desarrollaron en el segundo.
+La planificación inicial se distribuyó en siete fases repartidas a lo largo del curso académico. La tabla siguiente resume los periodos, actividades y entregables previstos. La fase de diseño expresa una previsión de trabajo: en la práctica se utilizó la propuesta como guía y el diseño se concretó durante la implementación, sin generar previamente una especificación funcional o modular independiente.
 
 \begingroup
   \arrayrulecolor{uemcgreen}
@@ -783,8 +784,9 @@ El alcance del prototipo se ha delimitado al análisis estático del correo elec
 No obstante, la arquitectura queda preparada para ampliaciones futuras. Podrían añadirse consultas a listas negras públicas, reputación de dominios, validación de certificados TLS, análisis dinámico de páginas o integración con sistemas corporativos de alerta. El prototipo no se plantea, por tanto, como un producto cerrado, sino como una base funcional y extensible.
 
 \section{Requisitos funcionales y no funcionales}
+\label{sec:requisitos}
 
-Los requisitos siguientes convierten el alcance descrito en criterios verificables. Los funcionales definen qué debe hacer el prototipo; los no funcionales fijan las condiciones de seguridad, reproducibilidad, mantenibilidad y rendimiento propias de una demostración académica local.
+Los requisitos siguientes sistematizan el alcance final en criterios verificables. Sus identificadores y su tabla se han formalizado al documentar el prototipo; no constituyen una especificación escrita antes de programar. Los funcionales definen qué debe hacer el sistema; los no funcionales fijan las condiciones de seguridad, reproducibilidad, mantenibilidad y rendimiento propias de una demostración académica local.
 
 \begingroup
   \arrayrulecolor{uemcgreen}
@@ -826,9 +828,11 @@ Los requisitos siguientes convierten el alcance descrito en criterios verificabl
 
 El cumplimiento se evalúa dentro del alcance declarado: no implica eficacia universal, operación multiusuario ni garantías de producción.
 
+\input{memoria/proceso_diseno}
+
 \section{Cambios respecto a la propuesta inicial}
 
-La propuesta de octubre de 2025 contemplaba un prototipo con reglas, servicios externos de reputación, comprobación de certificados y la posible utilización de TensorFlow. Durante el desarrollo se ajustó el alcance para priorizar privacidad, seguridad de la evaluación, reproducibilidad local y una arquitectura cliente-servidor con un único modelo compartido.
+La propuesta de octubre de 2025 contemplaba un prototipo con reglas, servicios externos de reputación, comprobación de certificados y el uso de scikit-learn y TensorFlow. Durante el desarrollo se ajustó el alcance para priorizar privacidad, seguridad de la evaluación, reproducibilidad local y una arquitectura cliente-servidor con un modelo activo por idioma compartido por todos los clientes.
 
 \begingroup
   \arrayrulecolor{uemcgreen}
@@ -842,7 +846,7 @@ La propuesta de octubre de 2025 contemplaba un prototipo con reglas, servicios e
     \rowcolor{uemcgreen}
     \textcolor{white}{\textbf{Elemento}} & \textcolor{white}{\textbf{Propuesta}} & \textcolor{white}{\textbf{Implementación final}} & \textcolor{white}{\textbf{Justificación}} \\
     \hline
-    Aprendizaje & scikit-learn y TensorFlow & TF-IDF + MLPClassifier de scikit-learn & Pipeline ligero, reproducible y suficiente para el alcance; TensorFlow no era necesario. \\
+    Aprendizaje & scikit-learn y TensorFlow & TF-IDF + MLPClassifier de scikit-learn & Un único pipeline de vectorización y clasificación; se reduce la exploración de arquitecturas prevista. \\
     \hline
     \rowcolor{tablelight}
     Reputación & Listas negras y servicios externos & Listas y señales locales; sin consultas online & Evita enviar URLs sensibles, depender de cuotas o visitar infraestructura potencialmente maliciosa. \\
@@ -1226,7 +1230,7 @@ El interés del modo combinado es estudiar cómo integrar evidencia estructural 
 
 \chapter{Conclusiones generales}
 
-El trabajo cumple los objetivos académicos y materializa un prototipo funcional dentro del alcance revisado. El cumplimiento de los compromisos originales es parcial: no se han integrado servicios externos de reputación, comprobación de certificados ni análisis activo de sitios web, como se detalla en el apartado~\ref{sec:objetivos-propuesta}. Dentro del alcance desarrollado, se ha estudiado el phishing desde su base psicológica y su evolución reciente, se ha revisado la investigación en machine learning y deep learning y se ha desarrollado un sistema cliente-servidor funcional que combina análisis heurístico explicable con un clasificador TF-IDF + MLP. Streamlit, la extensión de Gmail y el monitor envían las entradas al backend central, que procesa el correo y mantiene los modelos compartidos.
+El trabajo desarrolla los objetivos académicos y materializa un prototipo funcional dentro del alcance revisado. El cumplimiento de los compromisos originales es parcial: no se han integrado servicios externos de reputación, comprobación de certificados ni análisis activo de sitios web. Las recomendaciones preventivas se han incorporado a la memoria, pero no se ha elaborado la guía independiente para usuarios y administradores anunciada en la propuesta. La cobertura y los límites de los objetivos originales se detallan en el apartado~\ref{sec:objetivos-propuesta}. Dentro del alcance desarrollado, se ha estudiado el phishing desde su base psicológica y su evolución reciente, se ha revisado la investigación en machine learning y deep learning y se ha desarrollado un sistema cliente-servidor funcional que combina análisis heurístico explicable con un clasificador TF-IDF + MLP. Streamlit, la extensión de Gmail y el monitor envían las entradas al backend central, que procesa el correo y mantiene los modelos compartidos.
 
 La valoración siguiente corresponde a los objetivos específicos de la introducción y debe leerse junto con la trazabilidad de la propuesta aprobada:
 

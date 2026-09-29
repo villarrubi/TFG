@@ -1,20 +1,31 @@
 \subsection{Cumplimiento de los objetivos y desviaciones de alcance}
 \label{sec:objetivos-propuesta}
 
-El cumplimiento se valora frente a los objetivos de la propuesta aprobada y no solo frente a los requisitos del prototipo final. Los objetivos académicos se desarrollan en el marco teórico, el estado del arte y la discusión: comprender los ataques, estudiar la ingeniería social y examinar las ventajas y limitaciones de la detección. La aplicación y su evaluación materializan la aplicación de conocimientos al problema. La valoración crítica se apoya en los límites de los datos y de la validación, sin atribuir al prototipo eficacia universal.
+El cumplimiento se valora frente a la propuesta aprobada y no solo frente a los requisitos finales. Sus cinco objetivos académicos (apartado 1, página 4) se corresponden con los contenidos siguientes, manteniendo su orden original:
+
+\begin{enumerate}[leftmargin=*,itemsep=3pt]
+\item \textbf{Comprender el funcionamiento, la estructura, las fases y las variantes del phishing.} Se desarrolla en el capítulo 2 mediante conceptos, modalidades y modelos de fases.
+\item \textbf{Analizar la evolución de las estrategias de ingeniería social.} El capítulo 2 relaciona la evolución de los ataques con la manipulación, los principios psicológicos y los usos de IA descritos en las fuentes.
+\item \textbf{Estudiar métodos de detección mediante software y políticas organizativas, con sus ventajas y límites.} Los controles por fase del capítulo 2 y el estado del arte del capítulo 3 cubren ambos planos; la evaluación propia del capítulo 6 se limita al software desarrollado.
+\item \textbf{Desarrollar capacidad crítica para evaluar medidas preventivas en contextos personales, empresariales e institucionales.} Se aborda mediante la comparación bibliográfica y la discusión de límites; no se ha medido la eficacia de esas medidas en organizaciones ni en estudios de campo con usuarios.
+\item \textbf{Fomentar el aprendizaje autónomo y aplicar conocimientos teóricos a un problema real de ciberseguridad.} Se materializa en el desarrollo y la evaluación del prototipo (capítulos 4--6), dentro de un entorno académico controlado.
+\end{enumerate}
+
+La tabla~\ref{tab:objetivos-propuesta} recoge los cuatro objetivos funcionales del apartado 2 de la propuesta (página 4), en su orden original, y distingue los dos compromisos adicionales de su resumen (página 3). Las recomendaciones preventivas forman parte del alcance inicial, aunque no figuren como una quinta viñeta de objetivos funcionales.
 
 \begin{table}[H]
 \centering\small
-\caption{Trazabilidad de los objetivos funcionales de la propuesta.}
+\caption{Trazabilidad de los objetivos funcionales y compromisos del resumen de la propuesta.}
 \label{tab:objetivos-propuesta}
-\begin{tabularx}{\textwidth}{|p{4cm}|p{2.5cm}|X|}
+\begin{tabularx}{\textwidth}{|>{\RaggedRight\arraybackslash}p{5.1cm}|>{\RaggedRight\arraybackslash}p{2.5cm}|>{\RaggedRight\arraybackslash}X|}
 \hline
 \rowcolor{uemcgreen}\color{white}\bfseries Objetivo original & \color{white}\bfseries Estado & \color{white}\bfseries Evidencia y alcance \\\hline
-Identificar indicios en correos o URLs & Parcial & Texto, EML y Gmail; inspección estática de los enlaces del mensaje. No se visita ni se verifica el sitio de destino. \\\hline
-Aplicar reglas y verificaciones heurísticas & Cumplido en correo & 31 señales sobre remitente, cabeceras, enlaces, HTML, adjuntos y contenido; pruebas unitarias y escenarios EML. No equivale a acreditar la legitimidad de una web. \\\hline
-Integrar listas negras y reputación externas & No desarrollado & Se emplean listas locales y reglas. No hay consultas online a proveedores de reputación. \\\hline
-Ofrecer una interfaz comprensible & Implementado & Streamlit y extensión presentan riesgo y explicaciones. Las pruebas verifican funcionamiento; no se ha realizado un estudio de usabilidad con participantes. \\\hline
-Comprobar certificados digitales, previsto en el resumen & No desarrollado & El sistema no conecta con los destinos ni valida sus certificados TLS. \\\hline
+1. Diseñar un prototipo capaz de identificar indicios de phishing en correos electrónicos o URLs mediante análisis de contenido, enlaces y cabeceras. & Parcial & Texto, EML y Gmail; inspección estática de los enlaces del mensaje. No se visita ni se verifica el sitio de destino. \\\hline
+2. Implementar un conjunto de reglas y verificaciones heurísticas que permitan evaluar la legitimidad de un mensaje o sitio web. & Parcial & 31 señales del correo y pruebas sobre EML. Proporciona indicios; no acredita la legitimidad de un sitio web. \\\hline
+3. Integrar fuentes externas, como listas negras y servicios de comprobación de reputación, para reforzar la fiabilidad del sistema. & No desarrollado & Se emplean listas locales y reglas. No hay consultas a proveedores de reputación ni actualización automática desde fuentes externas. \\\hline
+4. Elaborar una interfaz sencilla que facilite la comprensión de los resultados del análisis por parte del usuario. & Implementado & Streamlit y extensión presentan riesgo y explicaciones. Hay pruebas funcionales, sin estudio de usabilidad con participantes. \\\hline
+Resumen: comprobaciones de certificados digitales. & No desarrollado & El sistema no conecta con los destinos ni valida sus certificados TLS. \\\hline
+Resumen: medidas técnicas y organizativas y guía de buenas prácticas para usuarios y administradores. & Parcial & Controles y recomendaciones en el capítulo 2 y la discusión. No se elaboró una guía independiente para ambos perfiles. \\\hline
 \end{tabularx}
 \end{table}
 
@@ -22,7 +33,7 @@ La consulta de reputación y la comprobación activa de certificados se excluyer
 
 La consecuencia es una menor cobertura: no se conoce la reputación actual del destino, su contenido servido en ese momento ni el estado de su certificado. Las listas locales pueden quedar desactualizadas. El sistema aporta indicios del correo recibido; no certifica que una URL sea segura. Incorporar esas capacidades requeriría un módulo de consultas separado, límites de tiempo, controles de privacidad y una evaluación específica. Su mención como trabajo futuro no sustituye esta declaración de incumplimiento parcial.
 
-Gmail, Telegram y la centralización de los modelos amplían las formas de uso del prototipo, pero no compensan por sí mismas la ausencia de reputación online o análisis activo de sitios web. Las recomendaciones preventivas se recogen en los controles por fase y en la discusión; no se ha validado una guía organizativa independiente con usuarios o administradores.
+Gmail, Telegram y la centralización de los modelos amplían las formas de uso del prototipo, pero no compensan por sí mismas la ausencia de reputación online o análisis activo de sitios web. Las medidas preventivas se integraron en la exposición teórica y la discusión, concentrando el desarrollo y la validación en el detector. Por ello, la guía de buenas prácticas anunciada en el resumen quedó sin elaborar como entregable independiente: las recomendaciones están dispersas y no constituyen una guía adaptada y validada para usuarios y administradores. La guía de instalación y uso del anexo C explica el prototipo y no sustituye ese compromiso preventivo.
 
 \subsection{Elección de scikit-learn frente al uso previsto de TensorFlow}
 \label{sec:decision-tensorflow}

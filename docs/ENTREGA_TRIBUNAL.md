@@ -10,6 +10,10 @@ Alejandro Villarrubia García · Septiembre de 2026
 | --- | --- | --- |
 | Memoria | [TFG.pdf](../TFG.pdf) | [TFG.tex](../TFG.tex), [memoria/](../memoria/) y [figuras](../latex_figures/) |
 
+La revisión del 29 de septiembre de 2026 incorpora la
+[relación breve de observaciones y apartados atendidos](RELACION_OBSERVACIONES.md),
+con las páginas de la memoria actualizada.
+
 El [README](../README.md) contiene la instalación y el arranque desde una copia
 limpia. La documentación técnica y los resultados incluidos permiten revisar
 el diseño, ejecutar el prototipo y reproducir sus comprobaciones.
@@ -41,8 +45,9 @@ Las integraciones externas y su alcance de validación se explican en
   verifican el comportamiento funcional. La [validación automática](../.github/workflows/ci.yml)
   comprueba además bibliografía, modelos y resultados reproducibles.
 
-La memoria explica la reorganización respecto de la propuesta (4.3), los
-objetivos cumplidos parcialmente (5.3.1), la elección de scikit-learn en lugar
+La memoria explica la reorganización respecto de la propuesta (4.3), el punto
+de partida y la evolución del diseño (5.2.1), los objetivos cumplidos parcialmente
+(5.3.1), la elección de scikit-learn en lugar
 de TensorFlow (5.3.2), los cinco diagramas UML (5.10) y la dependencia de la
 calibración respecto de los datos (6.4). El prototipo realiza análisis estático;
 no incluye reputación online, visitas a las páginas enlazadas ni validación TLS.
